@@ -57,3 +57,9 @@ require_once dirname( __DIR__ ) . '/stubs/ET_Builder_Module.php';
 if ( ! defined( 'HOF_PLUGIN_DIR' ) ) {
     define( 'HOF_PLUGIN_DIR', dirname( __DIR__, 2 ) . '/' );
 }
+
+// HOF_PLUGIN_FILE is what the WooCommerce integration hands to FeaturesUtil
+// when declaring feature compatibility.
+if ( ! defined( 'HOF_PLUGIN_FILE' ) ) {
+    define( 'HOF_PLUGIN_FILE', dirname( __DIR__, 2 ) . '/hooked-on-facets.php' );
+}
