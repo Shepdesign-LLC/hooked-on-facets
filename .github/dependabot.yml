@@ -55,6 +55,17 @@ updates:
       - dependency-name: "react-dom"
         update-types: ["version-update:semver-major"]
 
+      # jsdom 30 and Vitest 5 require Node 22+ (jsdom 30 pulls in undici 8,
+      # which declares engines >=22.19.0). This project targets Node 20 —
+      # package.json engines, the CI node-version, and the node:20-alpine
+      # dev recipes in CLAUDE.md. On Node 20 the whole Vitest suite dies at
+      # startup with "webidl.util.markAsUncloneable is not a function".
+      # Lift this block when the Node 22 floor lands.
+      - dependency-name: "jsdom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"

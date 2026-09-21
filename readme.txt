@@ -5,7 +5,7 @@ Tags: facets, faceted search, filters, woocommerce, product filter
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -118,6 +118,16 @@ lives in the public repository: https://github.com/Shepdesign/hooked-on-facets
 4. The design-tokens editor for theming facets with CSS custom properties.
 
 == Changelog ==
+
+= 1.1.1 =
+* Added: pretty faceted URLs (opt-in, SEO screen) — filtered shop and product
+  archive views get clean `/filter/brand/nike/` paths with canonical URLs and
+  301 redirects from legacy query strings.
+* Added: WooCommerce 11 readiness — declares HPOS and cart/checkout blocks
+  compatibility and a `WC tested up to: 11.1` header, so WooCommerce no longer
+  flags the plugin as untested or incompatible.
+* Fixed: a database error logged on every plugin reactivation, caused by inline
+  comments in the index-table schema.
 
 = 1.1.0 =
 * Changed: the six signature facets — Ask (AI natural language), Visual DNA,

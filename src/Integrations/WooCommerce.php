@@ -18,6 +18,9 @@
  * attributes are skipped so admins don't see a noisy list of zero-count
  * options.
  *
+ * Also owns the WooCommerce feature-compatibility declaration (HPOS, cart /
+ * checkout blocks) so WC's plugin-compat screens don't flag HOF.
+ *
  * @package HookedOnFacets\Integrations
  */
 
@@ -25,9 +28,40 @@ declare(strict_types=1);
 
 namespace HookedOnFacets\Integrations;
 
+use HookedOnFacets\Contracts\Bootable;
+
 defined( 'ABSPATH' ) || exit;
 
-final class WooCommerce {
+final class WooCommerce implements Bootable {
+
+    /**
+     * WC features HOF is compatible with. Both are declared positively
+     * because HOF never reads or writes orders (HPOS-agnostic) and never
+     * touches cart / checkout markup — it only indexes and filters products.
+     */
+    private const COMPATIBLE_FEATURES = [ 'custom_order_tables', 'cart_checkout_blocks' ];
+
+    public function register_hooks(): void {
+        // FeaturesUtil is a per-request registry, so the declaration must be
+        // repeated on every load — WC fires this hook before its own init.
+        add_action( 'before_woocommerce_init', [ $this, 'declare_feature_compatibility' ] );
+    }
+
+    /**
+     * Tell WooCommerce which of its opt-in features HOF supports.
+     *
+     * Guarded on the class so the hook is harmless on WC < 7.1 (no
+     * FeaturesUtil yet) and when a stray third party fires the action
+     * without WooCommerce loaded.
+     */
+    public function declare_feature_compatibility(): void {
+        if ( ! class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+            return;
+        }
+        foreach ( self::COMPATIBLE_FEATURES as $feature ) {
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( $feature, HOF_PLUGIN_FILE, true );
+        }
+    }
 
     public function is_active(): bool {
         return function_exists( 'WC' ) || class_exists( \WooCommerce::class );

@@ -195,6 +195,7 @@ final class Plugin {
             \HookedOnFacets\Frontend\BlockRegistrar::class,
             \HookedOnFacets\Seo\SeoManager::class,
             \HookedOnFacets\Routing\RewriteManager::class,
+            \HookedOnFacets\Integrations\WooCommerce::class,
             \HookedOnFacets\Integrations\Elementor::class,
             \HookedOnFacets\Integrations\Bricks::class,
             \HookedOnFacets\Integrations\Breakdance::class,
