@@ -9,6 +9,8 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-18
+
 ### Added
 
 - **Pretty faceted URLs** (opt-in) — filtered WooCommerce views get clean,
@@ -21,7 +23,23 @@ major version. Each version links to its full GitHub release notes.
   server's canonical encoding — so AJAX filtering pushes the same pretty
   URLs. Configure on the SEO screen; requires non-plain permalinks. New
   filters: `hof_pretty_urls_bases`, `hof_pretty_urls_max_values`,
-  `hof_slugmap_cache_ttl`.
+  `hof_slugmap_cache_ttl`. (#42)
+- **WooCommerce 11 readiness.** The plugin header now declares
+  `WC requires at least: 8.0` / `WC tested up to: 11.1`, and the WooCommerce
+  integration declares compatibility with High-Performance Order Storage
+  (`custom_order_tables`) and cart/checkout blocks on `before_woocommerce_init`,
+  so WooCommerce's plugin-compatibility screens no longer flag Hooked on
+  Facets. Verified against the 11.0 breaking changes (shop-page queried object,
+  private shipping-class taxonomy, Action Scheduler 4.0) — none touch HOF.
+
+### Fixed
+
+- **Reactivation database error.** The index-table schema carried inline
+  `-- comment` lines that `dbDelta()` parsed as a column named `--`, emitting a
+  malformed `ALTER TABLE` and logging a database error on every reactivation
+  and version-bump upgrade. The rationale moved into the docblock and a
+  regression test keeps the schema comment-free. (#43)
+- Dependency advisories: patched `undici` and `postcss`. (#54)
 
 ## [1.1.0] - 2026-07-21
 
@@ -197,7 +215,8 @@ Custom-field source line — ACF, Meta Box, and Pods.
 
 - First public alpha.
 
-[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.1.1
 [1.1.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.1.0
 [1.0.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.0.1
 [1.0.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.0.0
