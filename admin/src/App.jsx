@@ -12,10 +12,11 @@ import {
     IconSettings,
     IconTools,
 } from '@tabler/icons-react';
-import { getIndexerStats, getSuggestions, saveFacets } from './api.js';
+import { getIndexerStats, getSuggestions, reindex, saveFacets } from './api.js';
 import { pickSuggestions } from './lib/facets.js';
 import { countInvalid } from './validation.js';
 import FacetsList from './components/FacetsList.jsx';
+import IndexStatusPill from './components/IndexStatusPill.jsx';
 import FacetEditor from './components/FacetEditor.jsx';
 import TokensPanel from './components/TokensPanel.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -40,13 +41,20 @@ const VIEWS = [
 
 const SECTION_ORDER = ['Main', 'Studio', 'System'];
 
-const blankFacet = () => ({
+const blankFacet = (postType = '') => ({
     name: '',
     label: '',
     source: '',
     kind: 'taxonomy',
     display: 'checkbox',
+    ...(postType ? { post_type: postType } : {}),
 });
+
+// A new facet starts on Products when it's indexed, else the first indexed type.
+const defaultPostType = (stats) => {
+    const types = stats?.post_types || [];
+    return (types.find((p) => p.slug === 'product') || types[0])?.slug || '';
+};
 
 export default function App({ bootstrap }) {
     const [view, setView] = useState('dashboard');
@@ -62,6 +70,8 @@ export default function App({ bootstrap }) {
     const [facetsScreen, setFacetsScreen] = useState('list');
     const [stats, setStats] = useState(null);
     const [rawSuggestions, setRawSuggestions] = useState([]);
+    const [reindexNeeded, setReindexNeeded] = useState(false);
+    const [reindexing, setReindexing] = useState(false);
     const editBaseline = useRef(null);
     const [dirty, setDirty] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -146,7 +156,7 @@ export default function App({ bootstrap }) {
 
     const addFacet = () => {
         editBaseline.current = { facets: JSON.stringify(facets), dirty };
-        setFacets([...facets, blankFacet()]);
+        setFacets([...facets, blankFacet(defaultPostType(stats))]);
         setSelectedIdx(facets.length);
         setDirty(true);
         setFacetsScreen('editor');
@@ -287,11 +297,27 @@ export default function App({ bootstrap }) {
             const result = await saveFacets(facets);
             setFacets(Array.isArray(result.facets) ? result.facets : []);
             setDirty(false);
+            if (result.reindex === 'needed') setReindexNeeded(true);
             refreshStats();
         } catch (e) {
             setError(e?.message || 'Save failed');
         } finally {
             setSaving(false);
+        }
+    };
+
+    // Rebuilding truncates the live index, so it only ever starts from here.
+    const reindexNow = async () => {
+        setReindexing(true);
+        setError(null);
+        try {
+            await reindex();
+            setReindexNeeded(false);
+            refreshStats();
+        } catch (e) {
+            setError(e?.message || 'Reindex failed');
+        } finally {
+            setReindexing(false);
         }
     };
 
@@ -383,6 +409,7 @@ export default function App({ bootstrap }) {
                                     </div>
                                     <div className="hof-view-actions">
                                         {error && <span className="hof-error" role="alert">{error}</span>}
+                                        <IndexStatusPill stats={stats} />
                                         <span className={`hof-pill ${dirty ? 'hof-pill-busy' : ''}`}>
                                             <i aria-hidden="true" />{dirty ? 'Unsaved changes' : 'No changes'}
                                         </span>
@@ -409,6 +436,7 @@ export default function App({ bootstrap }) {
                                         </p>
                                     </div>
                                     <div className="hof-view-actions">
+                                        <IndexStatusPill stats={stats} />
                                         {bootstrap?.woocommerceActive && (
                                             <button
                                                 className="hof-btn"
@@ -472,6 +500,26 @@ export default function App({ bootstrap }) {
                                 </div>
                             )}
 
+                            {reindexNeeded && (
+                                <div className="hof-banner" role="status">
+                                    <span>
+                                        Saved. New or changed sources aren&apos;t in the index yet, so filters
+                                        won&apos;t see them until it&apos;s rebuilt.
+                                    </span>
+                                    <button
+                                        className="hof-btn hof-btn-primary"
+                                        type="button"
+                                        onClick={reindexNow}
+                                        disabled={reindexing}
+                                    >
+                                        {reindexing ? 'Starting…' : 'Reindex now'}
+                                    </button>
+                                    <button className="hof-btn hof-btn-ghost" type="button" onClick={() => setReindexNeeded(false)}>
+                                        Later
+                                    </button>
+                                </div>
+                            )}
+
                             {inEditor ? (
                                 <section className="hof-facets-content">
                                     <FacetEditor
@@ -480,6 +528,8 @@ export default function App({ bootstrap }) {
                                         onDelete={deleteSelected}
                                         allFacets={facets}
                                         availableDisplays={bootstrap.availableDisplays}
+                                        postTypes={stats?.post_types || []}
+                                        stats={stats}
                                     />
                                 </section>
                             ) : (
