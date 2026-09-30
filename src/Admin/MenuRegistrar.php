@@ -21,6 +21,7 @@ namespace HookedOnFacets\Admin;
 
 use HookedOnFacets\Activator;
 use HookedOnFacets\Contracts\Bootable;
+use HookedOnFacets\Design\DesignTokens;
 use HookedOnFacets\Indexer;
 
 defined( 'ABSPATH' ) || exit;
@@ -86,6 +87,8 @@ final class MenuRegistrar implements Bootable {
                 'nonce'              => wp_create_nonce( 'wp_rest' ),
                 'facets'             => array_values( (array) get_option( Indexer::OPTION_FACETS, [] ) ),
                 'tokens'             => $tokens,
+                // Editable design tokens and site CSS (Design tokens screen).
+                'designTokens'       => DesignTokens::get(),
                 'productsIndexed'    => $this->count_indexed_products(),
                 'telemetry'          => $this->load_telemetry_snapshot(),
                 'version'            => HOF_VERSION,
@@ -293,7 +296,11 @@ final class MenuRegistrar implements Bootable {
          *
          * @param array<string, string> $tokens
          */
-        return apply_filters( 'hof_admin_css_tokens', [
+        // The colors saved under Design tokens flow into the admin too; layout
+        // and font tokens stay the admin's own so its density doesn't shift.
+        $saved = array_intersect_key( DesignTokens::saved_overrides(), array_flip( DesignTokens::ADMIN_TOKENS ) );
+
+        return apply_filters( 'hof_admin_css_tokens', $saved + [
             '--hof-primary'    => '#534AB7',
             '--hof-on-primary' => '#FFFFFF',
             '--hof-surface'    => '#FFFFFF',
