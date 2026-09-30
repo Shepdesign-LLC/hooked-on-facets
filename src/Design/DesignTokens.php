@@ -57,8 +57,9 @@ final class DesignTokens {
      */
     public static function defaults(): array {
         return [
-            // Brand
-            '--hof-primary'    => '#5b6cff',
+            // Brand. The primary is the brand's, read from brand-tokens.json so
+            // the default and Reset to brand can't drift apart.
+            '--hof-primary'    => self::brand()['--hof-primary'],
             '--hof-on-primary' => '#ffffff',
             '--hof-accent'     => '#e0364f',
             '--hof-surface'    => '#ffffff',

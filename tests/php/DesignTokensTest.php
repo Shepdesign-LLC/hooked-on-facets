@@ -106,6 +106,15 @@ final class DesignTokensTest extends TestCase {
         self::assertSame( $css, DesignTokens::sanitize_css( $css ) );
     }
 
+    public function test_the_public_default_primary_is_the_brand_primary(): void {
+        $this->assertSame( DesignTokens::brand()['--hof-primary'], DesignTokens::defaults()['--hof-primary'] );
+        $this->assertSame( '#534AB7', DesignTokens::defaults()['--hof-primary'] );
+    }
+
+    public function test_an_unsaved_site_shows_the_brand_primary_in_the_editor(): void {
+        $this->assertSame( '#534AB7', DesignTokens::get()['tokens']['--hof-primary'] );
+    }
+
     public function test_comments_are_stripped(): void {
         self::assertSame( '.a{color:red}', DesignTokens::sanitize_css( '/* note */.a{color:red}/* end */' ) );
     }

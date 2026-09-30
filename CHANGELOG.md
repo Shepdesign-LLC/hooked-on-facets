@@ -66,6 +66,8 @@ major version. Each version links to its full GitHub release notes.
 
 ### Fixed
 
+- The public default for `--hof-primary` is the brand purple (`#534AB7`), not `#5b6cff`.
+  Sites that saved their own tokens are unchanged.
 - Admin token overrides from the `hof_admin_css_tokens` filter printed before
   the bundle's own defaults, so the defaults silently won. They now print after.
 
