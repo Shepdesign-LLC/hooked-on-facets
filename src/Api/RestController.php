@@ -498,13 +498,35 @@ final class RestController implements Bootable {
         // object must carry every selected value); 'any' (default) is OR.
         $match = isset( $raw['match'] ) && in_array( (string) $raw['match'], [ 'any', 'all' ], true ) ? (string) $raw['match'] : null;
 
-        return array_filter( [
+        $out = array_filter( [
             'variant'   => $variant,
             'cardSize'  => $card_size,
             'deckDepth' => $deck_depth,
             'animation' => $animation,
             'match'     => $match,
         ], static fn( $v ) => $v !== null );
+
+        // Button style is an option on the checkbox and radio displays, not a
+        // separate facet type. Unknown values are dropped so the renderer's
+        // own defaults (list, pill, outline, counts on, empty values shown) apply.
+        if ( in_array( $display, [ 'checkbox', 'radio' ], true ) ) {
+            if ( isset( $raw['style'] ) && in_array( (string) $raw['style'], [ 'list', 'buttons' ], true ) ) {
+                $out['style'] = (string) $raw['style'];
+            }
+            if ( isset( $raw['button_shape'] ) && in_array( (string) $raw['button_shape'], [ 'pill', 'square' ], true ) ) {
+                $out['button_shape'] = (string) $raw['button_shape'];
+            }
+            if ( isset( $raw['button_fill'] ) && in_array( (string) $raw['button_fill'], [ 'outline', 'tinted' ], true ) ) {
+                $out['button_fill'] = (string) $raw['button_fill'];
+            }
+            foreach ( [ 'button_count', 'show_empty' ] as $flag ) {
+                if ( isset( $raw[ $flag ] ) && is_scalar( $raw[ $flag ] ) ) {
+                    $out[ $flag ] = filter_var( $raw[ $flag ], FILTER_VALIDATE_BOOLEAN );
+                }
+            }
+        }
+
+        return $out;
     }
 
     public function apply_filter( \WP_REST_Request $request ): \WP_REST_Response {
