@@ -110,7 +110,7 @@ export default function LicenseSettings({ bootstrap }) {
                 <div>
                     <h2 className="hof-ai-settings-title">License</h2>
                     <p className="hof-ai-settings-sub">
-                        Activate this site against your Hooked on Facets license. Activation
+                        Activate this site against your hooked on facets license. Activation
                         enables automatic plugin updates and unlocks any features that ship
                         gated to licensed installs.
                     </p>

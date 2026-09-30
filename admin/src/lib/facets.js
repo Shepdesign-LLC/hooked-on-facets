@@ -72,6 +72,23 @@ const titleCase = (slug) =>
         .replace(/[_-]+/g, ' ')
         .replace(/^./, (c) => c.toUpperCase());
 
+// Products first, custom post types A→Z, Posts last. Anything without a slug
+// (unresolved) sorts after everything else.
+export function postTypeRank(slug, label = slug) {
+    if (slug === 'product') return [0, ''];
+    if (slug === 'post') return [2, ''];
+    if (!slug) return [3, ''];
+    return [1, String(label).toLowerCase()];
+}
+
+export function orderPostTypes(types) {
+    return [...(types || [])].sort((a, b) => {
+        const [ra, la] = postTypeRank(a.slug, a.label);
+        const [rb, lb] = postTypeRank(b.slug, b.label);
+        return ra - rb || la.localeCompare(lb);
+    });
+}
+
 /**
  * Group facets for the list.
  *

@@ -8,6 +8,14 @@ import {
     IconTarget,
     IconTools,
 } from '@tabler/icons-react';
+import Tip from './ui/Tip.jsx';
+
+const AVG_TIP =
+    'How long the index takes to answer a filter, measured on this site. Under 50 ms means a filter change feels instant.';
+
+const ZERO_TIP =
+    "Combinations shoppers tried that returned zero results. Each one is a product you don't stock, a value that's " +
+    'mis-tagged, or a facet that could hide values with no results.';
 
 const DISPLAY_CHIPS = {
     checkbox: 'Checkbox list',
@@ -58,6 +66,7 @@ export default function Dashboard({ facets, productsIndexed, telemetry, onCreate
             <div className="hof-dash-stats">
                 <Stat
                     label={sampleSize > 0 ? `Avg query time · last ${sampleSize}` : 'Avg query time'}
+                    tip={AVG_TIP}
                     value={
                         avgMs !== null && avgMs !== undefined
                             ? <><span>{avgMs.toFixed(1)}</span><span className="hof-stat-unit">ms</span></>
@@ -97,11 +106,11 @@ export default function Dashboard({ facets, productsIndexed, telemetry, onCreate
             )}
 
             <div className="hof-dash-actions">
-                <button type="button" className="hof-btn hof-btn-coral" onClick={onCreateFacet}>
+                <button type="button" className="hof-btn hof-btn-primary" onClick={onCreateFacet}>
                     <IconPlus size={15} stroke={2} aria-hidden="true" />
                     Create new facet
                 </button>
-                <button type="button" className="hof-btn hof-btn-outline" onClick={onOpenBlueprint}>
+                <button type="button" className="hof-btn" onClick={onOpenBlueprint}>
                     <IconTools size={15} stroke={2} aria-hidden="true" />
                     Blueprint sandbox
                 </button>
@@ -110,10 +119,10 @@ export default function Dashboard({ facets, productsIndexed, telemetry, onCreate
     );
 }
 
-function Stat({ label, value }) {
+function Stat({ label, tip, value }) {
     return (
         <div className="hof-stat">
-            <p className="hof-eyebrow">{label}</p>
+            <p className="hof-eyebrow">{label}{tip && <Tip text={tip} />}</p>
             <p className="hof-stat-value">{value}</p>
         </div>
     );
@@ -173,7 +182,7 @@ function Analytics({ analytics, resolver, facets }) {
                     </section>
 
                     <section className="hof-analytics-card">
-                        <h3 className="hof-analytics-title">Filters that find nothing</h3>
+                        <h3 className="hof-analytics-title">Filters that find nothing<Tip text={ZERO_TIP} /></h3>
                         {zero.length === 0 ? (
                             <p className="hof-analytics-muted">No zero-result filters — nice.</p>
                         ) : (

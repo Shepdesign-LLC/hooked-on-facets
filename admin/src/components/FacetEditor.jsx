@@ -1,707 +1,345 @@
+import { useEffect, useState } from 'react';
 import { validateFacet } from '../validation.js';
+import { getSources } from '../api.js';
+import { orderPostTypes, postTypeOf } from '../lib/facets.js';
+import {
+    SOURCE_GROUPS,
+    TYPES,
+    VIEW_TYPES,
+    explainer,
+    findSource,
+    sourceId,
+    sourceOptionLabel,
+    sourcePatch,
+    typeState,
+} from '../lib/sources.js';
+import Tip from './ui/Tip.jsx';
+import LivePreview from './editor/LivePreview.jsx';
+import PlaceIt from './editor/PlaceIt.jsx';
+import { BehaviorFields, COLOR_TARGETS, DisplayFields } from './editor/TypeSettings.jsx';
+
+const TIPS = {
+    appliesTo:
+        'The post type this facet filters. Products is WooCommerce. Custom post types work exactly the same way. ' +
+        'Search and Ask span every post type you index.',
+    source: 'The data the facet reads. Pick it before the type, because the source decides which types make sense.',
+    type: "How the facet looks and behaves on the page. Greyed types don't fit this source; the reason is written on each one.",
+};
 
 const KINDS = [
-    { value: 'taxonomy', label: 'Taxonomy',           hint: 'e.g. product_cat, category, product_tag' },
-    { value: 'meta',     label: 'Post meta',          hint: 'e.g. _price, _stock_status' },
-    { value: 'field',    label: 'Post field',         hint: 'e.g. post_title, post_author' },
-    { value: 'view',     label: 'Display-only (no filter)', hint: "Doesn't filter on its own — drives other facets via the URL state." },
+    { value: 'taxonomy', label: 'Taxonomy', hint: 'e.g. product_cat, category, product_tag' },
+    { value: 'meta',     label: 'Post meta', hint: 'e.g. _price, _stock_status' },
+    { value: 'field',    label: 'Post field', hint: 'e.g. post_title, post_author' },
 ];
 
-// Display picker — grouped by what the shopper actually does with it,
-// so a non-developer admin can scan the list and pick the right one.
-// Internal slugs (visual_dna, ask) stay for stored-config back-compat;
-// only the UI labels change.
-const DISPLAY_GROUPS = [
-    {
-        group: 'Select',
-        hint: 'Pick one or more options.',
-        items: [
-            { value: 'checkbox',  label: 'Checkbox list' },
-            { value: 'radio',     label: 'Radio (single-select)' },
-            { value: 'dropdown',  label: 'Dropdown' },
-            { value: 'hierarchy', label: 'Hierarchy (nested taxonomy)' },
-        ],
-    },
-    {
-        group: 'Range',
-        hint: 'Pick between two values.',
-        items: [
-            { value: 'range',      label: 'Range slider' },
-            { value: 'date_range', label: 'Date range' },
-        ],
-    },
-    {
-        group: 'Boolean',
-        hint: 'On or off.',
-        items: [
-            { value: 'toggle', label: 'Toggle' },
-        ],
-    },
-    {
-        group: 'Text',
-        hint: 'Type to filter.',
-        items: [
-            { value: 'search', label: 'Search box' },
-        ],
-    },
-    {
-        group: 'Visual',
-        hint: 'Swipeable, tappable, or color-driven.',
-        items: [
-            { value: 'swatch', label: 'Fluid swatches' },
-            { value: 'swiper', label: 'Swipe deck' },
-            { value: 'spin_the_wheel', label: 'Spin the wheel' },
-            { value: 'matrix', label: 'Intersection matrix' },
-        ],
-    },
-    {
-        group: 'Navigation',
-        hint: "Doesn't filter — moves shoppers through pages of results.",
-        items: [
-            { value: 'pagination', label: 'Pagination (numbered)' },
-        ],
-    },
-    {
-        group: 'Collect',
-        hint: 'Shoppers pin items into a bin to compare or filter to.',
-        items: [
-            { value: 'saved_bin', label: 'Saved bin (compare)' },
-        ],
-    },
-    {
-        group: 'Display-only (no filter)',
-        hint: "Doesn't filter on its own — sends shoppers' input to other facets.",
-        items: [
-            { value: 'ask',        label: 'Natural-language search' },
-            { value: 'visual_dna', label: 'Color match (drop an image)' },
-        ],
-    },
-];
+const DOCS = 'https://hookedonfacets.com/docs';
 
-// Flat lookup used by the rest of the file — switching/validation
-// shouldn't care which group a display lives in.
-const DISPLAYS = DISPLAY_GROUPS.flatMap((g) => g.items);
+const slugify = (raw) =>
+    String(raw || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
 
-// Displays that don't have a source — they orchestrate other facets
-// (ask, visual_dna), render result-region navigation (pagination), or filter
-// by a client-persisted set of object IDs (saved_bin).
-const VIEW_DISPLAYS = new Set(['ask', 'visual_dna', 'pagination', 'saved_bin']);
+const sanitizeSlug = (raw) => String(raw || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
 
-// Displays that visual_dna can target (color-bearing displays).
-const COLOR_TARGET_DISPLAYS = new Set(['checkbox', 'radio', 'dropdown', 'swatch', 'swiper']);
+const isObject = (v) => v && typeof v === 'object' && !Array.isArray(v);
 
-// Multi-value displays — a shopper can pick more than one value, so the
-// any/all (OR/AND) match mode is meaningful.
-const MULTI_VALUE_DISPLAYS = new Set(['checkbox', 'swatch', 'swiper']);
+// Last catalog seen per post type. Shown instantly on the next open while a
+// fresh one loads, so counts never go stale but the picker never flashes empty.
+const catalogCache = new Map();
 
-const sanitizeSlug = (raw) =>
-    String(raw || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+function useSources(postType) {
+    const [state, setState] = useState(() => ({
+        sources: catalogCache.get(postType) || null,
+        loading: !!postType && !catalogCache.has(postType),
+        error: null,
+    }));
 
-export default function FacetEditor({ facet, onChange, onDelete, allFacets = [], availableDisplays = null }) {
-    // Only offer displays the installed plugins can render. A stored facet
-    // whose display is unavailable (a Pro facet with the add-on inactive)
-    // keeps its option visible so the select doesn't silently rewrite it.
-    const displayAvailable = (v) =>
-        !Array.isArray(availableDisplays) || availableDisplays.includes(v) || v === facet.display;
-    const visibleGroups = DISPLAY_GROUPS
-        .map((g) => ({ ...g, items: g.items.filter((d) => displayAvailable(d.value)) }))
-        .filter((g) => g.items.length > 0);
+    useEffect(() => {
+        if (!postType) {
+            setState({ sources: null, loading: false, error: null });
+            return undefined;
+        }
+        let live = true;
+        const cached = catalogCache.get(postType) || null;
+        setState({ sources: cached, loading: !cached, error: null });
+        getSources(postType)
+            .then((res) => {
+                const sources = Array.isArray(res.sources) ? res.sources : [];
+                catalogCache.set(postType, sources);
+                if (live) setState({ sources, loading: false, error: null });
+            })
+            .catch((e) => {
+                if (live) setState({ sources: cached, loading: false, error: e?.message || 'Could not load sources' });
+            });
+        return () => { live = false; };
+    }, [postType]);
 
+    return state;
+}
+
+export default function FacetEditor({
+    facet,
+    onChange,
+    onDelete,
+    allFacets = [],
+    availableDisplays = null,
+    postTypes = [],
+    stats = null,
+    onOpenTokens = null,
+}) {
+    const settings = isObject(facet.settings) ? facet.settings : {};
+    const update = (patch) => onChange({ settings: { ...settings, ...patch } });
+    const issues = validateFacet(facet, allFacets);
+    const isView = VIEW_TYPES.has(facet.display);
+
+    const postType = postTypeOf(facet, stats);
+    const { sources, loading, error } = useSources(postType);
+    const source = findSource(sources, facet);
+    const noun = (postTypes.find((p) => p.slug === postType)?.label || 'items').toLowerCase();
+
+    const colorTargetFacets = allFacets.filter((f) => COLOR_TARGETS.has(f.display) && f.name !== facet.name);
     const kindDef = KINDS.find((k) => k.value === facet.kind) || KINDS[0];
-    const isView  = VIEW_DISPLAYS.has(facet.display);
-    const colorTargetFacets = allFacets.filter((f) =>
-        COLOR_TARGET_DISPLAYS.has(f.display) && f.name !== facet.name
-    );
-    const settings = (facet.settings && typeof facet.settings === 'object' && !Array.isArray(facet.settings))
-        ? facet.settings
-        : {};
 
-    const updateSettings = (patch) => {
-        onChange({ settings: { ...settings, ...patch } });
+    // Applies to: an indexed post type, plus the facet's own if it isn't one
+    // (a saved facet for a type since switched off must stay visible).
+    const ptOptions = orderPostTypes(
+        postTypes.some((p) => p.slug === postType) || !postType
+            ? postTypes
+            : [...postTypes, { slug: postType, label: postType }]
+    );
+
+    const setName = (value) => {
+        const patch = { label: value };
+        // Keep the slug following the name until the slug is edited by hand.
+        if (!facet.name || facet.name === slugify(facet.label)) patch.name = slugify(value);
+        onChange(patch);
     };
 
-    // Live validation. Keys: name / label / kind / source / settings.<key>
-    const issues = validateFacet(facet, allFacets);
+    const choosePostType = (slug) => {
+        if (slug === postType) return;
+        // A source belongs to one post type, so changing it starts the source over.
+        onChange({ post_type: slug, kind: 'taxonomy', source: '', display: 'checkbox', settings: {} });
+    };
+
+    const chooseSource = (id) => {
+        const src = (sources || []).find((s) => s.id === id);
+        if (src) onChange(sourcePatch(src, facet, availableDisplays));
+    };
+
+    const chooseType = (value) => {
+        const patch = { display: value };
+        if (VIEW_TYPES.has(value)) {
+            patch.kind = 'view';
+            patch.source = '';
+        } else if (facet.kind === 'view') {
+            patch.kind = 'taxonomy';
+        }
+        onChange(patch);
+    };
+
+    const currentId = facet.source ? sourceId(facet.kind, facet.source) : '';
+    const inCatalog = !!source;
+    const groups = SOURCE_GROUPS
+        .map((g) => ({ ...g, items: (sources || []).filter((s) => s.group === g.key) }))
+        .filter((g) => g.items.length > 0);
 
     return (
-        <div className="hof-editor">
-            <div className="hof-editor-grid">
-                <section className="hof-editor-form">
-                    <h2 className="hof-editor-title">Edit facet</h2>
+        <div className="hof-ed">
+            <div className="hof-ed-head">
+                <input
+                    className="hof-ed-name"
+                    type="text"
+                    value={facet.label || ''}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Facet name"
+                    aria-label="Facet name"
+                    aria-invalid={issues.label ? 'true' : 'false'}
+                />
+                <p className="hof-lede">
+                    Every change updates the preview. Save writes it to the site; new sources are added to the
+                    index the next time you reindex.
+                </p>
+                {issues.label && <span className="hof-field-error">{issues.label}</span>}
+            </div>
 
-                    <label className={`hof-field ${issues.name ? 'is-invalid' : ''}`}>
-                        <span className="hof-field-label">Slug</span>
-                        <input
-                            className="hof-input"
-                            type="text"
-                            value={facet.name}
-                            onChange={(e) => onChange({ name: sanitizeSlug(e.target.value) })}
-                            placeholder="brand"
-                            aria-invalid={issues.name ? 'true' : 'false'}
-                        />
-                        {issues.name ? (
-                            <span className="hof-field-error">{issues.name}</span>
+            <div className="hof-ed-grid">
+                <div className="hof-panel hof-steps">
+                    <div className="hof-step">
+                        <div className="hof-step-head">
+                            <h2>Applies to</h2><Tip text={TIPS.appliesTo} />
+                            <a href={`${DOCS}/post-types/`} target="_blank" rel="noopener noreferrer">Docs</a>
+                        </div>
+                        {ptOptions.length === 0 ? (
+                            <p className="hof-field-help">
+                                No post types are indexed yet. Turn one on under Settings → Post types.
+                            </p>
                         ) : (
-                            <span className="hof-field-help">
-                                URL-safe identifier used in <code>?hof[slug]=…</code>. Lowercase, hyphens and underscores only.
-                            </span>
+                            <div className="hof-seg" role="group" aria-label="Applies to">
+                                {ptOptions.map((p) => (
+                                    <button
+                                        key={p.slug}
+                                        type="button"
+                                        aria-pressed={p.slug === postType}
+                                        onClick={() => choosePostType(p.slug)}
+                                    >
+                                        {p.label}
+                                    </button>
+                                ))}
+                            </div>
                         )}
-                    </label>
+                    </div>
 
-                    <label className={`hof-field ${issues.label ? 'is-invalid' : ''}`}>
-                        <span className="hof-field-label">Label</span>
-                        <input
-                            className="hof-input"
-                            type="text"
-                            value={facet.label}
-                            onChange={(e) => onChange({ label: e.target.value })}
-                            placeholder="Brand"
-                            aria-invalid={issues.label ? 'true' : 'false'}
-                        />
-                        {issues.label && <span className="hof-field-error">{issues.label}</span>}
-                    </label>
-
-                    {!isView && (
-                        <>
-                            <label className="hof-field">
-                                <span className="hof-field-label">Source kind</span>
+                    <div className="hof-step">
+                        <div className="hof-step-head">
+                            <h2>Source</h2><Tip text={TIPS.source} />
+                            <a href={`${DOCS}/sources/`} target="_blank" rel="noopener noreferrer">Docs</a>
+                        </div>
+                        {isView ? (
+                            <p className="hof-field-help">
+                                {TYPES.find((t) => t.value === facet.display)?.label} doesn&apos;t read a source. It
+                                drives other facets or the results themselves.
+                            </p>
+                        ) : (
+                            <>
                                 <select
                                     className="hof-input"
-                                    value={facet.kind === 'view' ? 'taxonomy' : facet.kind}
-                                    onChange={(e) => onChange({ kind: e.target.value })}
+                                    aria-label="Source"
+                                    aria-invalid={issues.source ? 'true' : 'false'}
+                                    value={currentId}
+                                    disabled={!postType || loading}
+                                    onChange={(e) => chooseSource(e.target.value)}
                                 >
-                                    {KINDS.filter((k) => k.value !== 'view').map((k) => (
-                                        <option key={k.value} value={k.value}>{k.label}</option>
+                                    <option value="" disabled>
+                                        {!postType ? 'Pick what this facet applies to' : loading ? 'Loading sources…' : 'Pick a source'}
+                                    </option>
+                                    {facet.source && !inCatalog && !loading && (
+                                        <option value={currentId}>{kindDef.label}: {facet.source}</option>
+                                    )}
+                                    {groups.map((g) => (
+                                        <optgroup key={g.key} label={g.label}>
+                                            {g.items.map((s) => (
+                                                <option key={s.id} value={s.id}>{sourceOptionLabel(s)}</option>
+                                            ))}
+                                        </optgroup>
                                     ))}
                                 </select>
-                            </label>
+                                {error && <p className="hof-field-error" role="alert">{error}</p>}
+                                {issues.source && !loading && <p className="hof-field-error">{issues.source}</p>}
+                                <div className="hof-explain" aria-live="polite">
+                                    {explainer(inCatalog ? source : null, { noun }).map((p, i) =>
+                                        p.b ? <b key={i}>{p.t}</b> : <span key={i}>{p.t}</span>
+                                    )}
+                                </div>
 
-                            <label className={`hof-field ${issues.source ? 'is-invalid' : ''}`}>
-                                <span className="hof-field-label">Source</span>
-                                <input
-                                    className="hof-input"
-                                    type="text"
-                                    value={facet.source || ''}
-                                    onChange={(e) => onChange({ source: e.target.value })}
-                                    placeholder={kindDef.hint}
-                                    aria-invalid={issues.source ? 'true' : 'false'}
-                                />
-                                {issues.source
-                                    ? <span className="hof-field-error">{issues.source}</span>
-                                    : <span className="hof-field-help">{kindDef.hint}</span>}
-                            </label>
-                        </>
-                    )}
+                                <details className="hof-adv">
+                                    <summary>Enter a source by hand</summary>
+                                    <label className="hof-field">
+                                        <span className="hof-field-label">Source kind</span>
+                                        <select
+                                            className="hof-input"
+                                            value={facet.kind === 'view' ? 'taxonomy' : facet.kind}
+                                            onChange={(e) => onChange({ kind: e.target.value })}
+                                        >
+                                            {KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
+                                        </select>
+                                    </label>
+                                    <label className="hof-field">
+                                        <span className="hof-field-label">Source</span>
+                                        <input
+                                            className="hof-input"
+                                            type="text"
+                                            value={facet.source || ''}
+                                            onChange={(e) => onChange({ source: e.target.value })}
+                                            placeholder={kindDef.hint}
+                                        />
+                                        <span className="hof-field-help">
+                                            For a taxonomy, meta key or post field the list above doesn&apos;t offer.
+                                        </span>
+                                    </label>
+                                </details>
+                            </>
+                        )}
+                    </div>
 
-                    <label className="hof-field">
-                        <span className="hof-field-label">Display</span>
-                        <select
-                            className="hof-input"
-                            value={facet.display}
-                            onChange={(e) => {
-                                const next = e.target.value;
-                                const patch = { display: next };
-                                // Switching to/from a view display auto-syncs
-                                // the kind and clears irrelevant fields so
-                                // the option saves cleanly.
-                                if (VIEW_DISPLAYS.has(next)) {
-                                    patch.kind = 'view';
-                                    patch.source = '';
-                                } else if (facet.kind === 'view') {
-                                    patch.kind = 'taxonomy';
-                                }
-                                onChange(patch);
-                            }}
-                        >
-                            {visibleGroups.map((g) => (
-                                <optgroup key={g.group} label={g.group}>
-                                    {g.items.map((d) => (
-                                        <option key={d.value} value={d.value}>{d.label}</option>
-                                    ))}
-                                </optgroup>
-                            ))}
-                        </select>
-                        {facet.display === 'swatch' && facet.kind !== 'taxonomy' && (
-                            <span className="hof-field-help hof-field-warn">
-                                Swatches require a taxonomy source. Falls back to a checkbox list at runtime.
-                            </span>
-                        )}
-                        {facet.display === 'swatch' && facet.kind === 'taxonomy' && (
-                            <span className="hof-field-help">
-                                Configure swatch image and color per term in the taxonomy admin
-                                (<em>Edit term</em> screen for <code>{facet.source || 'your-taxonomy'}</code>).
-                            </span>
-                        )}
-                        {facet.display === 'swiper' && facet.kind === 'taxonomy' && (
-                            <span className="hof-field-help">
-                                Card visuals reuse the swatch image/color per term. Swipe right to include,
-                                left to skip. Multi-select OR within the facet.
-                            </span>
-                        )}
-                        {facet.display === 'swiper' && facet.kind !== 'taxonomy' && (
-                            <span className="hof-field-help">
-                                Works best with a taxonomy source so cards can show per-term images.
-                                Non-taxonomy sources still work but cards will be label-only.
-                            </span>
-                        )}
-                        {facet.display === 'ask' && (
-                            <span className="hof-field-help">
-                                A conversational, multi-turn facet. Each turn calls Anthropic and
-                                returns chips for every constraint the model heard — shoppers can tap
-                                ✕ on any chip to correct it. Set the key in <em>Settings → Ask</em>.
-                            </span>
-                        )}
-                        {facet.display === 'visual_dna' && (
-                            <span className="hof-field-help">
-                                Drop an image, paste a URL, or eyedrop any color on screen — the
-                                catalog filters to products in the closest matching color term.
-                                Pick the color facet to drive below.
-                            </span>
-                        )}
-                        {facet.display === 'pagination' && (
-                            <span className="hof-field-help">
-                                Numbered « 1 2 3 » nav for the results region. Reads <code>paged</code>
-                                from the URL and respects every other current query arg
-                                (filters survive pagination). Click handler is SPA-style — no full
-                                page reloads.
-                            </span>
-                        )}
-                    </label>
+                    <div className="hof-step">
+                        <div className="hof-step-head">
+                            <h2>Type</h2><Tip text={TIPS.type} />
+                            <a href={`${DOCS}/facet-types/`} target="_blank" rel="noopener noreferrer">Docs</a>
+                        </div>
+                        <div className="hof-types">
+                            {TYPES.map((def) => {
+                                const st = typeState(def, { facet, source, available: availableDisplays, current: facet.display });
+                                return (
+                                    <button
+                                        key={def.value}
+                                        type="button"
+                                        className="hof-type"
+                                        aria-pressed={facet.display === def.value}
+                                        disabled={st.disabled}
+                                        onClick={() => chooseType(def.value)}
+                                    >
+                                        <b>{def.label}</b>
+                                        <small>{st.subtitle}</small>
+                                        {def.pro && <span className="hof-tag">Pro</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                    {facet.display === 'ask' && (
-                        <label className="hof-field">
-                            <span className="hof-field-label">Placeholder text</span>
+                    <div className="hof-step">
+                        <div className="hof-step-head"><h2>Behavior</h2></div>
+                        <BehaviorFields
+                            facet={facet}
+                            settings={settings}
+                            update={update}
+                            issues={issues}
+                            colorTargetFacets={colorTargetFacets}
+                        />
+                        {!hasBehavior(facet.display) && (
+                            <p className="hof-field-help">Nothing to tune for this type.</p>
+                        )}
+                    </div>
+
+                    <div className="hof-step">
+                        <div className="hof-step-head"><h2>Display</h2></div>
+                        <label className={`hof-field ${issues.name ? 'is-invalid' : ''}`}>
+                            <span className="hof-field-label">Slug</span>
                             <input
                                 className="hof-input"
                                 type="text"
-                                value={settings.placeholder || ''}
-                                onChange={(e) => updateSettings({ placeholder: e.target.value })}
-                                placeholder="Describe what you're looking for…"
+                                value={facet.name}
+                                onChange={(e) => onChange({ name: sanitizeSlug(e.target.value) })}
+                                placeholder="brand"
+                                aria-invalid={issues.name ? 'true' : 'false'}
                             />
-                            <span className="hof-field-help">
-                                Shown in the input before the shopper types. Hint what kinds of asks
-                                work — e.g. <em>"comfy red shoes under $50"</em> or
-                                <em>"a gift for my dad's workshop"</em>.
-                            </span>
-                        </label>
-                    )}
-
-                    {MULTI_VALUE_DISPLAYS.has(facet.display) && (
-                        <label className="hof-field">
-                            <span className="hof-field-label">Match within facet</span>
-                            <select
-                                className="hof-input"
-                                value={settings.match || 'any'}
-                                onChange={(e) => updateSettings({ match: e.target.value })}
-                            >
-                                <option value="any">Any selected value (OR)</option>
-                                <option value="all">All selected values (AND)</option>
-                            </select>
-                            <span className="hof-field-help">
-                                <strong>Any</strong> matches items with at least one selected value.
-                                {' '}<strong>All</strong> requires every selected value — useful for
-                                tags or features where shoppers narrow by stacking choices.
-                            </span>
-                        </label>
-                    )}
-
-                    {facet.display === 'toggle' && (
-                        <>
-                            <label className="hof-field">
-                                <span className="hof-field-label">True value (in the index)</span>
-                                <input
-                                    className="hof-input"
-                                    type="text"
-                                    value={settings.true_value || ''}
-                                    onChange={(e) => updateSettings({ true_value: e.target.value })}
-                                    placeholder="1"
-                                />
-                                <span className="hof-field-help">
-                                    The exact <code>facet_value</code> the index stores for matching
-                                    products. Typically <code>1</code> for boolean meta, or e.g.
-                                    <code>yes</code>, <code>true</code>, <code>in-stock</code>.
-                                </span>
-                            </label>
-                            <label className="hof-field">
-                                <span className="hof-field-label">On label (optional)</span>
-                                <input
-                                    className="hof-input"
-                                    type="text"
-                                    value={settings.on_label || ''}
-                                    onChange={(e) => updateSettings({ on_label: e.target.value })}
-                                    placeholder="On"
-                                />
-                            </label>
-                            <label className="hof-field">
-                                <span className="hof-field-label">Off label (optional)</span>
-                                <input
-                                    className="hof-input"
-                                    type="text"
-                                    value={settings.off_label || ''}
-                                    onChange={(e) => updateSettings({ off_label: e.target.value })}
-                                    placeholder="Off"
-                                />
-                            </label>
-                        </>
-                    )}
-
-                    {facet.display === 'date_range' && (
-                        <span className="hof-field-help">
-                            <strong>Note:</strong> the source meta field must already store dates as
-                            Unix timestamps in <code>facet_numeric</code>. The Indexer doesn't yet do
-                            string-date → epoch conversion; that's a planned alpha follow-up.
-                        </span>
-                    )}
-
-                    {facet.display === 'visual_dna' && (
-                        <label className={`hof-field ${issues['settings.target_facet'] ? 'is-invalid' : ''}`}>
-                            <span className="hof-field-label">Target color facet</span>
-                            <select
-                                className="hof-input"
-                                value={settings.target_facet || ''}
-                                onChange={(e) => updateSettings({ target_facet: e.target.value })}
-                                aria-invalid={issues['settings.target_facet'] ? 'true' : 'false'}
-                            >
-                                <option value="">— pick a color facet —</option>
-                                {colorTargetFacets.map((f) => (
-                                    <option key={f.name} value={f.name}>
-                                        {f.label || f.name}{' '}({f.display})
-                                    </option>
-                                ))}
-                            </select>
-                            {issues['settings.target_facet']
-                                ? <span className="hof-field-error">{issues['settings.target_facet']}</span>
-                                : colorTargetFacets.length === 0 && (
-                                    <span className="hof-field-help hof-field-warn">
-                                        No color-bearing facets configured. Add a checkbox, dropdown, or
-                                        swatch facet for a color taxonomy first.
+                            {issues.name
+                                ? <span className="hof-field-error">{issues.name}</span>
+                                : (
+                                    <span className="hof-field-help">
+                                        URL-safe identifier used in <code>?hof[slug]=…</code>. Lowercase, hyphens and underscores only.
                                     </span>
                                 )}
-                            <span className="hof-field-help">
-                                Color terms get their hex from the term's <code>swatch_color</code> meta
-                                (same as the swatch facet uses), falling back to a built-in name table
-                                for common terms like <code>red</code>, <code>navy</code>, <code>olive</code>.
-                            </span>
                         </label>
-                    )}
+                        <DisplayFields facet={facet} settings={settings} update={update} onOpenTokens={onOpenTokens} />
+                    </div>
 
-                    {facet.display === 'pagination' && (
-                        <>
-                            <label className="hof-field">
-                                <span className="hof-field-label">Per page (optional)</span>
-                                <input
-                                    className="hof-input"
-                                    type="number"
-                                    min="1"
-                                    value={settings.per_page || ''}
-                                    onChange={(e) => {
-                                        const v = e.target.value === '' ? null : Math.max(1, parseInt(e.target.value, 10) || 1);
-                                        updateSettings({ per_page: v });
-                                    }}
-                                    placeholder={`Default: WP "Posts per page" setting`}
-                                />
-                                <span className="hof-field-help">
-                                    Leave blank to use WordPress's <code>posts_per_page</code> option
-                                    (Settings → Reading). Override here if this loop should paginate at a
-                                    different rate than the rest of the site.
-                                </span>
-                            </label>
-
-                            <label className="hof-field">
-                                <span className="hof-field-label">Neighbors visible</span>
-                                <input
-                                    className="hof-input"
-                                    type="number"
-                                    min="0"
-                                    max="5"
-                                    value={settings.neighbors ?? 2}
-                                    onChange={(e) => updateSettings({ neighbors: Math.max(0, Math.min(5, parseInt(e.target.value, 10) || 0)) })}
-                                />
-                                <span className="hof-field-help">
-                                    How many page numbers show on each side of the current page.
-                                    Higher = wider nav; lower = more compact. 2 is a sensible default
-                                    that fits in most narrow sidebars without wrapping.
-                                </span>
-                            </label>
-
-                            <label className="hof-field hof-field-inline">
-                                <input
-                                    type="checkbox"
-                                    checked={settings.show_first_last !== false}
-                                    onChange={(e) => updateSettings({ show_first_last: e.target.checked })}
-                                />
-                                <span>Show first/last buttons (« »)</span>
-                            </label>
-
-                            <label className="hof-field hof-field-inline">
-                                <input
-                                    type="checkbox"
-                                    checked={settings.show_prev_next !== false}
-                                    onChange={(e) => updateSettings({ show_prev_next: e.target.checked })}
-                                />
-                                <span>Show prev/next buttons (‹ ›)</span>
-                            </label>
-                        </>
-                    )}
-
-                    <div className="hof-editor-actions">
+                    <div className="hof-step">
                         <button className="hof-btn hof-btn-danger" onClick={onDelete} type="button">
                             Delete facet
                         </button>
                     </div>
-                </section>
+                </div>
 
-                <aside className="hof-editor-preview">
-                    <h3 className="hof-editor-subtitle">Preview</h3>
-                    <FacetPreview facet={facet} />
-                </aside>
+                <div className="hof-panel hof-preview-panel">
+                    <LivePreview facet={facet} postType={postType} />
+                </div>
             </div>
+
+            <PlaceIt slug={facet.name} />
         </div>
     );
 }
 
-function FacetPreview({ facet }) {
-    const label = facet.label || facet.name || 'Untitled facet';
-
-    if (facet.display === 'range') {
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <div className="hof-preview-range">
-                    <input type="range" disabled />
-                    <div className="hof-preview-range-bounds">
-                        <span>min</span>
-                        <span>max</span>
-                    </div>
-                </div>
-                <p className="hof-preview-note">Bounds populate from index data at runtime.</p>
-            </div>
-        );
-    }
-
-    if (facet.display === 'search') {
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <input className="hof-input" type="search" placeholder="Search…" disabled />
-                <p className="hof-preview-note">Matches against the configured source field.</p>
-            </div>
-        );
-    }
-
-    if (facet.display === 'swiper') {
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <div className="hof-preview-swiper">
-                    <div className="hof-preview-swiper-card hof-preview-swiper-card-back hof-preview-swiper-card-back-2"></div>
-                    <div className="hof-preview-swiper-card hof-preview-swiper-card-back hof-preview-swiper-card-back-1"></div>
-                    <div className="hof-preview-swiper-card">
-                        <p className="hof-preview-swiper-card-meta">{label} · 1 of 12</p>
-                        <p className="hof-preview-swiper-card-label">Top card</p>
-                    </div>
-                </div>
-                <div className="hof-preview-swiper-controls">
-                    <span className="hof-preview-swiper-btn hof-preview-swiper-btn-skip">←</span>
-                    <span className="hof-preview-swiper-btn hof-preview-swiper-btn-include">→</span>
-                </div>
-                <p className="hof-preview-note">
-                    Right = include, left = skip. Cards reuse the term's swatch image/color.
-                </p>
-            </div>
-        );
-    }
-
-    if (facet.display === 'spin_the_wheel') {
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <div className="hof-preview-wheel">
-                    <span className="hof-preview-wheel-pointer" />
-                    <div className="hof-preview-wheel-dial" />
-                    <span className="hof-preview-wheel-spin">Spin</span>
-                </div>
-                <p className="hof-preview-note">
-                    Gamified single-select. Spin lands on a value (or pick one directly).
-                </p>
-            </div>
-        );
-    }
-
-    if (facet.display === 'saved_bin') {
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <ul className="hof-preview-bin">
-                    <li className="hof-preview-bin-item">Trail Runner <span>×</span></li>
-                    <li className="hof-preview-bin-item">Court Classic <span>×</span></li>
-                </ul>
-                <label className="hof-preview-bin-toggle">
-                    <input type="checkbox" readOnly /> Show only saved (2)
-                </label>
-                <p className="hof-preview-note">
-                    Shoppers add items (button or drag) into a localStorage bin, then
-                    filter results to just the bin. Add buttons via <code>[hof_bin_button]</code>.
-                </p>
-            </div>
-        );
-    }
-
-    if (facet.display === 'matrix') {
-        const rows = [
-            { name: 'Waterproof', weight: 1.0, on: true },
-            { name: 'Wireless',   weight: 0.6, on: true },
-            { name: 'Foldable',   weight: 0.3, on: false },
-        ];
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <ul className="hof-preview-matrix">
-                    {rows.map((r) => (
-                        <li key={r.name} className={`hof-preview-matrix-row${r.on ? ' is-on' : ''}`}>
-                            <span className="hof-preview-matrix-dot" />
-                            <span className="hof-preview-matrix-name">{r.name}</span>
-                            <span className="hof-preview-matrix-bar" style={{ width: `${r.weight * 100}%` }} />
-                        </li>
-                    ))}
-                </ul>
-                <p className="hof-preview-note">
-                    Stack values — items must match all selected (AND-within-facet).
-                </p>
-            </div>
-        );
-    }
-
-    if (facet.display === 'swatch') {
-        // Mock tiles sized by descending fake counts so the preview reads as fluid.
-        const swatches = [
-            { name: 'Red',    weight: 1.0, color: '#e0364f' },
-            { name: 'Blue',   weight: 0.7, color: '#1e40af' },
-            { name: 'Green',  weight: 0.4, color: '#16a34a' },
-            { name: 'Yellow', weight: 0.2, color: '#facc15' },
-        ];
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <div className="hof-preview-swatches">
-                    {swatches.map((s) => (
-                        <div key={s.name} className="hof-preview-swatch">
-                            <span
-                                className="hof-preview-swatch-visual"
-                                style={{
-                                    width:  `${24 + s.weight * 56}px`,
-                                    height: `${24 + s.weight * 56}px`,
-                                    background: s.color,
-                                }}
-                            />
-                            <span>{s.name}</span>
-                        </div>
-                    ))}
-                </div>
-                <p className="hof-preview-note">
-                    Tile size morphs by count; image/color comes from per-term meta.
-                </p>
-            </div>
-        );
-    }
-
-
-    if (facet.display === 'visual_dna') {
-        const settings = (facet.settings && typeof facet.settings === 'object') ? facet.settings : {};
-        const ready = !!settings.target_facet;
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <div className="hof-preview-visual-drop">
-                    <span className="hof-preview-visual-icon" aria-hidden="true">⬇</span>
-                    <span>Drop · paste URL · 🎨 pick</span>
-                </div>
-                <div className="hof-preview-visual-result">
-                    <span className="hof-preview-visual-swatch" style={{ background: '#c84a2d' }} aria-hidden="true"></span>
-                    <span className="hof-preview-visual-readout">
-                        <code>#c84a2d</code>
-                        <span className="hof-preview-visual-match">
-                            <span className="hof-preview-visual-dot" style={{ background: '#f97316' }} aria-hidden="true"></span>
-                            orange
-                        </span>
-                    </span>
-                </div>
-                <p className="hof-preview-note">
-                    {ready
-                        ? `Drives the "${settings.target_facet}" facet by snapping to its nearest term in LAB ΔE.`
-                        : 'Pick a target color facet to wire this up.'}
-                </p>
-            </div>
-        );
-    }
-
-    if (facet.display === 'ask') {
-        const settings = (facet.settings && typeof facet.settings === 'object') ? facet.settings : {};
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <div className="hof-preview-ask-input">
-                    <span className="hof-preview-ask-icon" aria-hidden="true">✦</span>
-                    <span className="hof-preview-ask-placeholder">
-                        {settings.placeholder || 'Describe what you\'re looking for…'}
-                    </span>
-                    <span className="hof-preview-ask-send" aria-hidden="true">▶</span>
-                </div>
-                <div className="hof-preview-ask-heard">
-                    <span className="hof-preview-ask-heard-label">I heard:</span>
-                    <span className="hof-preview-ask-chip">color: red <em>×</em></span>
-                    <span className="hof-preview-ask-chip">price: ≤50 <em>×</em></span>
-                </div>
-                <p className="hof-preview-note">
-                    Conversational. Each chip is removable — taps update both the filter and the
-                    model's next-turn context. Configure the key in Settings → Ask.
-                </p>
-            </div>
-        );
-    }
-
-    if (facet.display === 'pagination') {
-        const settings = (facet.settings && typeof facet.settings === 'object') ? facet.settings : {};
-        const showFL = settings.show_first_last !== false;
-        const showPN = settings.show_prev_next !== false;
-        return (
-            <div className="hof-preview">
-                <div className="hof-preview-label">{label}</div>
-                <div className="hof-preview-pagination">
-                    {showFL && <span className="hof-preview-page">«</span>}
-                    {showPN && <span className="hof-preview-page">‹</span>}
-                    <span className="hof-preview-page">1</span>
-                    <span className="hof-preview-page hof-preview-page-current">2</span>
-                    <span className="hof-preview-page">3</span>
-                    <span className="hof-preview-page-gap">…</span>
-                    <span className="hof-preview-page">12</span>
-                    {showPN && <span className="hof-preview-page">›</span>}
-                    {showFL && <span className="hof-preview-page">»</span>}
-                </div>
-                <p className="hof-preview-note">
-                    Shows on the live site when results span more than one page. Click a number to
-                    jump — filters survive the page change.
-                </p>
-            </div>
-        );
-    }
-
-    const stub = ['Option A', 'Option B', 'Option C'];
-    return (
-        <div className="hof-preview">
-            <div className="hof-preview-label">{label}</div>
-            <ul className="hof-preview-list">
-                {stub.map((v) => (
-                    <li key={v}>
-                        <label>
-                            <input type="checkbox" disabled />
-                            <span>{v}</span>
-                            <span className="hof-preview-count">(0)</span>
-                        </label>
-                    </li>
-                ))}
-            </ul>
-            <p className="hof-preview-note">Real options + counts populate once the indexer has run.</p>
-        </div>
-    );
+// Whether a display has anything under Behavior.
+function hasBehavior(display) {
+    return ['checkbox', 'swatch', 'swiper', 'toggle', 'date_range', 'visual_dna', 'pagination'].includes(display);
 }

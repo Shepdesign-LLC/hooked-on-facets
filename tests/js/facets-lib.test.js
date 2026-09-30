@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     facetStatus,
+    orderPostTypes,
     facetValues,
     groupFacets,
     pickSuggestions,
@@ -149,5 +150,25 @@ describe('pickSuggestions', () => {
         const [first] = pickSuggestions(suggested, [{ name: 'brand' }], stats);
 
         expect(first).toMatchObject({ prefix: 'Trail guides', label: 'season', display: 'Checkbox' });
+    });
+});
+
+describe('orderPostTypes', () => {
+    it('puts Products first, custom types A→Z, then Posts', () => {
+        const out = orderPostTypes([
+            { slug: 'post', label: 'Posts' },
+            { slug: 'guide', label: 'Trail guides' },
+            { slug: 'product', label: 'Products' },
+            { slug: 'dealer', label: 'Dealers' },
+        ]);
+
+        expect(out.map((t) => t.slug)).toEqual(['product', 'dealer', 'guide', 'post']);
+    });
+
+    it('does not mutate its input', () => {
+        const input = [{ slug: 'post', label: 'Posts' }, { slug: 'product', label: 'Products' }];
+        orderPostTypes(input);
+
+        expect(input[0].slug).toBe('post');
     });
 });

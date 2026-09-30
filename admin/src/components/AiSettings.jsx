@@ -1,5 +1,22 @@
 import { useEffect, useState } from 'react';
 import { IconSparkle, IconKey, IconCheck, IconAlertTriangle } from '@tabler/icons-react';
+import Tip from './ui/Tip.jsx';
+
+// Providers Ask can talk to. Anthropic is the default: prompt caching keeps
+// each turn cheap and its models handle structured filter output well. The
+// list is what the UI knows about; which ones can be picked comes from the
+// server (`providers` on GET /ai-settings), so a provider only becomes
+// selectable once the installed HOF Pro supports it.
+export const PROVIDERS = [
+    { id: 'anthropic', label: 'Anthropic (recommended)', name: 'Anthropic', placeholder: 'sk-ant-api03-…' },
+    { id: 'openai', label: 'OpenAI', name: 'OpenAI', placeholder: 'sk-…' },
+    { id: 'google', label: 'Google', name: 'Google', placeholder: 'AIza…' },
+    { id: 'openrouter', label: 'OpenRouter', name: 'OpenRouter', placeholder: 'sk-or-…' },
+];
+
+const PROVIDER_TIP =
+    'Anthropic is the default because prompt caching keeps each turn cheap and the models handle structured filter ' +
+    'output well. Other providers become selectable when your version of HOF Pro supports them.';
 
 // Bring-your-own-key admin panel. The key is sent once on save and never
 // echoed back — only a fingerprint (first 14 / last 6 chars) is returned by
@@ -32,7 +49,10 @@ export default function AiSettings({ bootstrap }) {
         })();
     }, [restUrl, nonce]);
 
-    const save = async (newKey) => {
+    const supported = Array.isArray(config.providers) && config.providers.length ? config.providers : ['anthropic'];
+    const provider = PROVIDERS.find((p) => p.id === (config.provider || 'anthropic')) || PROVIDERS[0];
+
+    const save = async (newKey, extra = {}) => {
         setSaving(true);
         setError('');
         setSuccess('');
@@ -43,7 +63,7 @@ export default function AiSettings({ bootstrap }) {
                     'Content-Type': 'application/json',
                     'X-WP-Nonce':   nonce,
                 },
-                body: JSON.stringify({ api_key: newKey }),
+                body: JSON.stringify(newKey === null ? extra : { api_key: newKey, ...extra }),
             });
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
@@ -52,7 +72,7 @@ export default function AiSettings({ bootstrap }) {
             const data = await res.json();
             setConfig(data);
             setKeyInput('');
-            setSuccess(newKey === '' ? 'Key cleared.' : 'Key saved.');
+            setSuccess(newKey === null ? 'Provider saved.' : newKey === '' ? 'Key cleared.' : 'Key saved.');
         } catch (e) {
             setError(e.message || 'Save failed.');
         } finally {
@@ -79,7 +99,7 @@ export default function AiSettings({ bootstrap }) {
                         Powers the conversational <em>Ask</em> facet — turning natural-language requests
                         like <em>"red shoes under $50"</em> into editable filter chips via the Anthropic API.
                         Bring your own key — it's stored on this site and never sent to the browser or
-                        shared with Hooked on Facets.
+                        shared with hooked on facets.
                     </p>
                 </div>
             </header>
@@ -108,8 +128,27 @@ export default function AiSettings({ bootstrap }) {
                 )}
 
                 <div className="hof-ai-settings-input-row">
+                    <label className="hof-ai-settings-label" htmlFor="hof-ai-provider">
+                        Provider<Tip text={PROVIDER_TIP} />
+                    </label>
+                    <select
+                        id="hof-ai-provider"
+                        className="hof-input"
+                        value={provider.id}
+                        disabled={saving}
+                        onChange={(e) => save(null, { provider: e.target.value })}
+                    >
+                        {PROVIDERS.map((p) => (
+                            <option key={p.id} value={p.id} disabled={!supported.includes(p.id)}>
+                                {p.label}{supported.includes(p.id) ? '' : ' · not available in this version'}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="hof-ai-settings-input-row">
                     <label className="hof-ai-settings-label" htmlFor="hof-ai-key">
-                        {config.configured ? 'Replace with a new key' : 'Paste your Anthropic API key'}
+                        {config.configured ? 'Replace with a new key' : `Paste your ${provider.name} API key`}
                     </label>
                     <div className="hof-ai-settings-input-wrap">
                         <span className="hof-ai-settings-input-icon"><IconKey size={16} stroke={1.75} /></span>
@@ -119,7 +158,7 @@ export default function AiSettings({ bootstrap }) {
                             autoComplete="off"
                             spellCheck="false"
                             className="hof-ai-settings-input"
-                            placeholder="sk-ant-api03-…"
+                            placeholder={provider.placeholder}
                             value={keyInput}
                             onChange={(e) => setKeyInput(e.target.value)}
                             disabled={saving}

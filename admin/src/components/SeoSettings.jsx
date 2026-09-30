@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { IconSearch, IconCheck } from '@tabler/icons-react';
+import Tip from './ui/Tip.jsx';
 
 // SEO controls for faceted (?hof[*]) views: canonical to the clean URL,
 // noindex of multi-facet combos, and an active-filters title suffix. Settings
@@ -10,6 +11,7 @@ const FIELDS = [
         key: 'manage_canonical',
         type: 'bool',
         label: 'Canonical to the clean URL',
+        tip: 'A canonical tag tells Google which URL is the real one. Pointing every filtered view at the unfiltered page means ranking signals stack on one URL instead of scattering across thousands.',
         help: 'Point filtered views at the unfiltered base URL so ranking signals consolidate. Automatically skipped if Yoast, Rank Math, AIOSEO, or SEOPress is active (they own canonical).',
     },
     {
@@ -22,6 +24,7 @@ const FIELDS = [
         key: 'noindex_threshold',
         type: 'int',
         label: 'Noindex threshold',
+        tip: 'How many facets have to be active before the page is marked noindex. 2 keeps single-facet pages like /shop/?hof[brand]=alder indexable and hides everything broader.',
         help: 'Number of active facets at which noindex kicks in. 2 keeps single-facet landing pages indexable and noindexes everything broader.',
         min: 1,
     },
@@ -135,7 +138,7 @@ export default function SeoSettings({ bootstrap }) {
                     <p className="hof-ai-settings-sub">
                         Faceted URLs spawn near-duplicate, crawl-bloating pages. These controls keep the
                         filtered long tail tidy — general SEO plugins don't understand the <code>?hof[*]</code>
-                        query shape, so Hooked on Facets manages it.
+                        query shape, so hooked on facets manages it.
                     </p>
                 </div>
             </header>
@@ -152,11 +155,11 @@ export default function SeoSettings({ bootstrap }) {
                                     disabled={saving}
                                     onChange={(e) => update(f.key, e.target.checked)}
                                 />
-                                {' '}{f.label}
+                                {' '}{f.label}{f.tip && <Tip text={f.tip} />}
                             </label>
                         ) : (
                             <label className="hof-ai-settings-label">
-                                {f.label}
+                                {f.label}{f.tip && <Tip text={f.tip} />}
                                 {' '}
                                 <input
                                     type="number"

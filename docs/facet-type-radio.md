@@ -37,6 +37,7 @@ A list of mutually exclusive options. Users pick one, or clear back to "no filte
 |---|---|---|---|
 | `kind` | `"taxonomy"` \| `"meta"` \| `"field"` | — | Where the indexed values come from |
 | `source` | string | — | The taxonomy slug or meta/field key |
+| `settings.style` | `"list"` \| `"buttons"` | `"list"` | Render as radio rows or as buttons. Pressing the selected button clears it. Shape, fill, count and empty-value options match [Checkbox](Facet-Type-Checkbox#button-style) |
 
 The radio facet renders one option per indexed value plus a "clear" affordance, with match counts shown next to each option. It has no display-specific `settings` in 1.0.0.
 
