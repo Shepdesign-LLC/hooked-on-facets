@@ -1,0 +1,112 @@
+{
+    "scope": [
+        {
+            "name": "prefixes a plain rule",
+            "slug": "brand",
+            "input": ".hof-btn { color: red; }",
+            "expected": ".hof-facet--brand .hof-btn { color: red; }"
+        },
+        {
+            "name": "prefixes each selector in a list",
+            "slug": "brand",
+            "input": ".a, .b > .c{x:y}",
+            "expected": ".hof-facet--brand .a, .hof-facet--brand .b > .c{x:y}"
+        },
+        {
+            "name": "joins a bare .hof-facet to the prefix instead of nesting it",
+            "slug": "brand",
+            "input": ".hof-facet { padding: 4px; }",
+            "expected": ".hof-facet--brand.hof-facet { padding: 4px; }"
+        },
+        {
+            "name": "joins a bare .hof-facet with a descendant",
+            "slug": "brand",
+            "input": ".hof-facet .hof-btn{x:y}",
+            "expected": ".hof-facet--brand.hof-facet .hof-btn{x:y}"
+        },
+        {
+            "name": "does not treat .hof-facet-checkbox as the bare class",
+            "slug": "brand",
+            "input": ".hof-facet-checkbox .x{a:b}",
+            "expected": ".hof-facet--brand .hof-facet-checkbox .x{a:b}"
+        },
+        {
+            "name": "does not treat .hof-facet__buttons as the bare class",
+            "slug": "brand",
+            "input": ".hof-facet__buttons{gap:0}",
+            "expected": ".hof-facet--brand .hof-facet__buttons{gap:0}"
+        },
+        {
+            "name": "prefixes rules inside @media",
+            "slug": "brand",
+            "input": "@media (max-width: 600px) { .hof-btn { color: red } }",
+            "expected": "@media (max-width: 600px) { .hof-facet--brand .hof-btn { color: red } }"
+        },
+        {
+            "name": "prefixes rules inside @supports",
+            "slug": "brand",
+            "input": "@supports (display: grid) { .a { x: y } }",
+            "expected": "@supports (display: grid) { .hof-facet--brand .a { x: y } }"
+        },
+        {
+            "name": "leaves @keyframes selectors alone",
+            "slug": "brand",
+            "input": "@keyframes pop { from { opacity: 0 } to { opacity: 1 } } .x { animation: pop 1s }",
+            "expected": "@keyframes pop { from { opacity: 0 } to { opacity: 1 } } .hof-facet--brand .x { animation: pop 1s }"
+        },
+        {
+            "name": "leaves @font-face alone",
+            "slug": "brand",
+            "input": "@font-face { font-family: X; src: url(https://x/y.woff2) } .a{b:c}",
+            "expected": "@font-face { font-family: X; src: url(https://x/y.woff2) } .hof-facet--brand .a{b:c}"
+        },
+        {
+            "name": "does not split a selector on a comma inside :is()",
+            "slug": "brand",
+            "input": ".a:is(.b, .c) { x: y }",
+            "expected": ".hof-facet--brand .a:is(.b, .c) { x: y }"
+        },
+        {
+            "name": "does not split on a comma inside an attribute selector string",
+            "slug": "brand",
+            "input": "[data-x=\"a,b\"] .y {z:1}",
+            "expected": ".hof-facet--brand [data-x=\"a,b\"] .y {z:1}"
+        },
+        {
+            "name": "keeps braces and semicolons inside strings",
+            "slug": "brand",
+            "input": ".a::after { content: \"}; x\"; color: red }",
+            "expected": ".hof-facet--brand .a::after { content: \"}; x\"; color: red }"
+        },
+        {
+            "name": "handles several rules and keeps the whitespace between them",
+            "slug": "brand",
+            "input": "\n.a { x: 1 }\n\n.b { y: 2 }\n",
+            "expected": "\n.hof-facet--brand .a { x: 1 }\n\n.hof-facet--brand .b { y: 2 }\n"
+        },
+        {
+            "name": "cleans the slug",
+            "slug": "Brand!",
+            "input": ".a{b:c}",
+            "expected": ".hof-facet--brand .a{b:c}"
+        },
+        {
+            "name": "leaves an empty stylesheet empty",
+            "slug": "brand",
+            "input": "",
+            "expected": ""
+        },
+        {
+            "name": "does nothing without a slug",
+            "slug": "",
+            "input": ".a{b:c}",
+            "expected": ".a{b:c}"
+        },
+        {
+            "name": "passes a top-level declaration-less string through",
+            "slug": "brand",
+            "input": "   ",
+            "expected": "   "
+        }
+    ]
+}

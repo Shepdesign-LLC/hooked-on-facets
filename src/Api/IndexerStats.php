@@ -30,6 +30,8 @@ final class IndexerStats {
      * @param array<int, array<string, mixed>> $facets Configured facet definitions.
      * @return array{
      *   post_types: array<int, array{slug: string, label: string, items: int, custom: bool}>,
+     *   registered_post_types: int,
+     *   totals: array{rows: int, objects: int},
      *   facets: array<string, array{values: int, rows: int, objects: int, post_type: string, status: string}>,
      *   background: array<string, mixed>
      * }
@@ -85,10 +87,23 @@ final class IndexerStats {
             ];
         }
 
+        $totals = (array) $wpdb->get_row(
+            "SELECT COUNT(*) AS rows_n, COUNT(DISTINCT object_id) AS objects_n FROM {$table}",
+            ARRAY_A
+        );
+
         return [
-            'post_types' => $this->post_types(),
-            'facets'     => $out,
-            'background' => $background,
+            'post_types'            => $this->post_types(),
+            // How many post types exist to index, for "3 of 5".
+            'registered_post_types' => function_exists( 'get_post_types' )
+                ? count( (array) get_post_types( [ 'public' => true ], 'names' ) )
+                : 0,
+            'totals'                => [
+                'rows'    => (int) ( $totals['rows_n'] ?? 0 ),
+                'objects' => (int) ( $totals['objects_n'] ?? 0 ),
+            ],
+            'facets'                => $out,
+            'background'            => $background,
         ];
     }
 

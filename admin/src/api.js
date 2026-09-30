@@ -74,3 +74,21 @@ export const previewFacet = (facet, selection = {}, options = {}) =>
         body: JSON.stringify({ facet, selection }),
         ...options,
     });
+
+// Every public post type with its item count and whether indexing is on.
+export const getPostTypes = () => request('post-types');
+
+// Switch indexing on or off. `indexed` is the full list of slugs to index;
+// turning one on queues a background index for that type alone.
+export const savePostTypes = (indexed) =>
+    request('post-types', {
+        method: 'PUT',
+        body: JSON.stringify({ indexed }),
+    });
+
+// Design tokens: values, site CSS and its scope, stored in the hof_tokens option.
+export const saveTokens = ({ tokens, custom_css, scope, facet }) =>
+    request('tokens', {
+        method: 'PUT',
+        body: JSON.stringify({ tokens, custom_css, scope, facet }),
+    });
