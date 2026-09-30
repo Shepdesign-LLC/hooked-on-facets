@@ -30,6 +30,8 @@ final class IndexerStats {
      * @param array<int, array<string, mixed>> $facets Configured facet definitions.
      * @return array{
      *   post_types: array<int, array{slug: string, label: string, items: int, custom: bool}>,
+     *   registered_post_types: int,
+     *   totals: array{rows: int, objects: int},
      *   facets: array<string, array{values: int, rows: int, objects: int, post_type: string, status: string}>,
      *   background: array<string, mixed>
      * }

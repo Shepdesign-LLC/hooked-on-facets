@@ -30,7 +30,9 @@ final class RestFacetSaveTest extends TestCase {
 
         Functions\when( 'sanitize_key' )->alias( static fn( $k ) => strtolower( preg_replace( '/[^a-zA-Z0-9_\-]/', '', (string) $k ) ) );
         Functions\when( 'sanitize_text_field' )->alias( static fn( $v ) => trim( (string) $v ) );
+        Functions\when( 'wp_json_encode' )->alias( static fn( $data ) => json_encode( $data ) );
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value ) => $value );
+        Functions\when( 'get_option' )->alias( fn( $name, $default = false ) => $this->saved[ $name ] ?? $default );
         Functions\when( 'update_option' )->alias( function ( $name, $value ) {
             $this->saved[ $name ] = $value;
             return true;

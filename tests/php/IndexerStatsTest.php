@@ -101,6 +101,7 @@ final class IndexerStatsTest extends TestCase {
         Functions\when( 'get_option' )->alias( static fn( $name, $default = false ) => $default );
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value ) => $value );
         Functions\when( 'get_taxonomy' )->justReturn( null );
+        Functions\when( 'get_post_types' )->justReturn( [ 'post', 'page', 'product', 'guide', 'dealer' ] );
         Functions\when( 'get_post_type_object' )->alias( static function ( $slug ) {
             return match ( $slug ) {
                 'product' => (object) [ 'labels' => (object) [ 'name' => 'Products' ], '_builtin' => false ],
@@ -113,6 +114,7 @@ final class IndexerStatsTest extends TestCase {
         $wpdb->prefix = 'wp_';
         $wpdb->posts  = 'wp_posts';
         $wpdb->shouldReceive( 'prepare' )->andReturnUsing( static fn( $sql, $args ) => $sql );
+        $wpdb->shouldReceive( 'get_row' )->andReturn( [ 'rows_n' => '14206', 'objects_n' => '1596' ] );
         $wpdb->shouldReceive( 'get_results' )->andReturnUsing( static function ( $sql ) {
             if ( str_contains( $sql, 'GROUP BY post_type' ) ) {
                 return [ [ 'type' => 'product', 'n' => '1200' ], [ 'type' => 'post', 'n' => '312' ] ];
