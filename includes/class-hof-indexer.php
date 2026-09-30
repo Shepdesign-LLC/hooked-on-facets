@@ -21,7 +21,7 @@ use HookedOnFacets\Contracts\Bootable;
 
 defined( 'ABSPATH' ) || exit;
 
-final class Indexer implements Bootable {
+final class Indexer implements Bootable, \HookedOnFacets\Contracts\IndexJobs {
 
     /** Option key holding the array of facet definitions. */
     public const OPTION_FACETS = 'hof_facets';
@@ -185,7 +185,7 @@ final class Indexer implements Bootable {
             }
         }
 
-        $types              = $this->indexed_post_types();
+        $types              = $this->scan_types();
         $types_placeholders = implode( ', ', array_fill( 0, count( $types ), '%s' ) );
         $count              = 0;
         $last_id            = 0;
@@ -1083,18 +1083,75 @@ final class Indexer implements Bootable {
         return $depth;
     }
 
+    /** wp_options key for the post types the admin turned indexing on for. */
+    public const OPTION_POST_TYPES = 'hof_indexed_post_types';
+
+    /** Indexed until the admin chooses otherwise. */
+    public const DEFAULT_POST_TYPES = [ 'post', 'page', 'product' ];
+
     /**
-     * Post types eligible for indexing.
+     * The post types the admin chose (Settings → Post types), before any
+     * developer filter. Falls back to the defaults until a choice is saved.
      *
      * @return string[]
      */
-    public function indexed_post_types(): array {
+    public static function saved_post_types(): array {
+        $saved = get_option( self::OPTION_POST_TYPES, null );
+        if ( ! is_array( $saved ) ) {
+            return self::DEFAULT_POST_TYPES;
+        }
+        return array_values( array_unique( array_filter( array_map( 'strval', $saved ) ) ) );
+    }
+
+    /**
+     * Post types eligible for indexing: the admin's choice, then the
+     * `hof_indexed_post_types` filter. Shared by the indexer and the query
+     * hook so the two can never disagree about what is indexed.
+     *
+     * @return string[]
+     */
+    public static function configured_post_types(): array {
         /**
          * Filter post types eligible for HOF indexing.
          *
          * @param string[] $types
          */
-        return apply_filters( 'hof_indexed_post_types', [ 'post', 'page', 'product' ] );
+        return array_values( array_unique( array_map( 'strval', (array) apply_filters( 'hof_indexed_post_types', self::saved_post_types() ) ) ) );
+    }
+
+    /**
+     * @return string[]
+     */
+    public function indexed_post_types(): array {
+        return self::configured_post_types();
+    }
+
+    /**
+     * Post types to scan in SQL. An empty list would make `IN ()` a syntax
+     * error, so it becomes one that matches nothing.
+     *
+     * @return string[]
+     */
+    private function scan_types(): array {
+        $types = $this->indexed_post_types();
+        return $types === [] ? [ '__hof_none__' ] : $types;
+    }
+
+    /**
+     * Drop every index row belonging to objects of one post type, for when
+     * indexing it is turned off. Other post types are untouched.
+     */
+    public function delete_post_type_rows( string $post_type ): void {
+        global $wpdb;
+        $table = $wpdb->prefix . Activator::TABLE;
+
+        $wpdb->query( $wpdb->prepare(
+            "DELETE i FROM {$table} i
+             INNER JOIN {$wpdb->posts} p ON p.ID = i.object_id
+             WHERE i.object_type = 'post' AND p.post_type = %s",
+            $post_type
+        ) );
+        $this->bump_index_version();
     }
 
     // ── Background reindex (Action Scheduler, wp_cron fallback) ─────────────
@@ -1167,7 +1224,7 @@ final class Indexer implements Bootable {
     public function queue_reindex_all( int $chunk_size = self::BACKGROUND_CHUNK ): array {
         global $wpdb;
         $chunk_size = max( 50, min( 2000, $chunk_size ) );
-        $types      = $this->indexed_post_types();
+        $types      = $this->scan_types();
         $types_in   = implode( ', ', array_fill( 0, count( $types ), '%s' ) );
 
         $total = (int) $wpdb->get_var( $wpdb->prepare(
@@ -1216,6 +1273,65 @@ final class Indexer implements Bootable {
     }
 
     /**
+     * Queue a background index for just these post types, for when indexing
+     * one is switched on. Unlike queue_reindex_all() this never truncates:
+     * the rest of the index keeps serving filters while the new type fills in.
+     *
+     * Returns null when another job is already running, since two jobs would
+     * fight over the one progress record; the caller should try again later.
+     *
+     * @param string[] $types
+     * @return array{job_id: string, total: int, chunks: int, chunk_size: int, started_at: int, types: string[]}|null
+     */
+    public function queue_reindex_types( array $types, int $chunk_size = self::BACKGROUND_CHUNK ): ?array {
+        global $wpdb;
+
+        $types = array_values( array_unique( array_filter( array_map( 'strval', $types ) ) ) );
+        if ( $types === [] || ! empty( $this->background_state()['running'] ) ) {
+            return null;
+        }
+
+        $chunk_size = max( 50, min( 2000, $chunk_size ) );
+        $types_in   = implode( ', ', array_fill( 0, count( $types ), '%s' ) );
+        $total      = (int) $wpdb->get_var( $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_type IN ({$types_in})",
+            $types
+        ) );
+
+        $chunks = $total > 0 ? (int) ceil( $total / $chunk_size ) : 0;
+        $job_id = wp_generate_uuid4();
+        $this->cancel_scheduled_chunks();
+        $this->bump_index_version();
+
+        update_option( self::BACKGROUND_STATE_OPTION, [
+            'job_id'      => $job_id,
+            'types'       => $types,
+            'total'       => $total,
+            'chunks'      => $chunks,
+            'chunk_size'  => $chunk_size,
+            'done_posts'  => 0,
+            'done_chunks' => 0,
+            'last_id'     => 0,
+            'started_at'  => time(),
+            'finished_at' => $chunks > 0 ? null : time(),
+            'running'     => $chunks > 0,
+        ], false );
+
+        if ( $chunks > 0 ) {
+            $this->schedule_chunk( $job_id );
+        }
+
+        return [
+            'job_id'     => $job_id,
+            'total'      => $total,
+            'chunks'     => $chunks,
+            'chunk_size' => $chunk_size,
+            'started_at' => time(),
+            'types'      => $types,
+        ];
+    }
+
+    /**
      * Cron handler — process one chunk and re-schedule if work remains.
      *
      * Honors the job_id so a stale event from a previous job (e.g. cancelled
@@ -1233,7 +1349,11 @@ final class Indexer implements Bootable {
         global $wpdb;
         $chunk_size = (int) ( $state['chunk_size'] ?? self::BACKGROUND_CHUNK );
         $last_id    = (int) ( $state['last_id']    ?? 0 );
-        $types      = $this->indexed_post_types();
+        // A scoped job (a post type just switched on) walks only its own
+        // types; a full job walks whatever is indexed now.
+        $types      = ! empty( $state['types'] ) && is_array( $state['types'] )
+            ? array_map( 'strval', $state['types'] )
+            : $this->scan_types();
         $types_in   = implode( ', ', array_fill( 0, count( $types ), '%s' ) );
 
         $params  = array_merge( $types, [ $last_id, $chunk_size ] );

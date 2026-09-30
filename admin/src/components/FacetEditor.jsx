@@ -83,6 +83,7 @@ export default function FacetEditor({
     availableDisplays = null,
     postTypes = [],
     stats = null,
+    onOpenTokens = null,
 }) {
     const settings = isObject(facet.settings) ? facet.settings : {};
     const update = (patch) => onChange({ settings: { ...settings, ...patch } });
@@ -318,7 +319,7 @@ export default function FacetEditor({
                                     </span>
                                 )}
                         </label>
-                        <DisplayFields facet={facet} settings={settings} update={update} />
+                        <DisplayFields facet={facet} settings={settings} update={update} onOpenTokens={onOpenTokens} />
                     </div>
 
                     <div className="hof-step">

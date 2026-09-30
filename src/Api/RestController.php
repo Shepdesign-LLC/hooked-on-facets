@@ -9,6 +9,8 @@
  *   GET  /reindex/status (admin) → current index stats (rows, objects, per-facet)
  *   GET  /indexer/stats (admin)  → item counts per post type + per-facet values / status
  *   GET  /sources (admin)        → what a facet can read from, per post type
+ *   GET|PUT /post-types (admin)  → which post types the index covers
+ *   GET|PUT /tokens (admin)      → design tokens + site CSS
  *   POST /facets/preview (admin) → run an unsaved facet against live content
  *   GET  /telemetry (admin)   → resolver timings + hooked-loop counts
  *   DELETE /telemetry (admin) → reset all telemetry counters
@@ -21,6 +23,7 @@ declare(strict_types=1);
 namespace HookedOnFacets\Api;
 
 use HookedOnFacets\Contracts\Bootable;
+use HookedOnFacets\Design\DesignTokens;
 use HookedOnFacets\Filter\Resolver;
 use HookedOnFacets\Indexer;
 use HookedOnFacets\Integrations\Acf;
@@ -129,6 +132,41 @@ final class RestController implements Bootable {
             'args'                => [
                 'facet'     => [ 'type' => 'object', 'required' => true ],
                 'selection' => [ 'type' => 'object', 'required' => false, 'default' => [] ],
+            ],
+        ] );
+
+        register_rest_route( self::NAMESPACE_V1, '/tokens', [
+            [
+                'methods'             => \WP_REST_Server::READABLE,
+                'callback'            => [ $this, 'get_tokens' ],
+                'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+            ],
+            [
+                'methods'             => \WP_REST_Server::EDITABLE,
+                'callback'            => [ $this, 'save_tokens' ],
+                'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+                'args'                => [
+                    'tokens'     => [ 'type' => 'object', 'required' => false ],
+                    'custom_css' => [ 'type' => 'string', 'required' => false ],
+                    'scope'      => [ 'type' => 'string', 'enum' => [ 'site', 'facet' ], 'required' => false ],
+                    'facet'      => [ 'type' => 'string', 'required' => false ],
+                ],
+            ],
+        ] );
+
+        register_rest_route( self::NAMESPACE_V1, '/post-types', [
+            [
+                'methods'             => \WP_REST_Server::READABLE,
+                'callback'            => [ $this, 'list_post_types' ],
+                'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+            ],
+            [
+                'methods'             => \WP_REST_Server::EDITABLE,
+                'callback'            => [ $this, 'save_post_types' ],
+                'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+                'args'                => [
+                    'indexed' => [ 'type' => 'array', 'required' => true ],
+                ],
             ],
         ] );
 
@@ -498,13 +536,35 @@ final class RestController implements Bootable {
         // object must carry every selected value); 'any' (default) is OR.
         $match = isset( $raw['match'] ) && in_array( (string) $raw['match'], [ 'any', 'all' ], true ) ? (string) $raw['match'] : null;
 
-        return array_filter( [
+        $out = array_filter( [
             'variant'   => $variant,
             'cardSize'  => $card_size,
             'deckDepth' => $deck_depth,
             'animation' => $animation,
             'match'     => $match,
         ], static fn( $v ) => $v !== null );
+
+        // Button style is an option on the checkbox and radio displays, not a
+        // separate facet type. Unknown values are dropped so the renderer's
+        // own defaults (list, pill, outline, counts on, empty values shown) apply.
+        if ( in_array( $display, [ 'checkbox', 'radio' ], true ) ) {
+            if ( isset( $raw['style'] ) && in_array( (string) $raw['style'], [ 'list', 'buttons' ], true ) ) {
+                $out['style'] = (string) $raw['style'];
+            }
+            if ( isset( $raw['button_shape'] ) && in_array( (string) $raw['button_shape'], [ 'pill', 'square' ], true ) ) {
+                $out['button_shape'] = (string) $raw['button_shape'];
+            }
+            if ( isset( $raw['button_fill'] ) && in_array( (string) $raw['button_fill'], [ 'outline', 'tinted' ], true ) ) {
+                $out['button_fill'] = (string) $raw['button_fill'];
+            }
+            foreach ( [ 'button_count', 'show_empty' ] as $flag ) {
+                if ( isset( $raw[ $flag ] ) && is_scalar( $raw[ $flag ] ) ) {
+                    $out[ $flag ] = filter_var( $raw[ $flag ], FILTER_VALIDATE_BOOLEAN );
+                }
+            }
+        }
+
+        return $out;
     }
 
     public function apply_filter( \WP_REST_Request $request ): \WP_REST_Response {
@@ -622,6 +682,42 @@ final class RestController implements Bootable {
         $result    = ( new FacetPreview( $this->indexer ) )->run( $clean[0], is_array( $selection ) ? $selection : [], 12 );
 
         return new \WP_REST_Response( $result, 200 );
+    }
+
+    public function get_tokens( \WP_REST_Request $request ): \WP_REST_Response {
+        return new \WP_REST_Response( DesignTokens::get(), 200 );
+    }
+
+    public function save_tokens( \WP_REST_Request $request ): \WP_REST_Response {
+        return new \WP_REST_Response( DesignTokens::save( [
+            'tokens'     => $request->get_param( 'tokens' ),
+            'custom_css' => $request->get_param( 'custom_css' ),
+            'scope'      => $request->get_param( 'scope' ),
+            'facet'      => $request->get_param( 'facet' ),
+        ] ) + [ 'saved' => true ], 200 );
+    }
+
+    public function list_post_types( \WP_REST_Request $request ): \WP_REST_Response {
+        return new \WP_REST_Response( ( new PostTypeSettings( $this->indexer ) )->all(), 200 );
+    }
+
+    public function save_post_types( \WP_REST_Request $request ): \WP_REST_Response {
+        $requested = $request->get_param( 'indexed' );
+        if ( ! is_array( $requested ) ) {
+            return new \WP_REST_Response( [ 'message' => 'Invalid post types payload.' ], 400 );
+        }
+
+        $settings = new PostTypeSettings( $this->indexer );
+        $result   = $settings->save( $requested );
+        if ( $result['status'] !== 200 ) {
+            return new \WP_REST_Response( [ 'message' => $result['message'] ?? 'Could not save.' ], $result['status'] );
+        }
+
+        return new \WP_REST_Response( $settings->all() + [
+            'queued'  => $result['queued'],
+            'added'   => $result['added'],
+            'removed' => $result['removed'],
+        ], 200 );
     }
 
     public function indexer_stats( \WP_REST_Request $request ): \WP_REST_Response {

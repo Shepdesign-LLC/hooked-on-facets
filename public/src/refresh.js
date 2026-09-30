@@ -10,6 +10,8 @@
 // facet's inputs — only update the count badges. Stops focus loss and
 // stops debounced typing from being clobbered.
 
+import { patchButtons } from './buttons.js';
+
 let inflight = null;
 
 // Cancel any in-flight refetch when the page goes away. Without this,
@@ -110,6 +112,18 @@ function swapFacets(doc) {
         // reconcile right-swipes from the URL state.
         if (current.getAttribute('data-hof-display') === 'swiper') {
             patchSwiper(current, incomingEl);
+            return;
+        }
+
+        // Button-style facets: patch in place while a button has focus so a
+        // keyboard user isn't dropped out of the row. Otherwise the normal
+        // swap below re-renders the row from the server.
+        if (
+            focused && current.contains(focused)
+            && current.getAttribute('data-hof-style') === 'buttons'
+            && incomingEl.getAttribute('data-hof-style') === 'buttons'
+        ) {
+            patchButtons(current, incomingEl);
             return;
         }
 

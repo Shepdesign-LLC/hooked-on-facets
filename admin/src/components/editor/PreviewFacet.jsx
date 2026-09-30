@@ -124,6 +124,34 @@ export default function PreviewFacet({ facet, values, bounds, selection, onChang
                 ))}
             </div>
         );
+    } else if ((display === 'checkbox' || display === 'radio') && facet.settings?.style === 'buttons') {
+        // Same options the public renderer reads: shape, fill, count, empty.
+        const st = facet.settings;
+        const shape = st.button_shape === 'square' ? 'square' : 'pill';
+        const fill = st.button_fill === 'tinted' ? 'tinted' : 'outline';
+        const shown = st.show_empty === false ? values.filter((v) => v.count > 0) : values;
+        body = (
+            <div className="hof-pv-buttons">
+                {shown.map((v) => {
+                    const on = picked.includes(v.value);
+                    // A value with no results can't be picked, but a picked one can be cleared.
+                    const empty = v.count === 0 && !on;
+                    return (
+                        <button
+                            key={v.value}
+                            type="button"
+                            className={`hof-pv-btn hof-pv-btn--${shape} hof-pv-btn--${fill} ${empty ? 'is-empty' : ''}`}
+                            aria-pressed={on}
+                            disabled={empty}
+                            onClick={() => pick(v.value, display === 'radio')}
+                        >
+                            {v.label}
+                            {st.button_count !== false && <span className="hof-pv-btn-count">{nf.format(v.count)}</span>}
+                        </button>
+                    );
+                })}
+            </div>
+        );
     } else {
         // checkbox, radio, hierarchy
         const rows = display === 'hierarchy' ? treeOrder(values) : values;

@@ -1,25 +1,32 @@
 @import './tokens.css';
 
-/* Charcoal "stage" behind the SPA so the whole interface reads as a floating
-   card. Scoped to the HOF admin page so we don't touch any other admin
-   screens. WP's #wpcontent/.wrap have their own backgrounds we have to neutralise. */
+/* The plugin owns the WordPress content area end to end; WordPress's own
+   sidebar and admin bar are untouched. The body carries the tokens (see
+   tokens.css), so the area behind the app follows --hof-bg. */
 body.toplevel_page_hooked-on-facets,
 body.toplevel_page_hooked-on-facets #wpwrap,
 body.toplevel_page_hooked-on-facets #wpcontent,
-body.toplevel_page_hooked-on-facets #wpbody-content,
+body.toplevel_page_hooked-on-facets #wpbody-content {
+    background: var(--hof-bg);
+}
+
+body.toplevel_page_hooked-on-facets #wpcontent {
+    padding-left: 0;
+}
+
 body.toplevel_page_hooked-on-facets .wrap {
-    background: #D3D1C7;
+    margin: 0;
+    background: transparent;
 }
 
 #hof-admin-root {
     background: var(--hof-bg);
     color: var(--hof-text);
     font-family: var(--hof-font-sans);
-    font-feature-settings: 'ss01', 'cv11';
-    margin: 14px 18px 18px -2px;
-    border-radius: var(--hof-radius-md);
-    overflow: hidden;
-    min-height: calc(100vh - 90px);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    min-height: calc(100vh - 32px);
 }
 
 #hof-admin-root *,
@@ -28,129 +35,196 @@ body.toplevel_page_hooked-on-facets .wrap {
     box-sizing: border-box;
 }
 
+#hof-admin-root code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--hof-tint);
+    font-family: var(--hof-font-mono);
+    font-size: 0.92em;
+}
+
+#hof-admin-root input[type="checkbox"],
+#hof-admin-root input[type="radio"],
+#hof-admin-root input[type="range"] {
+    accent-color: var(--hof-primary);
+}
+
+#hof-admin-root :focus-visible {
+    outline: 2px solid var(--hof-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #hof-admin-root * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* ── App frame: top bar + rail ────────────────────────────────────────── */
+
 .hof {
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 90px);
+    padding: 20px 24px 48px;
 }
 
-/* ── Status bar (dark top breadcrumb) ─────────────────────────────────── */
-
-.hof-statusbar {
-    background: var(--hof-color-ink-900);
-    padding: 9px 14px;
+.hof-topbar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.hof-mark {
+    flex: none;
+    display: block;
+    width: 36px;
+    height: 36px;
+}
+
+.hof-wordmark {
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+.hof-topbar-right {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
-    color: var(--hof-color-ink-500);
-}
-
-.hof-statusbar svg {
-    color: var(--hof-color-ink-700);
-    flex-shrink: 0;
-}
-
-.hof-crumb {
-    font-family: var(--hof-font-mono);
-    font-size: 11px;
-    color: var(--hof-color-ink-300);
-}
-
-.hof-crumb-muted { color: var(--hof-color-ink-500); }
-.hof-crumb-active { color: var(--hof-color-warm-cream); }
-
-.hof-version {
     margin-left: auto;
-    font-family: var(--hof-font-mono);
-    font-size: 10px;
-    color: var(--hof-color-ink-700);
 }
 
-/* ── Layout ────────────────────────────────────────────────────────────── */
-
-.hof-layout {
+.hof-shell {
     display: grid;
-    grid-template-columns: 168px minmax(0, 1fr);
-    flex: 1;
+    grid-template-columns: 172px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
 }
 
-/* ── Dark nav sidebar ──────────────────────────────────────────────────── */
-
-.hof-nav {
-    background: var(--hof-color-deep-ink);
-    color: var(--hof-color-ink-300);
-    padding: 18px 12px;
+.hof-rail {
+    position: sticky;
+    top: 44px; /* clears the 32px WordPress admin bar */
     display: flex;
     flex-direction: column;
+    gap: 14px;
 }
 
-.hof-nav-brand {
+.hof-rail-group {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin: 0 0 24px;
-    padding: 12px 10px 14px;
+    gap: 1px;
 }
 
-.hof-nav-wordmark {
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    color: var(--hof-color-warm-cream);
-    white-space: nowrap;
-    text-align: center;
-    line-height: 1.1;
-}
-
-.hof-nav-section {
-    margin-bottom: 14px;
-}
-
-.hof-nav-section-label {
-    font-family: var(--hof-font-mono);
-    font-size: 10px;
-    color: var(--hof-color-ink-700);
-    letter-spacing: 0.12em;
+.hof-rail-label {
+    padding: 0 10px 5px;
+    font-size: 10.5px;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
-    padding: 0 10px 6px;
-    margin: 0;
+    color: var(--hof-faint);
 }
 
-.hof-nav-item {
+.hof-rail-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    width: 100%;
-    background: transparent;
-    border: 0;
+    gap: 9px;
     padding: 7px 10px;
-    color: var(--hof-color-ink-500);
+    border: 0;
+    border-left: 2px solid transparent;
+    border-radius: 0 var(--hof-radius-sm) var(--hof-radius-sm) 0;
+    background: none;
+    color: var(--hof-muted);
     font: inherit;
-    font-size: 13px;
-    border-radius: var(--hof-radius-md);
-    cursor: pointer;
+    font-size: 13.5px;
     text-align: left;
-    margin-bottom: 1px;
-    transition: background 140ms ease, color 140ms ease;
+    cursor: pointer;
 }
 
-.hof-nav-item:hover {
-    color: var(--hof-color-warm-cream);
-    background: rgba(255, 255, 255, 0.04);
+.hof-rail-item svg {
+    flex: none;
 }
 
-.hof-nav-item.is-active {
-    background: rgba(216, 90, 48, 0.14);
-    color: var(--hof-color-warm-cream);
+.hof-rail-item:hover {
+    background: var(--hof-tint);
+    color: var(--hof-text);
 }
 
-/* ── View (cream main content) ─────────────────────────────────────────── */
+.hof-rail-item[aria-current="page"] {
+    border-left-color: var(--hof-primary);
+    background: var(--hof-tint);
+    color: var(--hof-primary);
+    font-weight: 500;
+}
+
+.hof-rail-foot {
+    margin-top: 6px;
+    padding: 10px;
+    border-top: 1px solid var(--hof-border);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--hof-faint);
+}
+
+.hof-rail-foot b {
+    display: block;
+    font-weight: 500;
+    color: var(--hof-muted);
+}
+
+/* Narrow screens: the rail becomes a horizontal strip that scrolls. */
+@media (max-width: 900px) {
+    .hof-shell {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .hof-rail {
+        position: static;
+        flex-direction: row;
+        gap: 10px;
+        padding-bottom: 6px;
+        overflow-x: auto;
+    }
+
+    .hof-rail-group {
+        flex: none;
+        flex-direction: row;
+        gap: 2px;
+    }
+
+    .hof-rail-label {
+        align-self: center;
+        margin-right: 4px;
+        padding: 0;
+    }
+
+    .hof-rail-item {
+        padding: 6px 9px;
+        border-bottom: 2px solid transparent;
+        border-left: 0;
+        border-radius: var(--hof-radius-sm) var(--hof-radius-sm) 0 0;
+        white-space: nowrap;
+    }
+
+    .hof-rail-item[aria-current="page"] {
+        border-bottom-color: var(--hof-primary);
+    }
+
+    .hof-rail-foot {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .hof {
+        padding: 16px 16px 40px;
+    }
+}
+
+/* ── Main content ─────────────────────────────────────────────────────── */
 
 .hof-view {
-    background: var(--hof-color-warm-cream);
-    padding: 22px;
-    overflow-y: auto;
+    min-width: 0;
 }
 
 .hof-error {
@@ -158,60 +232,56 @@ body.toplevel_page_hooked-on-facets .wrap {
     font-size: 0.875rem;
 }
 
-/* ── Eyebrow / live dot / chip utilities (reusable patterns from BRAND.md) */
+/* ── Eyebrow / live dot / chip ────────────────────────────────────────── */
 
 .hof-eyebrow {
-    font-family: var(--hof-font-mono);
-    font-size: 10px;
-    color: var(--hof-color-facet-coral);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin: 0;
+    font-size: 12px;
+    color: var(--hof-muted);
 }
 
 .hof-live-dot {
+    display: inline-block;
+    flex-shrink: 0;
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--hof-color-facet-coral);
-    display: inline-block;
-    flex-shrink: 0;
+    background: var(--hof-good);
 }
 
 .hof-live-dot-muted {
-    background: var(--hof-color-ink-300);
+    background: var(--hof-faint);
 }
 
 .hof-chip {
-    font-family: var(--hof-font-mono);
-    font-size: 10px;
-    color: var(--hof-color-purple-700);
-    background: var(--hof-color-purple-50);
-    padding: 3px 9px;
-    border-radius: var(--hof-radius-pill);
-    letter-spacing: 0.06em;
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: var(--hof-tint);
+    color: var(--hof-text);
+    font-size: 12px;
     white-space: nowrap;
-}
-
-.hof-chip-muted {
-    color: var(--hof-color-ink-700);
-    background: var(--hof-color-ink-200);
 }
 
 /* ── Buttons ──────────────────────────────────────────────────────────── */
 
 .hof-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
     background: var(--hof-surface);
-    border: 0.5px solid var(--hof-border);
     color: var(--hof-text);
-    padding: 6px 14px;
-    border-radius: var(--hof-radius-ui);
-    cursor: pointer;
     font: inherit;
-    transition: filter 120ms ease, border-color 120ms ease, color 120ms ease, background 120ms ease;
+    font-weight: 500;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .hof-btn:hover:not(:disabled) {
@@ -221,29 +291,30 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-btn:disabled {
     opacity: 0.5;
-    cursor: not-allowed;
+    cursor: default;
 }
 
 .hof-btn-primary {
-    background: var(--hof-primary);
     border-color: var(--hof-primary);
+    background: var(--hof-primary);
     color: var(--hof-on-primary);
 }
 
 .hof-btn-primary:hover:not(:disabled) {
+    background: var(--hof-primary-deep);
+    border-color: var(--hof-primary-deep);
     color: var(--hof-on-primary);
-    filter: brightness(0.95);
 }
 
 .hof-btn-ghost {
-    background: transparent;
     border-color: transparent;
+    background: transparent;
     color: var(--hof-muted);
 }
 
 .hof-btn-ghost:hover:not(:disabled) {
-    background: var(--hof-bg);
     border-color: transparent;
+    background: var(--hof-tint);
     color: var(--hof-text);
 }
 
@@ -255,7 +326,20 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-btn-danger:hover:not(:disabled) {
     background: var(--hof-danger);
+    border-color: var(--hof-danger);
     color: var(--hof-on-primary);
+}
+
+/* The Help button is the only coral button in the admin: an outline, not a fill. */
+.hof-btn-help {
+    border-color: var(--hof-danger);
+    color: var(--hof-danger);
+}
+
+.hof-btn-help:hover:not(:disabled) {
+    background: var(--hof-danger-tint);
+    border-color: var(--hof-danger);
+    color: var(--hof-danger);
 }
 
 /* ── Facets view header (above the editor pane) ───────────────────────── */
@@ -275,7 +359,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     margin: 0;
     font-size: 22px;
     font-weight: 500;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
     letter-spacing: -0.02em;
 }
 
@@ -396,7 +480,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     padding: 5px 9px;
     border: 0;
     border-radius: var(--hof-radius-sm);
-    background: var(--hof-color-purple-50);
+    background: var(--hof-tint);
     color: var(--hof-text);
     font: inherit;
     font-size: 13px;
@@ -465,7 +549,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-table-group-meta {
     font-weight: 400;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
 }
 
 .hof-table-row {
@@ -473,7 +557,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-table-row:hover td {
-    background: var(--hof-color-purple-50);
+    background: var(--hof-tint);
 }
 
 .hof-table-row.is-invalid .hof-row-name {
@@ -499,7 +583,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-row-slug {
     font-size: 12px;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
 }
 
 .hof-row-invalid {
@@ -528,7 +612,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-icon-btn:hover:not(:disabled) {
-    background: var(--hof-color-purple-50);
+    background: var(--hof-tint);
     color: var(--hof-text);
 }
 
@@ -733,7 +817,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     margin-top: 3px;
     padding: 1px 6px;
     border-radius: 4px;
-    background: var(--hof-color-purple-50);
+    background: var(--hof-tint);
     color: var(--hof-primary);
     font-size: 10.5px;
     font-weight: 500;
@@ -743,7 +827,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     margin-top: 8px;
     padding: 10px 12px;
     border-radius: var(--hof-radius-sm);
-    background: var(--hof-color-purple-50);
+    background: var(--hof-tint);
     font-size: 12.5px;
     line-height: 1.45;
     color: var(--hof-muted);
@@ -929,8 +1013,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-pv-swatch[aria-pressed="true"] {
-    border-color: var(--hof-text);
-    box-shadow: inset 0 0 0 2px var(--hof-surface);
+    border-color: var(--hof-surface);
+    outline: 2px solid var(--hof-text);
 }
 
 .hof-pv-facet input[type="range"] {
@@ -985,7 +1069,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-lp-thumb {
     height: 64px;
-    background: var(--hof-color-purple-50) center / cover no-repeat;
+    background: var(--hof-tint) center / cover no-repeat;
 }
 
 .hof-lp-card-text {
@@ -1010,6 +1094,74 @@ body.toplevel_page_hooked-on-facets .wrap {
     border-radius: var(--hof-radius-sm);
     text-align: center;
     color: var(--hof-muted);
+}
+
+/* Button-style preview. Mirrors the public .hof-btn rules and reads the
+   same tokens; separate class names because the admin already owns .hof-btn. */
+.hof-pv-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.hof-pv-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.35em 0.8em;
+    border: 1px solid var(--hof-primary);
+    background: transparent;
+    color: var(--hof-primary);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.hof-pv-btn--pill {
+    border-radius: var(--hof-radius-pill);
+}
+
+.hof-pv-btn--square {
+    border-radius: var(--hof-radius-md);
+}
+
+.hof-pv-btn--tinted {
+    background: color-mix(in srgb, var(--hof-primary) 10%, var(--hof-surface));
+}
+
+.hof-pv-btn[aria-pressed="true"] {
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
+}
+
+.hof-pv-btn.is-empty {
+    opacity: 0.45;
+    border-style: dashed;
+    cursor: not-allowed;
+}
+
+.hof-pv-btn-count {
+    padding: 0 0.4em;
+    border-radius: var(--hof-radius-pill);
+    background: color-mix(in srgb, currentColor 14%, transparent);
+    font-size: 0.8em;
+    font-variant-numeric: tabular-nums;
+}
+
+.hof-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--hof-primary);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.hof-btn-note {
+    margin-top: 6px;
 }
 
 /* ── Place it ─────────────────────────────────────────────────────────── */
@@ -1045,7 +1197,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-place-card code {
     font-family: var(--hof-font-mono);
     font-size: 12.5px;
-    color: var(--hof-color-purple-700);
+    color: var(--hof-primary-deep);
     word-break: break-all;
 }
 
@@ -1068,20 +1220,92 @@ body.toplevel_page_hooked-on-facets .wrap {
     padding: 12px 14px;
     border: 1px solid var(--hof-color-coral-200);
     border-radius: var(--hof-radius-sm);
-    background: var(--hof-color-coral-50);
+    background: var(--hof-danger-tint);
 }
 
 .hof-banner > span {
     flex: 1 1 260px;
 }
 
-/* ── Content / editor ─────────────────────────────────────────────────── */
-
-.hof-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: calc(var(--hof-space) * 3);
+/* Numbers line up in columns and stat tiles. */
+.hof-dash,
+.hof-loops,
+.hof-indexer {
+    font-variant-numeric: tabular-nums;
 }
+
+/* ── Settings ─────────────────────────────────────────────────────────── */
+
+.hof-settings {
+    max-width: 800px;
+}
+
+.hof-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--hof-border);
+}
+
+.hof-tabs button {
+    margin-bottom: -1px;
+    padding: 8px 10px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--hof-muted);
+    font: inherit;
+    cursor: pointer;
+}
+
+.hof-tabs button[aria-selected="true"] {
+    border-bottom-color: var(--hof-primary);
+    color: var(--hof-text);
+    font-weight: 500;
+}
+
+.hof-settings-list {
+    padding: 4px 16px;
+    margin-bottom: 14px;
+}
+
+.hof-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--hof-border);
+}
+
+.hof-setting-row:last-child {
+    border-bottom: 0;
+}
+
+.hof-setting-row > span {
+    font-size: 13.5px;
+}
+
+.hof-setting-row small {
+    display: block;
+    font-size: 12.5px;
+    color: var(--hof-muted);
+}
+
+.hof-settings-upsell {
+    padding: 16px;
+}
+
+.hof-settings-upsell p {
+    margin: 0;
+}
+
+.hof-switch:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────── */
 
 .hof-empty {
     height: 100%;
@@ -1091,85 +1315,6 @@ body.toplevel_page_hooked-on-facets .wrap {
     justify-content: center;
     color: var(--hof-muted);
     gap: var(--hof-space);
-}
-
-.hof-editor-title {
-    margin: 0 0 calc(var(--hof-space) * 2) 0;
-}
-
-.hof-editor-subtitle {
-    margin: 0 0 var(--hof-space) 0;
-    color: var(--hof-muted);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.hof-editor-grid {
-    display: grid;
-    /* Preview shrinks gracefully (320 → 240px) with the container before
-       the layout collapses. clamp() keeps it usable at the small end and
-       caps growth at the large end so the form column gets priority on
-       very wide screens. */
-    grid-template-columns: minmax(0, 1fr) clamp(240px, 32cqi, 320px);
-    gap: calc(var(--hof-space) * 4);
-    align-items: start;
-}
-
-/* Stack form above preview when there's not enough room for both. Triggers
-   off the editor's container (.hof-facets-content), not the viewport — the
-   editor sits inside a nested sidebar + nav layout, and a viewport media
-   query consistently fired at the wrong moment (the old 960px breakpoint
-   left a "preview big, form cramped" zone roughly from 960–1100px). */
-@container facets-content (max-width: 640px) {
-    .hof-editor-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.hof-editor-form {
-    display: flex;
-    flex-direction: column;
-    gap: calc(var(--hof-space) * 2);
-}
-
-.hof-editor-actions {
-    margin-top: calc(var(--hof-space) * 2);
-}
-
-/* Canvas-tone preview pane — matches the brand "sandbox" surface tone so
-   the preview reads as a stage rather than competing with the form column. */
-.hof-editor-preview {
-    background: var(--hof-color-ink-100);
-    border: 0.5px solid var(--hof-color-ink-300);
-    border-radius: var(--hof-radius-lg);
-    padding: calc(var(--hof-space) * 2.5);
-    position: sticky;
-    top: 0;
-}
-
-/* Sticky only makes sense when the preview sits alongside the form.
-   In the stacked layout the preview is below the form — sticky there
-   would pin it to the viewport top while the user scrolls the form,
-   which reads as "broken layout." */
-@container facets-content (max-width: 640px) {
-    .hof-editor-preview {
-        position: static;
-    }
-}
-
-.hof-editor-preview .hof-editor-subtitle {
-    display: inline-flex;
-    align-items: center;
-    color: var(--hof-color-ink-700);
-    font-family: var(--hof-font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    background: rgba(255, 255, 255, 0.6);
-    padding: 5px 11px;
-    border-radius: var(--hof-radius-pill);
-    border: 0.5px solid var(--hof-color-ink-300);
-    margin-bottom: calc(var(--hof-space) * 2);
 }
 
 /* ── Form fields ──────────────────────────────────────────────────────── */
@@ -1195,22 +1340,19 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-field-error {
-    color: #e0364f;
+    color: var(--hof-danger);
     font-size: 0.75rem;
     line-height: 1.4;
 }
 
 .hof-field.is-invalid .hof-input,
 .hof-field.is-invalid select.hof-input {
-    border-color: #e0364f;
-    box-shadow: 0 0 0 3px rgba(224, 54, 79, 0.12);
+    border-color: var(--hof-danger);
 }
 
-.hof-btn-blocked,
-.hof-btn-primary:disabled.hof-btn-blocked {
-    background: #e0364f;
-    color: #fff;
-    opacity: 1;
+/* A save blocked by validation stays a (faded) primary button; the rows
+   carry the warning. Coral is reserved for the Help button. */
+.hof-btn-blocked {
     cursor: not-allowed;
 }
 
@@ -1219,8 +1361,8 @@ body.toplevel_page_hooked-on-facets .wrap {
    override an unscoped `.hof-input`. */
 #hof-admin-root .hof-input {
     background: var(--hof-surface);
-    border: 0.5px solid var(--hof-border);
-    border-radius: var(--hof-radius-md);
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
     padding: 9px 14px;
     color: var(--hof-text);
     font: inherit;
@@ -1234,35 +1376,19 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 #hof-admin-root .hof-input:hover:not(:focus) {
-    border-color: var(--hof-color-ink-300);
+    border-color: var(--hof-border);
 }
 
 #hof-admin-root .hof-input:focus {
-    outline: 2px solid var(--hof-color-hook-purple);
+    outline: 2px solid var(--hof-primary);
     outline-offset: 2px;
     border-color: transparent;
     box-shadow: none;
 }
 
 #hof-admin-root select.hof-input {
-    appearance: none;
-    -webkit-appearance: none;
-    background-image:
-        linear-gradient(45deg, transparent 50%, var(--hof-color-ink-500) 50%),
-        linear-gradient(135deg, var(--hof-color-ink-500) 50%, transparent 50%);
-    background-position:
-        calc(100% - 18px) 50%,
-        calc(100% - 13px) 50%;
-    background-size: 6px 6px, 6px 6px;
-    background-repeat: no-repeat;
-    padding-right: 40px;
+    padding-right: 32px;
     cursor: pointer;
-}
-
-#hof-admin-root select.hof-input:focus {
-    background-image:
-        linear-gradient(45deg, transparent 50%, var(--hof-color-hook-purple) 50%),
-        linear-gradient(135deg, var(--hof-color-hook-purple) 50%, transparent 50%);
 }
 
 /* ── Preview ──────────────────────────────────────────────────────────── */
@@ -1288,14 +1414,14 @@ body.toplevel_page_hooked-on-facets .wrap {
     cursor: not-allowed;
     color: var(--hof-text);
     background: var(--hof-surface);
-    border: 0.5px solid var(--hof-color-ink-200);
+    border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
     padding: 8px 12px;
     font-size: 13px;
 }
 
 .hof-preview-list label input[type="checkbox"] {
-    accent-color: var(--hof-color-hook-purple);
+    accent-color: var(--hof-primary);
     width: 14px;
     height: 14px;
     margin: 0;
@@ -1304,7 +1430,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-preview-count {
     margin-left: auto;
     font-size: 0.75rem;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
     font-variant-numeric: tabular-nums;
 }
 
@@ -1327,7 +1453,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     width: 100%;
     height: 6px;
     background: var(--hof-surface);
-    border: 0.5px solid var(--hof-color-ink-300);
+    border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-pill);
     outline: none;
     margin: 0;
@@ -1337,7 +1463,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     -webkit-appearance: none;
     width: 16px;
     height: 16px;
-    background: var(--hof-color-hook-purple);
+    background: var(--hof-primary);
     border-radius: 50%;
     cursor: not-allowed;
     border: 0;
@@ -1346,7 +1472,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-preview-range input[type='range']::-moz-range-thumb {
     width: 16px;
     height: 16px;
-    background: var(--hof-color-hook-purple);
+    background: var(--hof-primary);
     border-radius: 50%;
     cursor: not-allowed;
     border: 0;
@@ -1357,7 +1483,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     justify-content: space-between;
     font-family: var(--hof-font-mono);
     font-size: 10px;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
     letter-spacing: 0.1em;
     text-transform: uppercase;
 }
@@ -1379,8 +1505,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-preview-swatch-visual {
-    border-radius: var(--hof-radius-ui);
-    border: 0.5px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
+    border: 1px solid var(--hof-border);
 }
 
 .hof-preview-swiper {
@@ -1393,21 +1519,21 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-preview-swiper-card {
     position: absolute;
     inset: 0;
-    border-radius: var(--hof-radius-lg);
-    border: 0.5px solid var(--hof-color-ink-300);
+    border-radius: var(--hof-radius-md);
+    border: 1px solid var(--hof-border);
     background: var(--hof-surface);
     padding: 12px;
     box-sizing: border-box;
 }
 
 .hof-preview-swiper-card-back-1 {
-    background: var(--hof-color-ink-300);
+    background: var(--hof-border);
     transform: translate(4px, 4px);
     z-index: 1;
 }
 
 .hof-preview-swiper-card-back-2 {
-    background: var(--hof-color-ink-200);
+    background: var(--hof-border);
     transform: translate(8px, 8px);
     z-index: 0;
 }
@@ -1415,7 +1541,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 /* Top card gets a coral border + a coral content block — pulls focus on the
    canvas the same way the blueprint sandbox's editing card does. */
 .hof-preview-swiper-card:not(.hof-preview-swiper-card-back) {
-    border-color: var(--hof-color-facet-coral);
+    border-color: var(--hof-danger);
     z-index: 2;
 }
 
@@ -1423,8 +1549,8 @@ body.toplevel_page_hooked-on-facets .wrap {
     content: '';
     display: block;
     height: 124px;
-    background: var(--hof-color-facet-coral);
-    border-radius: 6px;
+    background: var(--hof-danger);
+    border-radius: var(--hof-radius-sm);
     margin-bottom: 10px;
 }
 
@@ -1432,7 +1558,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: block;
     font-family: var(--hof-font-mono);
     font-size: 9px;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     margin: 0;
@@ -1442,7 +1568,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: block;
     font-size: 15px;
     font-weight: 500;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
     letter-spacing: -0.01em;
     margin: 3px 0 0;
 }
@@ -1459,19 +1585,19 @@ body.toplevel_page_hooked-on-facets .wrap {
     height: 32px;
     border-radius: 50%;
     background: var(--hof-surface);
-    border: 0.5px solid var(--hof-color-ink-300);
+    border: 1px solid var(--hof-border);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 0.9rem;
 }
 
-.hof-preview-swiper-btn-skip { color: var(--hof-color-ink-500); }
+.hof-preview-swiper-btn-skip { color: var(--hof-faint); }
 
 .hof-preview-swiper-btn-include {
-    background: var(--hof-color-facet-coral);
-    border-color: var(--hof-color-facet-coral);
-    color: var(--hof-color-coral-50);
+    background: var(--hof-danger);
+    border-color: var(--hof-danger);
+    color: var(--hof-danger-tint);
 }
 
 /* ── Spin-the-wheel preview ───────────────────────────────────────────── */
@@ -1488,13 +1614,8 @@ body.toplevel_page_hooked-on-facets .wrap {
     height: 100%;
     border-radius: 50%;
     border: 2px solid var(--hof-surface);
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
-    background: conic-gradient(
-        var(--hof-color-soft-indigo) 0% 25%,
-        var(--hof-color-facet-coral) 25% 50%,
-        var(--hof-color-soft-indigo) 50% 75%,
-        var(--hof-color-facet-coral) 75% 100%
-    );
+    outline: 1px solid var(--hof-border);
+    background: var(--hof-primary-light);
 }
 
 .hof-preview-wheel-pointer {
@@ -1506,7 +1627,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     height: 0;
     border-left: 7px solid transparent;
     border-right: 7px solid transparent;
-    border-top: 11px solid var(--hof-color-deep-ink);
+    border-top: 11px solid var(--hof-text);
     z-index: 2;
 }
 
@@ -1518,7 +1639,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: var(--hof-color-deep-ink);
+    background: var(--hof-text);
     color: var(--hof-surface);
     display: inline-flex;
     align-items: center;
@@ -1550,22 +1671,22 @@ body.toplevel_page_hooked-on-facets .wrap {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    border: 2px solid var(--hof-color-ink-300);
+    border: 2px solid var(--hof-border);
     background: var(--hof-surface);
     flex: none;
 }
 
 .hof-preview-matrix-row.is-on .hof-preview-matrix-dot {
-    background: var(--hof-color-soft-indigo);
-    border-color: var(--hof-color-soft-indigo);
+    background: var(--hof-primary-light);
+    border-color: var(--hof-primary-light);
 }
 
 .hof-preview-matrix-name { flex: none; min-width: 70px; }
 
 .hof-preview-matrix-bar {
     height: 6px;
-    border-radius: 999px;
-    background: var(--hof-color-soft-indigo);
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-primary-light);
     opacity: 0.55;
 }
 
@@ -1585,127 +1706,139 @@ body.toplevel_page_hooked-on-facets .wrap {
     align-items: center;
     gap: 5px;
     padding: 3px 9px;
-    border: 0.5px solid var(--hof-color-ink-300);
-    border-radius: 999px;
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-pill);
     font-size: 12px;
 }
 
-.hof-preview-bin-item span { color: var(--hof-color-ink-500); }
+.hof-preview-bin-item span { color: var(--hof-faint); }
 
 .hof-preview-bin-toggle {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
 }
 
 
-/* ── Tokens panel ─────────────────────────────────────────────────────── */
+/* ── Design tokens ────────────────────────────────────────────────────── */
 
-.hof-tokens {
-    padding: calc(var(--hof-space) * 3);
-    flex: 1;
-    overflow-y: auto;
+.hof-tk-note {
+    min-height: 1.4em;
+    margin: 6px 0 0;
+    font-size: 0.8125rem;
+    color: var(--hof-good);
 }
 
-.hof-tokens-header h2 {
-    margin: 0 0 var(--hof-space) 0;
-}
-
-.hof-tokens-header p {
-    color: var(--hof-muted);
-    max-width: 60ch;
-}
-
-.hof-tokens-empty {
-    color: var(--hof-muted);
-}
-
-.hof-tokens-list {
-    list-style: none;
-    margin: calc(var(--hof-space) * 2) 0 0 0;
-    padding: 0;
+.hof-tk-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--hof-space);
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+    gap: 14px;
+    margin-top: 8px;
+    align-items: start;
 }
 
-.hof-tokens-item {
-    display: flex;
-    align-items: center;
-    gap: var(--hof-space);
-    background: var(--hof-surface);
-    border: 0.5px solid var(--hof-border);
-    border-radius: var(--hof-radius-ui);
-    padding: calc(var(--hof-space) * 1.5);
+@media (max-width: 900px) {
+    .hof-tk-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-.hof-tokens-swatch {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    flex-shrink: 0;
+.hof-tk-list,
+.hof-tk-pad {
+    padding: 16px;
 }
 
-.hof-tokens-name {
-    font-weight: 500;
-    font-size: 0.875rem;
+.hof-tk-side {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
 }
 
-.hof-tokens-value {
-    margin-left: auto;
-    color: var(--hof-muted);
+.hof-tk-sec {
+    margin: 0 0 8px;
     font-size: 0.75rem;
-    max-width: 50%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--hof-muted);
 }
 
-/* ── Button variants (coral CTA, outline secondary) ───────────────────── */
+.hof-tk-list section + section {
+    margin-top: 14px;
+}
 
-.hof-btn-coral {
-    display: inline-flex;
+.hof-tk-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 132px);
     align-items: center;
-    gap: 6px;
-    background: var(--hof-color-facet-coral);
-    border: 0.5px solid var(--hof-color-facet-coral);
-    color: var(--hof-color-coral-50);
-    padding: 9px 16px;
-    font-size: 13px;
-    font-weight: 500;
-    border-radius: var(--hof-radius-md);
+    gap: 8px;
+    padding: 4px 0;
 }
 
-.hof-btn-coral:hover:not(:disabled) {
-    filter: brightness(0.95);
-    color: var(--hof-color-coral-50);
+.hof-tk-row label {
+    display: grid;
+    font-size: 0.8125rem;
 }
 
-.hof-btn-outline {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: transparent;
-    border: 0.5px solid var(--hof-color-deep-ink);
-    color: var(--hof-color-deep-ink);
-    padding: 9px 14px;
-    font-size: 13px;
-    font-weight: 500;
-    border-radius: var(--hof-radius-md);
+.hof-tk-row label code {
+    font-size: 0.6875rem;
+    color: var(--hof-faint);
+    background: none;
+    padding: 0;
 }
 
-.hof-btn-outline:hover:not(:disabled) {
-    background: var(--hof-color-deep-ink);
-    color: var(--hof-color-warm-cream);
+.hof-tk-row .hof-input {
+    grid-column: 3;
+    min-width: 0;
+}
+
+.hof-tk-swatch {
+    grid-column: 2;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
+    background: none;
+    cursor: pointer;
+}
+
+.hof-tk-shadow {
+    display: block;
+}
+
+.hof-tk-css {
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px 10px;
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-bg);
+    color: var(--hof-text);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.hof-tk-pre {
+    margin: 0;
+    padding: 10px 12px;
+    overflow-x: auto;
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-bg);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
 }
 
 /* ── Dashboard view ───────────────────────────────────────────────────── */
 
 .hof-dash-hero {
-    background: var(--hof-color-purple-50);
-    border-radius: var(--hof-radius-lg);
+    background: var(--hof-tint);
+    border-radius: var(--hof-radius-md);
     padding: 18px 20px;
     margin-bottom: 14px;
 }
@@ -1713,7 +1846,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-dash-headline {
     font-size: 22px;
     font-weight: 500;
-    color: var(--hof-color-purple-700);
+    color: var(--hof-primary-deep);
     margin: 10px 0 6px;
     letter-spacing: -0.02em;
     line-height: 1.2;
@@ -1721,7 +1854,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-dash-sub {
     font-size: 13px;
-    color: var(--hof-color-hook-purple);
+    color: var(--hof-primary);
     margin: 0;
     line-height: 1.5;
     max-width: 480px;
@@ -1736,22 +1869,21 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-stat {
     background: var(--hof-surface);
-    border: 0.5px solid var(--hof-border);
+    border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
     padding: 14px;
 }
 
 .hof-stat .hof-eyebrow {
-    color: var(--hof-color-ink-500);
-    margin-bottom: 10px;
-    letter-spacing: 0.12em;
     display: block;
+    margin-bottom: 10px;
+    color: var(--hof-muted);
 }
 
 .hof-stat-value {
     font-size: 24px;
     font-weight: 500;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
     margin: 0;
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
@@ -1759,16 +1891,19 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-stat-unit {
     font-size: 13px;
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
     margin-left: 2px;
     font-weight: 400;
 }
 
 .hof-dash-section-label {
-    color: var(--hof-color-ink-500);
-    letter-spacing: 0.12em;
-    margin-bottom: 8px;
     display: block;
+    margin-bottom: 8px;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--hof-faint);
 }
 
 .hof-dash-facets {
@@ -1784,14 +1919,14 @@ body.toplevel_page_hooked-on-facets .wrap {
     align-items: center;
     padding: 11px 14px;
     background: var(--hof-surface);
-    border: 0.5px solid var(--hof-border);
+    border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
     margin-bottom: 6px;
     transition: border-color 140ms ease;
 }
 
 .hof-dash-facet:hover {
-    border-color: var(--hof-color-ink-300);
+    border-color: var(--hof-border);
 }
 
 .hof-dash-facet[data-hof-draft] {
@@ -1799,11 +1934,11 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-dash-facet-icon {
-    color: var(--hof-color-hook-purple);
+    color: var(--hof-primary);
 }
 
 .hof-dash-facet[data-hof-draft] .hof-dash-facet-icon {
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
 }
 
 .hof-dash-facet-text {
@@ -1813,19 +1948,19 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-dash-facet-name {
     font-size: 14px;
     font-weight: 500;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
     margin: 0;
 }
 
 .hof-dash-facet-source {
     font-size: 11px;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
     margin: 2px 0 0;
     font-family: var(--hof-font-mono);
 }
 
 .hof-dash-empty {
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
     font-size: 13px;
     margin: 0 0 18px;
 }
@@ -1846,8 +1981,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-analytics-card {
-    border: 0.5px solid var(--hof-color-ink-300);
-    border-radius: 10px;
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-md);
     padding: 16px;
     background: var(--hof-surface);
 }
@@ -1856,12 +1991,12 @@ body.toplevel_page_hooked-on-facets .wrap {
     font-size: 13px;
     font-weight: 600;
     margin: 0 0 12px;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
 }
 
 .hof-analytics-muted {
     font-size: 13px;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
     margin: 0;
 }
 
@@ -1890,22 +2025,22 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-analytics-bar-track {
     height: 8px;
-    border-radius: 999px;
-    background: var(--hof-color-ink-100, rgba(0, 0, 0, 0.06));
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-tint);
     overflow: hidden;
 }
 
 .hof-analytics-bar-fill {
     display: block;
     height: 100%;
-    border-radius: 999px;
-    background: var(--hof-color-soft-indigo);
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-primary-light);
     min-width: 2px;
 }
 
 .hof-analytics-bar-count {
     font-variant-numeric: tabular-nums;
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
 }
 
 .hof-analytics-list {
@@ -1929,15 +2064,15 @@ body.toplevel_page_hooked-on-facets .wrap {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
 }
 
 .hof-analytics-dead {
     font-size: 12px;
-    color: var(--hof-color-ink-700);
-    background: color-mix(in oklab, var(--hof-color-facet-coral) 8%, var(--hof-surface));
-    border: 0.5px solid color-mix(in oklab, var(--hof-color-facet-coral) 30%, var(--hof-color-ink-300));
-    border-radius: 8px;
+    color: var(--hof-muted);
+    background: color-mix(in oklab, var(--hof-danger) 8%, var(--hof-surface));
+    border: 1px solid color-mix(in oklab, var(--hof-danger) 30%, var(--hof-border));
+    border-radius: var(--hof-radius-md);
     padding: 10px 12px;
     margin: 0 0 18px;
 }
@@ -1945,48 +2080,55 @@ body.toplevel_page_hooked-on-facets .wrap {
 /* ── Blueprint sandbox ────────────────────────────────────────────────── */
 
 .hof-bp {
-    border: 0.5px solid var(--hof-color-ink-300);
-    border-radius: var(--hof-radius-lg);
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-md);
     overflow: hidden;
     background: var(--hof-surface);
 }
 
 .hof-bp-bar {
-    background: #0B0B0A;
-    padding: 11px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
-    color: var(--hof-color-ink-300);
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--hof-border);
+    background: var(--hof-surface);
+    color: var(--hof-muted);
 }
 
 .hof-bp-back {
-    background: transparent;
-    border: 0;
-    color: var(--hof-color-ink-500);
-    cursor: pointer;
-    padding: 0;
     display: inline-flex;
     align-items: center;
-    transition: color 140ms ease;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--hof-muted);
+    cursor: pointer;
 }
 
-.hof-bp-back:hover { color: var(--hof-color-warm-cream); }
+.hof-bp-back:hover {
+    color: var(--hof-text);
+}
 
-.hof-bp-sep { color: var(--hof-color-ink-700); flex-shrink: 0; }
+.hof-bp-sep {
+    flex-shrink: 0;
+    color: var(--hof-faint);
+}
 
 .hof-bp-crumb {
-    font-family: var(--hof-font-mono);
-    font-size: 11px;
-    color: var(--hof-color-ink-300);
+    font-size: 13px;
+    color: var(--hof-muted);
 }
 
-.hof-bp-crumb-active { color: var(--hof-color-warm-cream); }
+.hof-bp-crumb-active {
+    font-weight: 500;
+    color: var(--hof-text);
+}
 
 .hof-bp-bar-actions {
-    margin-left: auto;
     display: flex;
     gap: 6px;
+    margin-left: auto;
 }
 
 .hof-bp-chip,
@@ -1994,37 +2136,25 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 0.5px solid #5F5E5A;
-    color: var(--hof-color-warm-cream);
     padding: 6px 10px;
-    border-radius: var(--hof-radius-md);
-    font-family: var(--hof-font-mono);
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
-}
-
-.hof-bp-chip-icon { padding: 6px 8px; }
-
-.hof-bp-chip:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: var(--hof-color-ink-300);
-}
-
-.hof-bp-deploy {
-    background: var(--hof-color-deep-ink);
-    border-color: var(--hof-color-ink-500);
-    color: var(--hof-color-warm-cream);
-    font-family: var(--hof-font-sans);
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-surface);
+    color: var(--hof-text);
+    font: inherit;
+    font-size: 13px;
     font-weight: 500;
-    padding: 6px 12px;
+    cursor: pointer;
 }
 
+.hof-bp-chip-icon {
+    padding: 6px 8px;
+}
+
+.hof-bp-chip:hover,
 .hof-bp-deploy:hover {
-    background: var(--hof-color-ink-900);
-    border-color: var(--hof-color-warm-cream);
-    color: var(--hof-color-warm-cream);
+    border-color: var(--hof-primary);
+    color: var(--hof-primary);
 }
 
 .hof-bp-grid {
@@ -2035,7 +2165,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 /* Canvas (left) ───────────────────────────────── */
 
 .hof-bp-canvas {
-    background: var(--hof-color-ink-100);
+    background: var(--hof-bg);
     padding: 22px 18px;
     min-height: 460px;
     display: flex;
@@ -2048,12 +2178,12 @@ body.toplevel_page_hooked-on-facets .wrap {
     gap: 6px;
     font-family: var(--hof-font-mono);
     font-size: 10px;
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
     letter-spacing: 0.1em;
-    background: rgba(255, 255, 255, 0.6);
+    background: var(--hof-surface);
     padding: 5px 11px;
     border-radius: var(--hof-radius-pill);
-    border: 0.5px solid var(--hof-color-ink-300);
+    border: 1px solid var(--hof-border);
     align-self: flex-start;
     margin-bottom: 18px;
 }
@@ -2070,9 +2200,9 @@ body.toplevel_page_hooked-on-facets .wrap {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    border: 0.5px solid var(--hof-color-ink-500);
+    border: 1px solid var(--hof-faint);
     background: transparent;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2081,20 +2211,20 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-action:hover {
-    color: var(--hof-color-deep-ink);
-    border-color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
+    border-color: var(--hof-text);
 }
 
 .hof-bp-action-include {
-    background: var(--hof-color-facet-coral);
-    border-color: var(--hof-color-facet-coral);
-    color: var(--hof-color-coral-50);
+    background: var(--hof-danger);
+    border-color: var(--hof-danger);
+    color: var(--hof-danger-tint);
 }
 
 .hof-bp-action-include:hover {
-    color: var(--hof-color-coral-50);
+    color: var(--hof-danger-tint);
     filter: brightness(0.95);
-    border-color: var(--hof-color-facet-coral);
+    border-color: var(--hof-danger);
 }
 
 .hof-bp-deck {
@@ -2123,14 +2253,14 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-deck-back {
     top: 0;
     left: 0;
-    background: var(--hof-color-ink-400, var(--hof-color-ink-500));
+    background: var(--hof-faint);
 }
 
 .hof-bp-deck-top {
     top: 0;
     left: 0;
     background: var(--hof-surface);
-    border: 0.5px solid var(--hof-color-facet-coral);
+    border: 1px solid var(--hof-danger);
     padding: 12px;
 }
 
@@ -2138,8 +2268,8 @@ body.toplevel_page_hooked-on-facets .wrap {
     position: absolute;
     top: -9px;
     right: -6px;
-    background: var(--hof-color-facet-coral);
-    color: var(--hof-color-coral-50);
+    background: var(--hof-danger);
+    color: var(--hof-danger-tint);
     padding: 3px 9px;
     border-radius: var(--hof-radius-pill);
     font-size: 9px;
@@ -2150,8 +2280,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-bp-card-visual {
     height: calc(var(--hof-bp-card-h, 190px) * 0.5);
-    background: var(--hof-color-facet-coral);
-    border-radius: 6px;
+    background: var(--hof-danger);
+    border-radius: var(--hof-radius-sm);
     margin-bottom: 10px;
     transition: height 180ms ease;
 }
@@ -2159,7 +2289,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-card-meta {
     font-family: var(--hof-font-mono);
     font-size: 9px;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
     margin: 0;
     letter-spacing: 0.1em;
 }
@@ -2167,7 +2297,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-card-title {
     font-size: 15px;
     font-weight: 500;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
     margin: 3px 0 0;
     letter-spacing: -0.01em;
 }
@@ -2177,7 +2307,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-response-label {
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
     margin-bottom: 8px;
     display: block;
     letter-spacing: 0.12em;
@@ -2191,12 +2321,12 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-response-bar {
     flex: 1;
     height: 56px;
-    background: var(--hof-color-facet-coral);
+    background: var(--hof-danger);
     border-radius: var(--hof-radius-md);
 }
 
 .hof-bp-response-bar-muted {
-    background: var(--hof-color-ink-300);
+    background: var(--hof-border);
     opacity: 0.3;
 }
 
@@ -2205,7 +2335,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-inspector {
     background: var(--hof-surface);
     padding: 20px 16px;
-    border-left: 0.5px solid var(--hof-color-ink-200);
+    border-left: 1px solid var(--hof-border);
     display: flex;
     flex-direction: column;
 }
@@ -2219,13 +2349,13 @@ body.toplevel_page_hooked-on-facets .wrap {
     margin: 0;
     font-size: 20px;
     font-weight: 500;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
     letter-spacing: -0.02em;
 }
 
 .hof-bp-inspector-subtitle {
     font-size: 12px;
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
     margin: 2px 0 20px;
 }
 
@@ -2236,7 +2366,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-field-label {
     font-family: var(--hof-font-mono);
     font-size: 10px;
-    color: var(--hof-color-ink-500);
+    color: var(--hof-faint);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     margin: 0 0 8px;
@@ -2251,8 +2381,8 @@ body.toplevel_page_hooked-on-facets .wrap {
     gap: 3px;
     padding: 3px;
     background: var(--hof-color-warm-cream);
-    border-radius: var(--hof-radius-md);
-    border: 0.5px solid var(--hof-color-ink-200);
+    border-radius: var(--hof-radius-sm);
+    border: 1px solid var(--hof-border);
 }
 
 .hof-bp-segmented-item {
@@ -2260,7 +2390,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     text-align: center;
     padding: 6px 4px;
     border-radius: 4px;
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
     background: transparent;
     border: 0;
     cursor: pointer;
@@ -2270,12 +2400,12 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-segmented-item:hover {
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
 }
 
 .hof-bp-segmented-item.is-active {
     background: var(--hof-surface);
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
     font-weight: 500;
 }
 
@@ -2292,7 +2422,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     -webkit-appearance: none;
     appearance: none;
     height: 4px;
-    background: var(--hof-color-ink-100);
+    background: var(--hof-bg);
     border-radius: var(--hof-radius-pill);
     outline: none;
     padding: 0;
@@ -2302,7 +2432,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     -webkit-appearance: none;
     width: 14px;
     height: 14px;
-    background: var(--hof-color-hook-purple);
+    background: var(--hof-primary);
     border-radius: 50%;
     cursor: pointer;
     border: 0;
@@ -2311,7 +2441,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-slider-input::-moz-range-thumb {
     width: 14px;
     height: 14px;
-    background: var(--hof-color-hook-purple);
+    background: var(--hof-primary);
     border-radius: 50%;
     cursor: pointer;
     border: 0;
@@ -2320,7 +2450,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-slider-value {
     font-family: var(--hof-font-mono);
     font-size: 11px;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
     font-variant-numeric: tabular-nums;
     min-width: 12px;
     text-align: right;
@@ -2339,12 +2469,12 @@ body.toplevel_page_hooked-on-facets .wrap {
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
     cursor: pointer;
     transition: color 140ms ease;
 }
 
-.hof-bp-radio.is-active { color: var(--hof-color-deep-ink); }
+.hof-bp-radio.is-active { color: var(--hof-text); }
 
 .hof-bp-radio input[type="radio"] {
     position: absolute;
@@ -2357,20 +2487,20 @@ body.toplevel_page_hooked-on-facets .wrap {
     height: 11px;
     border-radius: 50%;
     background: transparent;
-    border: 0.5px solid var(--hof-color-ink-300);
+    border: 1px solid var(--hof-border);
     display: inline-block;
     transition: background 140ms ease, border-color 140ms ease;
 }
 
 .hof-bp-radio.is-active .hof-bp-radio-dot {
-    background: var(--hof-color-hook-purple);
-    border-color: var(--hof-color-hook-purple);
+    background: var(--hof-primary);
+    border-color: var(--hof-primary);
 }
 
 .hof-bp-inspector-cta {
     margin-top: 16px;
     padding-top: 14px;
-    border-top: 0.5px solid var(--hof-color-ink-100);
+    border-top: 1px solid var(--hof-bg);
 }
 
 .hof-bp-sync {
@@ -2384,31 +2514,6 @@ body.toplevel_page_hooked-on-facets .wrap {
     font-weight: 500;
 }
 
-/* ── Stub view ────────────────────────────────────────────────────────── */
-
-.hof-stub {
-    background: var(--hof-surface);
-    border: 0.5px solid var(--hof-border);
-    border-radius: var(--hof-radius-md);
-    padding: 32px;
-    max-width: 560px;
-}
-
-.hof-stub-title {
-    margin: 0 0 8px;
-    font-size: 22px;
-    font-weight: 500;
-    color: var(--hof-color-deep-ink);
-    letter-spacing: -0.02em;
-}
-
-.hof-stub-body {
-    margin: 0;
-    color: var(--hof-color-ink-700);
-    font-size: 14px;
-    line-height: 1.55;
-}
-
 /* ── Indexer view ─────────────────────────────────────────────────────── */
 
 .hof-indexer {
@@ -2419,20 +2524,20 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-indexer-blurb {
     margin: 0;
-    color: var(--hof-color-ink-700);
+    color: var(--hof-muted);
     font-size: 13.5px;
     line-height: 1.6;
     max-width: 720px;
 }
 
 .hof-indexer-blurb code {
-    background: var(--hof-color-ink-100);
-    border: 0.5px solid var(--hof-color-ink-200);
+    background: var(--hof-bg);
+    border: 1px solid var(--hof-border);
     border-radius: 4px;
     padding: 1px 5px;
-    font-family: var(--hof-font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+    font-family: var(--hof-font-mono);
     font-size: 12.5px;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
 }
 
 .hof-indexer-toast,
@@ -2443,28 +2548,28 @@ body.toplevel_page_hooked-on-facets .wrap {
     padding: 10px 14px;
     border-radius: var(--hof-radius-md, 6px);
     font-size: 13px;
-    border: 0.5px solid;
+    border: 1px solid;
 }
 
 .hof-indexer-toast {
-    background: rgba(83, 74, 183, 0.06);
-    border-color: rgba(83, 74, 183, 0.35);
-    color: var(--hof-color-deep-ink);
+    background: color-mix(in srgb, var(--hof-primary) 6%, transparent);
+    border-color: color-mix(in srgb, var(--hof-primary) 35%, transparent);
+    color: var(--hof-text);
 }
 
 .hof-indexer-toast svg {
-    color: var(--hof-color-hook-purple);
+    color: var(--hof-primary);
     flex-shrink: 0;
 }
 
 .hof-indexer-error {
-    background: rgba(216, 90, 48, 0.06);
-    border-color: rgba(216, 90, 48, 0.45);
-    color: var(--hof-color-deep-ink);
+    background: color-mix(in srgb, var(--hof-danger) 6%, transparent);
+    border-color: color-mix(in srgb, var(--hof-danger) 45%, transparent);
+    color: var(--hof-text);
 }
 
 .hof-indexer-error svg {
-    color: var(--hof-color-facet-coral);
+    color: var(--hof-danger);
     flex-shrink: 0;
 }
 
@@ -2504,9 +2609,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-loops-sig {
-    font-family: var(--hof-font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+    font-family: var(--hof-font-mono);
     font-size: 13px;
-    color: var(--hof-color-deep-ink);
+    color: var(--hof-text);
     background: transparent;
     padding: 0;
 }
@@ -2522,9 +2627,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-bp-facet-chip {
     appearance: none;
-    background: var(--hof-color-ink-100);
-    border: 0.5px solid var(--hof-color-ink-300);
-    color: var(--hof-color-ink-700);
+    background: var(--hof-bg);
+    border: 1px solid var(--hof-border);
+    color: var(--hof-muted);
     border-radius: var(--hof-radius-pill, 999px);
     padding: 4px 10px;
     font-size: 11px;
@@ -2535,14 +2640,14 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-facet-chip:hover {
-    color: var(--hof-color-deep-ink);
-    border-color: var(--hof-color-ink-500);
+    color: var(--hof-text);
+    border-color: var(--hof-faint);
 }
 
 .hof-bp-facet-chip.is-active {
-    background: var(--hof-color-hook-purple);
-    border-color: var(--hof-color-hook-purple);
-    color: var(--hof-color-purple-50, #EEEDFE);
+    background: var(--hof-primary);
+    border-color: var(--hof-primary);
+    color: var(--hof-tint);
 }
 
 /* Grid variant — 2×3 mini-card matrix to preview the non-deck layout. */
@@ -2557,7 +2662,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-bp-grid-card {
     background: var(--hof-surface);
-    border: 0.5px solid var(--hof-color-ink-200);
+    border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
     padding: 10px;
     box-sizing: border-box;
@@ -2585,27 +2690,27 @@ body.toplevel_page_hooked-on-facets .wrap {
     margin-top: 8px;
     border-radius: var(--hof-radius-md, 6px);
     font-size: 11.5px;
-    border: 0.5px solid;
+    border: 1px solid;
 }
 
 .hof-bp-toast-ok {
-    background: rgba(83, 74, 183, 0.08);
-    border-color: rgba(83, 74, 183, 0.4);
-    color: var(--hof-color-deep-ink);
+    background: color-mix(in srgb, var(--hof-primary) 8%, transparent);
+    border-color: color-mix(in srgb, var(--hof-primary) 40%, transparent);
+    color: var(--hof-text);
 }
 
 .hof-bp-toast-ok svg {
-    color: var(--hof-color-hook-purple);
+    color: var(--hof-primary);
 }
 
 .hof-bp-toast-err {
-    background: rgba(216, 90, 48, 0.08);
-    border-color: rgba(216, 90, 48, 0.5);
-    color: var(--hof-color-deep-ink);
+    background: color-mix(in srgb, var(--hof-danger) 8%, transparent);
+    border-color: color-mix(in srgb, var(--hof-danger) 50%, transparent);
+    color: var(--hof-text);
 }
 
 .hof-bp-toast-err svg {
-    color: var(--hof-color-facet-coral);
+    color: var(--hof-danger);
 }
 
 .hof-bp-sync:disabled {
@@ -2633,9 +2738,9 @@ body.toplevel_page_hooked-on-facets .wrap {
     place-items: center;
     width: 36px;
     height: 36px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #534AB7, #7F77DD);
-    color: #F1EFE8;
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
     flex-shrink: 0;
 }
 
@@ -2643,54 +2748,54 @@ body.toplevel_page_hooked-on-facets .wrap {
     margin: 0 0 4px;
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--hof-text, #2C2C2A);
+    color: var(--hof-text);
 }
 
 .hof-ai-settings-sub {
     margin: 0;
-    color: var(--hof-muted, #5F5E5A);
+    color: var(--hof-muted);
     font-size: 0.9375rem;
     line-height: 1.5;
 }
 
 .hof-ai-settings-sub em {
-    color: var(--hof-text, #2C2C2A);
+    color: var(--hof-text);
     font-style: italic;
 }
 
 .hof-ai-settings-section {
-    background: #FFFFFF;
-    border: 0.5px solid #D3D1C7;
-    border-radius: 10px;
+    background: var(--hof-surface);
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-md);
     padding: 18px 20px;
 }
 
 .hof-ai-settings-section-title {
     margin: 0 0 12px;
     font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-weight: 500;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--hof-muted, #5F5E5A);
+    color: var(--hof-muted);
 }
 
 .hof-ai-settings-row {
     display: flex;
     gap: 10px;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--hof-radius-md);
     margin-bottom: 14px;
     align-items: flex-start;
 }
 
 .hof-ai-settings-row--ok {
-    background: rgba(83, 74, 183, 0.06);
-    border: 0.5px solid rgba(83, 74, 183, 0.18);
+    background: color-mix(in srgb, var(--hof-primary) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hof-primary) 18%, transparent);
 }
 
 .hof-ai-settings-row--warn {
-    background: rgba(216, 90, 48, 0.08);
-    border: 0.5px solid rgba(216, 90, 48, 0.25);
+    background: color-mix(in srgb, var(--hof-danger) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hof-danger) 25%, transparent);
 }
 
 .hof-ai-settings-row-icon {
@@ -2700,25 +2805,25 @@ body.toplevel_page_hooked-on-facets .wrap {
     margin-top: 1px;
 }
 
-.hof-ai-settings-row--ok .hof-ai-settings-row-icon { color: #534AB7; }
-.hof-ai-settings-row--warn .hof-ai-settings-row-icon { color: #D85A30; }
+.hof-ai-settings-row--ok .hof-ai-settings-row-icon { color: var(--hof-primary); }
+.hof-ai-settings-row--warn .hof-ai-settings-row-icon { color: var(--hof-danger); }
 
 .hof-ai-settings-row-line {
     margin: 0;
     font-size: 0.875rem;
-    color: var(--hof-text, #2C2C2A);
+    color: var(--hof-text);
 }
 
 .hof-ai-settings-row-sub {
     margin: 2px 0 0;
     font-size: 0.8125rem;
-    color: var(--hof-muted, #5F5E5A);
+    color: var(--hof-muted);
 }
 
 .hof-ai-settings-row code,
 .hof-ai-settings-list code {
-    font-family: var(--hof-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-    background: rgba(28, 26, 22, 0.04);
+    font-family: var(--hof-font-mono);
+    background: color-mix(in srgb, var(--hof-text) 4%, transparent);
     padding: 1px 6px;
     border-radius: 4px;
     font-size: 0.8125em;
@@ -2730,10 +2835,19 @@ body.toplevel_page_hooked-on-facets .wrap {
     gap: 8px;
 }
 
+.hof-ai-settings-input-row + .hof-ai-settings-input-row {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hof-border);
+}
+
 .hof-ai-settings-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--hof-text, #2C2C2A);
+    color: var(--hof-text);
 }
 
 .hof-ai-settings-input-wrap {
@@ -2745,7 +2859,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-ai-settings-input-icon {
     position: absolute;
     left: 10px;
-    color: var(--hof-muted, #5F5E5A);
+    color: var(--hof-muted);
     display: inline-grid;
     place-items: center;
     pointer-events: none;
@@ -2754,23 +2868,23 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-ai-settings-input {
     width: 100%;
     padding: 9px 12px 9px 34px;
-    border: 0.5px solid #D3D1C7;
-    border-radius: 8px;
-    background: #FFFFFF;
-    color: var(--hof-text, #2C2C2A);
-    font-family: var(--hof-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-surface);
+    color: var(--hof-text);
+    font-family: var(--hof-font-mono);
     font-size: 0.875rem;
-    transition: border-color 160ms ease, box-shadow 160ms ease;
+    transition: border-color 160ms ease;
 }
 
 .hof-ai-settings-input:focus {
-    outline: none;
-    border-color: #534AB7;
-    box-shadow: 0 0 0 3px rgba(83, 74, 183, 0.15);
+    outline: 2px solid var(--hof-primary);
+    outline-offset: 1px;
+    border-color: var(--hof-primary);
 }
 
 .hof-ai-settings-input:disabled {
-    background: #F8F6EE;
+    background: var(--hof-tint);
     cursor: not-allowed;
 }
 
@@ -2781,8 +2895,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-ai-settings-btn {
     padding: 8px 14px;
-    border-radius: 8px;
-    border: 0.5px solid transparent;
+    border-radius: var(--hof-radius-sm);
+    border: 1px solid transparent;
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -2795,23 +2909,23 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-ai-settings-btn--primary {
-    background: #534AB7;
-    color: #F1EFE8;
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
 }
 
 .hof-ai-settings-btn--primary:not(:disabled):hover {
-    background: #3C3489;
+    background: var(--hof-primary-deep);
 }
 
 .hof-ai-settings-btn--ghost {
     background: transparent;
-    color: var(--hof-muted, #5F5E5A);
-    border-color: #D3D1C7;
+    color: var(--hof-muted);
+    border-color: var(--hof-border);
 }
 
 .hof-ai-settings-btn--ghost:not(:disabled):hover {
-    color: #D85A30;
-    border-color: #D85A30;
+    color: var(--hof-danger);
+    border-color: var(--hof-danger);
 }
 
 .hof-ai-settings-msg {
@@ -2819,13 +2933,13 @@ body.toplevel_page_hooked-on-facets .wrap {
     font-size: 0.8125rem;
 }
 
-.hof-ai-settings-msg--error { color: #D85A30; }
-.hof-ai-settings-msg--ok    { color: #534AB7; }
+.hof-ai-settings-msg--error { color: var(--hof-danger); }
+.hof-ai-settings-msg--ok    { color: var(--hof-primary); }
 
 .hof-ai-settings-list {
     margin: 0;
     padding-left: 18px;
-    color: var(--hof-text, #2C2C2A);
+    color: var(--hof-text);
     font-size: 0.875rem;
     line-height: 1.6;
 }
@@ -2835,7 +2949,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-ai-settings-status {
-    color: var(--hof-muted, #5F5E5A);
+    color: var(--hof-muted);
     font-size: 0.9375rem;
 }
 
@@ -2846,15 +2960,15 @@ body.toplevel_page_hooked-on-facets .wrap {
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
-    background: #FFFFFF;
-    border: 0.5px solid #D3D1C7;
-    border-radius: 10px;
+    background: var(--hof-surface);
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
     font-size: 0.9375rem;
-    color: #888780;
+    color: var(--hof-faint);
 }
 
 .hof-preview-ask-icon {
-    color: #534AB7;
+    color: var(--hof-primary);
     line-height: 1;
 }
 
@@ -2871,19 +2985,19 @@ body.toplevel_page_hooked-on-facets .wrap {
     justify-content: center;
     width: 28px;
     height: 28px;
-    border-radius: 8px;
-    background: #534AB7;
-    color: #FFFFFF;
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-primary);
+    color: var(--hof-surface);
     font-size: 0.75rem;
 }
 
 .hof-preview-ask-heard {
     margin-top: 8px;
     padding: 8px 10px;
-    border-radius: 6px;
-    background: rgba(83, 74, 183, 0.05);
+    border-radius: var(--hof-radius-sm);
+    background: color-mix(in srgb, var(--hof-primary) 5%, transparent);
     font-size: 0.8125rem;
-    color: #4A4842;
+    color: var(--hof-muted);
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -2894,7 +3008,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     font-size: 0.6875rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #888780;
+    color: var(--hof-faint);
     margin-right: 2px;
 }
 
@@ -2903,15 +3017,15 @@ body.toplevel_page_hooked-on-facets .wrap {
     align-items: center;
     gap: 4px;
     padding: 3px 8px;
-    border-radius: 999px;
-    background: #FFFFFF;
-    border: 0.5px solid #D3D1C7;
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-surface);
+    border: 1px solid var(--hof-border);
     font-size: 0.75rem;
 }
 
 .hof-preview-ask-chip em {
     font-style: normal;
-    color: #888780;
+    color: var(--hof-faint);
 }
 
 .hof-preview-visual-drop {
@@ -2920,23 +3034,23 @@ body.toplevel_page_hooked-on-facets .wrap {
     justify-content: center;
     gap: 8px;
     padding: 14px 10px;
-    border: 1.5px dashed #D3D1C7;
-    border-radius: 10px;
-    background: rgba(83, 74, 183, 0.03);
-    color: #888780;
+    border: 1.5px dashed var(--hof-border);
+    border-radius: var(--hof-radius-md);
+    background: color-mix(in srgb, var(--hof-primary) 3%, transparent);
+    color: var(--hof-faint);
     font-size: 0.8125rem;
 }
 
 .hof-preview-visual-icon {
-    color: #534AB7;
+    color: var(--hof-primary);
     font-size: 1.1rem;
 }
 
 .hof-preview-visual-result {
     margin-top: 8px;
     padding: 8px 10px;
-    border-radius: 8px;
-    background: rgba(83, 74, 183, 0.05);
+    border-radius: var(--hof-radius-md);
+    background: color-mix(in srgb, var(--hof-primary) 5%, transparent);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -2945,9 +3059,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-preview-visual-swatch {
     width: 28px;
     height: 28px;
-    border-radius: 6px;
-    border: 0.5px solid #D3D1C7;
-    box-shadow: inset 0 0 0 1.5px #FFFFFF;
+    border-radius: var(--hof-radius-sm);
+    border: 1px solid var(--hof-border);
 }
 
 .hof-preview-visual-readout {
@@ -2958,8 +3071,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-preview-visual-readout code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color: #4A4842;
+    font-family: var(--hof-font-mono);
+    color: var(--hof-muted);
     background: transparent;
     padding: 0;
 }
@@ -2968,7 +3081,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: #888780;
+    color: var(--hof-faint);
 }
 
 .hof-preview-visual-dot {
@@ -2976,7 +3089,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    border: 0.5px solid #D3D1C7;
+    border: 1px solid var(--hof-border);
 }
 
 /* ── Pagination preview (admin only — mirrors public chrome) ────────────── */
@@ -2996,36 +3109,167 @@ body.toplevel_page_hooked-on-facets .wrap {
     min-width: 28px;
     height: 28px;
     padding: 0 8px;
-    border-radius: 999px;
-    background: #FFFFFF;
-    border: 0.5px solid #D3D1C7;
-    color: #2C2C2A;
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-surface);
+    border: 1px solid var(--hof-border);
+    color: var(--hof-text);
     font-size: 0.8125rem;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
 }
 
 .hof-preview-page-current {
-    background: #534AB7;
-    border-color: #534AB7;
-    color: #F1EFE8;
+    background: var(--hof-primary);
+    border-color: var(--hof-primary);
+    color: var(--hof-on-primary);
 }
 
 .hof-preview-page-gap {
-    color: #5F5E5A;
+    color: var(--hof-muted);
     font-size: 0.8125rem;
     padding: 0 4px;
 }
 
-/* ── Inline checkbox field (used by pagination settings) ────────────────── */
+/* ── Pro pill ─────────────────────────────────────────────────────────── */
 
-.hof-field-inline {
-    flex-direction: row !important;
-    align-items: center;
-    gap: 8px;
+.hof-pill-pro {
+    border-color: color-mix(in srgb, var(--hof-primary) 40%, var(--hof-border));
+    color: var(--hof-primary);
+    font-weight: 500;
 }
 
-.hof-field-inline input[type="checkbox"] {
+/* ── Help drawer ──────────────────────────────────────────────────────── */
+
+/* Sits under the WordPress admin bar (z-index 99999) so the bar stays usable,
+   and above everything the app draws. Closed, it is visibility:hidden so its
+   links can't be tabbed to or read by assistive tech. */
+.hof-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 99990;
+    background: var(--hof-scrim);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.18s, visibility 0s 0.18s;
+}
+
+.hof-scrim.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.18s;
+}
+
+.hof-drawer {
+    position: fixed;
+    top: var(--wp-admin--admin-bar--height, 32px);
+    right: 0;
+    bottom: 0;
+    z-index: 99991;
+    width: min(380px, 100%);
+    padding: 20px;
+    overflow-y: auto;
+    border-left: 1px solid var(--hof-border);
+    background: var(--hof-surface);
+    color: var(--hof-text);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 0.18s, visibility 0s 0.18s;
+}
+
+.hof-drawer.is-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.18s;
+}
+
+.hof-drawer-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.hof-drawer-head h2 {
     margin: 0;
-    flex-shrink: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.hof-drawer-head .hof-btn {
+    margin-left: auto;
+}
+
+.hof-drawer-ctx {
+    margin: 12px 0 14px;
+    padding: 12px;
+    border-left: 3px solid var(--hof-danger);
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-tint);
+    font-size: 13px;
+}
+
+.hof-drawer-ctx b {
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+.hof-drawer-h {
+    margin: 16px 0 6px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--hof-faint);
+}
+
+.hof-drawer-doc {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--hof-border);
+    font-size: 13.5px;
+    color: var(--hof-text);
+    text-decoration: none;
+}
+
+.hof-drawer-doc:hover {
+    color: var(--hof-primary);
+}
+
+.hof-drawer-doc span {
+    flex: none;
+    font-size: 12px;
+    color: var(--hof-faint);
+}
+
+.hof-drawer-none {
+    margin: 16px 0 0;
+    font-size: 13px;
+    color: var(--hof-muted);
+}
+
+.hof-drawer-ask {
+    margin-top: 18px;
+    padding: 12px;
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
+    font-size: 13px;
+    color: var(--hof-muted);
+}
+
+.hof-drawer a {
+    color: var(--hof-primary);
+}
+
+.hof-drawer a.hof-drawer-doc {
+    color: var(--hof-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hof-scrim,
+    .hof-drawer {
+        transition: none;
+    }
 }

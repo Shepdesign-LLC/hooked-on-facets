@@ -36,6 +36,9 @@ final class Renderer {
     /** Per-request cache of the resolver result. */
     private ?array $resolve_cache = null;
 
+    /** @var array<string, array<string, string>> Per-request cache of all_values_for(). */
+    private array $all_values_cache = [];
+
     public function __construct( private readonly Resolver $resolver ) {}
 
     /**
@@ -60,10 +63,10 @@ final class Renderer {
          */
         $external = apply_filters( 'hof_facet_renderers', [] );
         if ( isset( $external[ $display ] ) && is_callable( $external[ $display ] ) ) {
-            return (string) call_user_func( $external[ $display ], $facet, $current_value, $counts );
+            return self::with_facet_class( (string) call_user_func( $external[ $display ], $facet, $current_value, $counts ), $name );
         }
 
-        return match ( $display ) {
+        return self::with_facet_class( match ( $display ) {
             'range'       => $this->render_range( $facet, $current_value, $counts ),
             'date_range'  => $this->render_date_range( $facet, $current_value, $counts ),
             'search'      => $this->render_search( $facet, $current_value ),
@@ -85,7 +88,27 @@ final class Renderer {
             // facet while the add-on is inactive — renders nothing rather
             // than a broken control. The stored config is preserved.
             default => '',
-        };
+        }, $name );
+    }
+
+    /**
+     * Tag a facet's outermost wrapper with `hof-facet--<slug>` so a site can
+     * restyle one facet without touching the rest. Done once here, after
+     * rendering, so every display (and add-on renderer) gets it.
+     */
+    public static function with_facet_class( string $html, string $slug ): string {
+        $slug = strtolower( (string) preg_replace( '/[^A-Za-z0-9_-]/', '', $slug ) );
+        if ( $html === '' || $slug === '' ) {
+            return $html;
+        }
+        // The first class attribute carrying the bare `hof-facet` token is the
+        // wrapper. Lookarounds keep `hof-facet-checkbox` from matching.
+        return (string) preg_replace_callback(
+            '/class="([^"]*(?<![\w-])hof-facet(?![\w-])[^"]*)"/',
+            static fn( array $m ): string => 'class="' . $m[1] . ' hof-facet--' . $slug . '"',
+            $html,
+            1
+        );
     }
 
     /**
@@ -268,6 +291,10 @@ final class Renderer {
      * @param array<string, mixed>            $counts
      */
     private function render_checkbox( array $facet, array $selected_values, array $counts ): string {
+        if ( self::uses_buttons( $facet ) ) {
+            return $this->render_buttons( $facet, $selected_values, $counts, 'checkbox' );
+        }
+
         $name        = $facet['name'];
         $label       = $facet['label'] ?: $name;
         $buckets     = ( $counts['type'] ?? '' ) === 'values' ? $counts['buckets'] : [];
@@ -322,6 +349,10 @@ final class Renderer {
      * @param array<string, mixed> $counts
      */
     private function render_radio( array $facet, array $selected_values, array $counts ): string {
+        if ( self::uses_buttons( $facet ) ) {
+            return $this->render_buttons( $facet, $selected_values, $counts, 'radio' );
+        }
+
         $name            = $facet['name'];
         $label           = $facet['label'] ?: $name;
         $buckets         = ( $counts['type'] ?? '' ) === 'values' ? $counts['buckets'] : [];
@@ -369,6 +400,170 @@ final class Renderer {
                             </li>
                         <?php endforeach; ?>
                     </ul>
+                <?php endif; ?>
+            </fieldset>
+        </div>
+        <?php
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * Whether a checkbox/radio facet renders as buttons instead of a list.
+     *
+     * @param array<string, mixed> $facet
+     */
+    public static function uses_buttons( array $facet ): bool {
+        $settings = is_array( $facet['settings'] ?? null ) ? $facet['settings'] : [];
+        return ( $settings['style'] ?? 'list' ) === 'buttons';
+    }
+
+    /**
+     * Append zero-count entries for values that exist but match nothing under
+     * the current filters. The resolver's buckets only hold values that still
+     * have results, so "show values with no results" needs the full set.
+     *
+     * @param array<int, array{value: string, display: string, count: int}> $buckets
+     * @param array<string, string>                                        $all value => display
+     * @return array<int, array{value: string, display: string, count: int}>
+     */
+    public static function merge_empty_values( array $buckets, array $all ): array {
+        $have = [];
+        foreach ( $buckets as $b ) {
+            $have[ (string) $b['value'] ] = true;
+        }
+        $missing = [];
+        foreach ( $all as $value => $display ) {
+            if ( ! isset( $have[ (string) $value ] ) ) {
+                $missing[] = [ 'value' => (string) $value, 'display' => (string) $display, 'count' => 0 ];
+            }
+        }
+        usort( $missing, static fn( array $a, array $b ): int => strcmp( $a['display'], $b['display'] ) );
+        return array_merge( $buckets, $missing );
+    }
+
+    /**
+     * Every value a facet can take, including ones nothing is filed under.
+     * Taxonomies list all their terms (so a brand with no products yet still
+     * appears); other sources list what the index holds.
+     *
+     * @param array<string, mixed> $facet
+     * @return array<string, string> value => display
+     */
+    private function all_values_for( array $facet ): array {
+        $name = (string) $facet['name'];
+        if ( isset( $this->all_values_cache[ $name ] ) ) {
+            return $this->all_values_cache[ $name ];
+        }
+
+        $out = [];
+        if ( ( $facet['kind'] ?? '' ) === 'taxonomy' && ! empty( $facet['source'] ) ) {
+            $terms = get_terms( [ 'taxonomy' => (string) $facet['source'], 'hide_empty' => false, 'number' => 200 ] );
+            if ( is_array( $terms ) ) {
+                foreach ( $terms as $t ) {
+                    if ( is_object( $t ) ) {
+                        $out[ (string) $t->slug ] = (string) $t->name;
+                    }
+                }
+            }
+        } else {
+            global $wpdb;
+            $table = $wpdb->prefix . \HookedOnFacets\Activator::TABLE;
+            $rows  = $wpdb->get_results( $wpdb->prepare(
+                "SELECT facet_value, MIN(facet_display) AS display FROM {$table}
+                 WHERE facet_name = %s GROUP BY facet_value ORDER BY facet_value LIMIT 200",
+                $name
+            ), ARRAY_A );
+            foreach ( (array) $rows as $r ) {
+                $out[ (string) $r['facet_value'] ] = (string) $r['display'];
+            }
+        }
+
+        return $this->all_values_cache[ $name ] = $out;
+    }
+
+    /**
+     * Checkbox / radio rendered as a row of buttons. Same values, same URL
+     * state and same crawlable links as the list style; only the control
+     * differs. The client reads `data-value` + `aria-pressed` the way it
+     * reads checked inputs, so nothing about the request changes.
+     *
+     * @param array<string, mixed> $facet
+     * @param array<int, string>   $selected_values
+     * @param array<string, mixed> $counts
+     * @param string               $display checkbox|radio
+     */
+    private function render_buttons( array $facet, array $selected_values, array $counts, string $display ): string {
+        $name     = $facet['name'];
+        $label    = $facet['label'] ?: $name;
+        $settings = is_array( $facet['settings'] ?? null ) ? $facet['settings'] : [];
+
+        $shape      = ( $settings['button_shape'] ?? 'pill' ) === 'square' ? 'square' : 'pill';
+        $fill       = ( $settings['button_fill'] ?? 'outline' ) === 'tinted' ? 'tinted' : 'outline';
+        $show_count = ! array_key_exists( 'button_count', $settings ) || (bool) $settings['button_count'];
+        $show_empty = ! array_key_exists( 'show_empty', $settings ) || (bool) $settings['show_empty'];
+
+        $buckets = ( $counts['type'] ?? '' ) === 'values' ? $counts['buckets'] : [];
+        if ( $show_empty ) {
+            $buckets = self::merge_empty_values( $buckets, $this->all_values_for( $facet ) );
+        }
+
+        $selected_lookup = $display === 'radio'
+            ? ( isset( $selected_values[0] ) ? [ (string) $selected_values[0] => true ] : [] )
+            : array_fill_keys( array_map( 'strval', $selected_values ), true );
+
+        ob_start();
+        ?>
+        <div class="hof-facet hof-facet-<?php echo esc_attr( $display ); ?>"
+             data-hof-facet="<?php echo esc_attr( $name ); ?>"
+             data-hof-display="<?php echo esc_attr( $display ); ?>"
+             data-hof-style="buttons">
+            <fieldset class="hof-facet-fieldset">
+                <legend class="hof-facet-label"><?php echo esc_html( $label ); ?></legend>
+                <?php if ( empty( $buckets ) ) : ?>
+                    <p class="hof-facet-empty"><?php esc_html_e( 'No options available.', 'hooked-on-facets' ); ?></p>
+                <?php else : ?>
+                    <div class="hof-facet__buttons">
+                        <?php foreach ( $buckets as $bucket ) :
+                            $value   = (string) $bucket['value'];
+                            $count   = (int) $bucket['count'];
+                            $pressed = isset( $selected_lookup[ $value ] );
+                            // A value with no results can't be picked, but a
+                            // selected one must stay clickable so it can be cleared.
+                            $empty   = $count === 0 && ! $pressed;
+                            $classes = 'hof-btn hof-btn--' . $shape . ' hof-btn--' . $fill . ( $empty ? ' hof-btn--empty' : '' );
+                        ?>
+                            <button type="button"
+                                    class="<?php echo esc_attr( $classes ); ?>"
+                                    data-value="<?php echo esc_attr( $value ); ?>"
+                                    aria-pressed="<?php echo $pressed ? 'true' : 'false'; ?>"
+                                    <?php echo $empty ? 'disabled' : ''; ?>>
+                                <?php echo esc_html( $bucket['display'] ); ?>
+                                <?php if ( $show_count ) : ?>
+                                    <span class="hof-btn__count"
+                                          data-hof-count="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( number_format_i18n( $count ) ); ?></span>
+                                <?php endif; ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php
+                    // Buttons can't be followed by a crawler or a no-JS visitor.
+                    // Emit the same anchors the list style does, outside the
+                    // fieldset flow; the runtime hides the list once it owns
+                    // interaction (see syncPrettyLinkA11y).
+                    $seo_links = [];
+                    foreach ( $buckets as $bucket ) {
+                        if ( (int) $bucket['count'] === 0 ) {
+                            continue;
+                        }
+                        $link = $this->pretty_link( $facet, (string) $bucket['value'] );
+                        if ( $link !== '' ) {
+                            $seo_links[] = '<li><a class="hof-facet-link" href="' . esc_url( $link ) . '">' . esc_html( $bucket['display'] ) . '</a></li>';
+                        }
+                    }
+                    if ( $seo_links !== [] ) {
+                        echo '<ul class="hof-facet-seo-links">' . implode( '', $seo_links ) . '</ul>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                    }
+                    ?>
                 <?php endif; ?>
             </fieldset>
         </div>

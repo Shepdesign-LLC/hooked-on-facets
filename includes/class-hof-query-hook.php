@@ -135,7 +135,7 @@ final class QueryHook implements Bootable {
         }
 
         $post_type    = (array) ( $query->get( 'post_type' ) ?: $this->guess_post_type_from_query( $query ) );
-        $indexed_pts  = (array) apply_filters( 'hof_indexed_post_types', [ 'post', 'page', 'product' ] );
+        $indexed_pts  = \HookedOnFacets\Indexer::configured_post_types();
         if ( empty( array_intersect( $post_type, $indexed_pts ) ) ) {
             return false;
         }
