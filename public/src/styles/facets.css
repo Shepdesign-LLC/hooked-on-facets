@@ -1823,6 +1823,67 @@
     opacity: 0.7;
 }
 
+/* ── Button-style checkbox / radio ──────────────────────────────────────
+   Every value is a <button data-value aria-pressed>. All color, radius and
+   font come from tokens, so changing --hof-primary (Design tokens, or theme
+   CSS) restyles every button facet with no rebuild. Restyle a single facet
+   with its .hof-facet--<slug> class. */
+.hof-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.35em 0.8em;
+    border: 1px solid var(--hof-primary);
+    background: transparent;
+    color: var(--hof-primary);
+    font: inherit;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.hof-btn--pill {
+    border-radius: var(--hof-radius-pill);
+}
+
+.hof-btn--square {
+    border-radius: var(--hof-radius-md);
+}
+
+.hof-btn--tinted {
+    background: color-mix(in srgb, var(--hof-primary) 10%, var(--hof-surface));
+}
+
+.hof-btn[aria-pressed="true"] {
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
+}
+
+.hof-btn__count {
+    font-size: 0.8em;
+    padding: 0 0.4em;
+    border-radius: var(--hof-radius-pill);
+    background: color-mix(in srgb, currentColor 14%, transparent);
+    font-variant-numeric: tabular-nums;
+}
+
+.hof-btn--empty {
+    opacity: 0.45;
+    border-style: dashed;
+    cursor: not-allowed;
+}
+
+.hof-btn:focus-visible {
+    outline: var(--hof-focus-ring-w) solid var(--hof-focus-ring);
+    outline-offset: var(--hof-focus-ring-offset);
+}
+
+.hof-facet__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em;
+}
+
 /* ── Hidden means hidden ────────────────────────────────────────────────
    The renderers (free core and the Pro add-on) toggle visibility with the
    HTML `hidden` attribute. Author `display` rules above — flex on the

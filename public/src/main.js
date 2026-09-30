@@ -15,6 +15,7 @@ import { initBin } from './bin.js';
 import { initAsk } from './ask.js';
 import { initVisualDna } from './visual-dna.js';
 import { initPagination } from './pagination.js';
+import { BUTTON_SELECTOR, pressButton } from './buttons.js';
 
 const store = new Store();
 store.hydrateFromUrl();
@@ -189,6 +190,15 @@ document.addEventListener('input', (e) => {
 
 // Reset link hijack — clear all and refresh in place.
 document.addEventListener('click', (e) => {
+    // Button-style checkbox / radio: a press is the same as a change on the
+    // matching input, and lands in the store the same way.
+    const pressed = e.target.closest(BUTTON_SELECTOR);
+    if (pressed) {
+        const result = pressButton(pressed);
+        if (result) store.set(result.name, result.values);
+        return;
+    }
+
     const reset = e.target.closest('[data-hof-reset]');
     if (reset) {
         e.preventDefault();
