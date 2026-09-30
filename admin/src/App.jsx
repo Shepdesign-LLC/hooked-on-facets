@@ -530,6 +530,7 @@ export default function App({ bootstrap }) {
                                         availableDisplays={bootstrap.availableDisplays}
                                         postTypes={stats?.post_types || []}
                                         stats={stats}
+                                        onOpenTokens={() => setView('tokens')}
                                     />
                                 </section>
                             ) : (

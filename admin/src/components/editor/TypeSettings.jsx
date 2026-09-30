@@ -11,6 +11,14 @@ const MULTI_VALUE = new Set(['checkbox', 'swatch', 'swiper']);
 // Displays that can target a color facet (Visual DNA).
 export const COLOR_TARGETS = new Set(['checkbox', 'radio', 'dropdown', 'swatch', 'swiper']);
 
+const STYLE_TIP =
+    'List is the classic checkbox or radio column. Buttons renders each value as a tappable button, styled from your ' +
+    'Design tokens so it matches the site. Same filtering either way.';
+
+const EMPTY_TIP =
+    'On: a value with zero matches still renders, dimmed and not clickable, so shoppers see the full set. ' +
+    'Off: it disappears until something matches.';
+
 const MATCH_TIP =
     'Any: show items that have at least one of the picked values. All: show only items that have every picked value. ' +
     'Most stores want Any.';
@@ -184,10 +192,65 @@ export function BehaviorFields({ facet, settings, update, issues, colorTargetFac
     );
 }
 
-export function DisplayFields({ facet, settings, update }) {
+export function DisplayFields({ facet, settings, update, onOpenTokens }) {
     const d = facet.display;
+    const buttons = settings.style === 'buttons';
     return (
         <>
+            {(d === 'checkbox' || d === 'radio') && (
+                <>
+                    <Row label="Style" tip={STYLE_TIP}>
+                        <Seg
+                            label="Style"
+                            value={buttons ? 'buttons' : 'list'}
+                            onChange={(style) => update({ style })}
+                            options={[{ value: 'list', label: 'List' }, { value: 'buttons', label: 'Buttons' }]}
+                        />
+                    </Row>
+                    {buttons && (
+                        <>
+                            <Row label="Shape">
+                                <Seg
+                                    label="Shape"
+                                    value={settings.button_shape || 'pill'}
+                                    onChange={(button_shape) => update({ button_shape })}
+                                    options={[{ value: 'pill', label: 'Pill' }, { value: 'square', label: 'Square' }]}
+                                />
+                            </Row>
+                            <Row label="Fill">
+                                <Seg
+                                    label="Fill"
+                                    value={settings.button_fill || 'outline'}
+                                    onChange={(button_fill) => update({ button_fill })}
+                                    options={[{ value: 'outline', label: 'Outline' }, { value: 'tinted', label: 'Tinted' }]}
+                                />
+                            </Row>
+                            <Row label="Count on the button">
+                                <Toggle
+                                    label="Count on the button"
+                                    checked={settings.button_count !== false}
+                                    onChange={(button_count) => update({ button_count })}
+                                />
+                            </Row>
+                            <Row label="Show values with no results" tip={EMPTY_TIP}>
+                                <Toggle
+                                    label="Show values with no results"
+                                    checked={settings.show_empty !== false}
+                                    onChange={(show_empty) => update({ show_empty })}
+                                />
+                            </Row>
+                            <p className="hof-note hof-btn-note">
+                                Colors, radius and font come from{' '}
+                                {onOpenTokens
+                                    ? <button type="button" className="hof-link" onClick={onOpenTokens}>Design tokens</button>
+                                    : 'Design tokens'}
+                                . Override per facet with the <code>hof-facet--{facet.name || 'slug'}</code> class.
+                            </p>
+                        </>
+                    )}
+                </>
+            )}
+
             {d === 'ask' && (
                 <label className="hof-field">
                     <span className="hof-field-label">Placeholder text</span>

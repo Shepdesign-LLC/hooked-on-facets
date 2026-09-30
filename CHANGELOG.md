@@ -9,6 +9,27 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+### Added
+
+- **Facets list grouped by post type** — Everywhere, Products, custom post
+  types, then Posts, with indexed item counts, a Values column, a status pill
+  and a "Found in your content" strip of suggested facets. New
+  `GET /indexer/stats` route; facets can carry an optional `post_type`.
+- **Source-first facet editor** — pick what a facet applies to, then its source,
+  then a type. Types that don't fit the source are disabled with the reason, and
+  an explainer is written from real counts. The preview runs the unsaved facet
+  against your content (`POST /facets/preview`, `GET /sources`). Saving reports
+  when the index needs a rebuild; it never starts one.
+- **Button style for checkbox and radio facets** — `settings.style: "buttons"`
+  renders each value as a pill or square button with an optional count and
+  dimmed empty values. Same URLs and links as list style, styled from the
+  `--hof-*` tokens. Every facet wrapper now also carries `hof-facet--<slug>`.
+
+### Changed
+
+- The Facets screen is a list that opens an editor, replacing the sidebar.
+  Drag reorder is replaced by move up / down within a post type group.
+
 ## [1.1.1] - 2026-09-18
 
 ### Added

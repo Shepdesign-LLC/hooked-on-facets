@@ -1012,6 +1012,74 @@ body.toplevel_page_hooked-on-facets .wrap {
     color: var(--hof-muted);
 }
 
+/* Button-style preview. Mirrors the public .hof-btn rules and reads the
+   same tokens; separate class names because the admin already owns .hof-btn. */
+.hof-pv-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.hof-pv-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.35em 0.8em;
+    border: 1px solid var(--hof-primary);
+    background: transparent;
+    color: var(--hof-primary);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.hof-pv-btn--pill {
+    border-radius: var(--hof-radius-pill);
+}
+
+.hof-pv-btn--square {
+    border-radius: var(--hof-radius-md);
+}
+
+.hof-pv-btn--tinted {
+    background: color-mix(in srgb, var(--hof-primary) 10%, var(--hof-surface));
+}
+
+.hof-pv-btn[aria-pressed="true"] {
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
+}
+
+.hof-pv-btn.is-empty {
+    opacity: 0.45;
+    border-style: dashed;
+    cursor: not-allowed;
+}
+
+.hof-pv-btn-count {
+    padding: 0 0.4em;
+    border-radius: var(--hof-radius-pill);
+    background: color-mix(in srgb, currentColor 14%, transparent);
+    font-size: 0.8em;
+    font-variant-numeric: tabular-nums;
+}
+
+.hof-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--hof-primary);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.hof-btn-note {
+    margin-top: 6px;
+}
+
 /* ── Place it ─────────────────────────────────────────────────────────── */
 
 .hof-place h2 {

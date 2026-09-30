@@ -367,3 +367,172 @@ describe('LivePreview', () => {
         expect(previewFacet.mock.calls[0][1].values).toEqual([]);
     });
 });
+
+describe('FacetEditor — button style', () => {
+    const row = (label) => [...host.querySelectorAll('.hof-row')].find((r) => r.querySelector('span').textContent.startsWith(label));
+    const seg = (label, text) => [...row(label).querySelectorAll('.hof-seg button')].find((b) => b.textContent === text);
+
+    it('offers Style (List / Buttons) for checkbox and radio only', async () => {
+        await render(editor());
+        expect(row('Style')).toBeTruthy();
+        expect([...row('Style').querySelectorAll('button')].map((b) => b.textContent)).toEqual(['List', 'Buttons']);
+        expect(seg('Style', 'List').getAttribute('aria-pressed')).toBe('true');
+
+        await act(async () => root.unmount());
+        host.remove();
+        await render(editor({ facet: facet({ display: 'radio' }) }));
+        expect(row('Style')).toBeTruthy();
+
+        await act(async () => root.unmount());
+        host.remove();
+        await render(editor({ facet: facet({ display: 'dropdown' }) }));
+        expect(row('Style')).toBeUndefined();
+    });
+
+    it('hides Shape, Fill, Count and Show empty until Style is Buttons', async () => {
+        await render(editor());
+
+        for (const label of ['Shape', 'Fill', 'Count on the button', 'Show values with no results']) {
+            expect(row(label), label).toBeUndefined();
+        }
+        expect(host.textContent).not.toContain('hof-facet--brand');
+    });
+
+    it('shows them with the stored defaults when Style is Buttons', async () => {
+        await render(editor({ facet: facet({ settings: { style: 'buttons' } }) }));
+
+        expect(seg('Shape', 'Pill').getAttribute('aria-pressed')).toBe('true');
+        expect(seg('Fill', 'Outline').getAttribute('aria-pressed')).toBe('true');
+        expect(row('Count on the button').querySelector('[role="switch"]').getAttribute('aria-checked')).toBe('true');
+        expect(row('Show values with no results').querySelector('[role="switch"]').getAttribute('aria-checked')).toBe('true');
+    });
+
+    it('writes each option to settings under the documented keys', async () => {
+        const onChange = vi.fn();
+        await render(editor({ onChange, facet: facet({ settings: { style: 'buttons' } }) }));
+
+        await act(async () => seg('Shape', 'Square').click());
+        expect(onChange).toHaveBeenLastCalledWith({ settings: { style: 'buttons', button_shape: 'square' } });
+
+        await act(async () => seg('Fill', 'Tinted').click());
+        expect(onChange).toHaveBeenLastCalledWith({ settings: { style: 'buttons', button_fill: 'tinted' } });
+
+        await act(async () => row('Count on the button').querySelector('[role="switch"]').click());
+        expect(onChange).toHaveBeenLastCalledWith({ settings: { style: 'buttons', button_count: false } });
+
+        await act(async () => row('Show values with no results').querySelector('[role="switch"]').click());
+        expect(onChange).toHaveBeenLastCalledWith({ settings: { style: 'buttons', show_empty: false } });
+
+        await act(async () => seg('Style', 'List').click());
+        expect(onChange).toHaveBeenLastCalledWith({ settings: { style: 'list' } });
+    });
+
+    it('keeps other settings when the style changes', async () => {
+        const onChange = vi.fn();
+        await render(editor({ onChange, facet: facet({ settings: { match: 'all' } }) }));
+
+        await act(async () => seg('Style', 'Buttons').click());
+
+        expect(onChange).toHaveBeenLastCalledWith({ settings: { match: 'all', style: 'buttons' } });
+    });
+
+    it('explains where the colors come from and names the per-facet class', async () => {
+        const onOpenTokens = vi.fn();
+        await render(editor({ onOpenTokens, facet: facet({ settings: { style: 'buttons' } }) }));
+        const note = host.querySelector('.hof-btn-note');
+
+        expect(note.textContent).toContain('Colors, radius and font come from Design tokens');
+        expect(note.querySelector('code').textContent).toBe('hof-facet--brand');
+
+        await act(async () => note.querySelector('button').click());
+        expect(onOpenTokens).toHaveBeenCalled();
+    });
+
+    it('has a tooltip on Style and on Show values with no results', async () => {
+        await render(editor({ facet: facet({ settings: { style: 'buttons' } }) }));
+        const tips = [...host.querySelectorAll('.hof-row .hof-tip')].map((t) => t.dataset.tip);
+
+        expect(tips.some((t) => t.startsWith('List is the classic checkbox or radio column'))).toBe(true);
+        expect(tips.some((t) => t.startsWith('On: a value with zero matches still renders'))).toBe(true);
+    });
+});
+
+describe('LivePreview — button style', () => {
+    const buttonsFacet = (settings = {}) => facet({ settings: { style: 'buttons', ...settings } });
+    const run = async (f, ans = answer()) => {
+        vi.useFakeTimers();
+        previewFacet.mockResolvedValue(ans);
+        await render(createElement(LivePreview, { facet: f, postType: 'product' }));
+        await act(async () => { vi.advanceTimersByTime(150); });
+    };
+    const buttons = () => [...host.querySelectorAll('.hof-pv-btn')];
+
+    it('renders the values as buttons with counts, not a list', async () => {
+        await run(buttonsFacet());
+
+        expect(host.querySelector('.hof-pv-list')).toBeNull();
+        expect(buttons().map((b) => b.textContent)).toEqual(['Alder4', 'Tundra0']);
+        expect(buttons()[0].className).toContain('hof-pv-btn--pill hof-pv-btn--outline');
+    });
+
+    it('dims a value with no results when Show empty is on (Tundra)', async () => {
+        await run(buttonsFacet({ show_empty: true }));
+        const tundra = buttons().find((b) => b.textContent.startsWith('Tundra'));
+
+        expect(tundra.disabled).toBe(true);
+        expect(tundra.classList.contains('is-empty')).toBe(true);
+    });
+
+    it('omits it when Show empty is off', async () => {
+        await run(buttonsFacet({ show_empty: false }));
+
+        expect(buttons().map((b) => b.textContent)).toEqual(['Alder4']);
+    });
+
+    it('drops the counts when Count on the button is off', async () => {
+        await run(buttonsFacet({ button_count: false }));
+
+        expect(host.querySelector('.hof-pv-btn-count')).toBeNull();
+        expect(buttons()[0].textContent).toBe('Alder');
+    });
+
+    it('applies shape and fill', async () => {
+        await run(buttonsFacet({ button_shape: 'square', button_fill: 'tinted' }));
+
+        expect(buttons()[0].className).toContain('hof-pv-btn--square hof-pv-btn--tinted');
+    });
+
+    it('toggles a value and re-queries, like the public facet', async () => {
+        await run(buttonsFacet());
+        previewFacet.mockClear();
+
+        await act(async () => buttons()[0].click());
+        await act(async () => { vi.advanceTimersByTime(150); });
+
+        expect(buttons()[0].getAttribute('aria-pressed')).toBe('true');
+        expect(previewFacet.mock.calls[0][1].values).toEqual(['alder']);
+    });
+
+    it('radio: pressing the selected button clears it', async () => {
+        await run(facet({ display: 'radio', settings: { style: 'buttons' } }));
+
+        await act(async () => buttons()[0].click());
+        expect(buttons()[0].getAttribute('aria-pressed')).toBe('true');
+        await act(async () => buttons()[0].click());
+
+        expect(buttons()[0].getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('radio: only one button is pressed at a time', async () => {
+        const ans = answer({ values: [
+            { value: 'alder', label: 'Alder', count: 4, term_id: 1, parent_id: null, depth: 0 },
+            { value: 'orin', label: 'Orin', count: 2, term_id: 2, parent_id: null, depth: 0 },
+        ] });
+        await run(facet({ display: 'radio', settings: { style: 'buttons' } }), ans);
+
+        await act(async () => buttons()[0].click());
+        await act(async () => buttons()[1].click());
+
+        expect(buttons().map((b) => b.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
+    });
+});
