@@ -1227,6 +1227,84 @@ body.toplevel_page_hooked-on-facets .wrap {
     flex: 1 1 260px;
 }
 
+/* Numbers line up in columns and stat tiles. */
+.hof-dash,
+.hof-loops,
+.hof-indexer {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Settings ─────────────────────────────────────────────────────────── */
+
+.hof-settings {
+    max-width: 800px;
+}
+
+.hof-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--hof-border);
+}
+
+.hof-tabs button {
+    margin-bottom: -1px;
+    padding: 8px 10px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--hof-muted);
+    font: inherit;
+    cursor: pointer;
+}
+
+.hof-tabs button[aria-selected="true"] {
+    border-bottom-color: var(--hof-primary);
+    color: var(--hof-text);
+    font-weight: 500;
+}
+
+.hof-settings-list {
+    padding: 4px 16px;
+    margin-bottom: 14px;
+}
+
+.hof-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--hof-border);
+}
+
+.hof-setting-row:last-child {
+    border-bottom: 0;
+}
+
+.hof-setting-row > span {
+    font-size: 13.5px;
+}
+
+.hof-setting-row small {
+    display: block;
+    font-size: 12.5px;
+    color: var(--hof-muted);
+}
+
+.hof-settings-upsell {
+    padding: 16px;
+}
+
+.hof-settings-upsell p {
+    margin: 0;
+}
+
+.hof-switch:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 /* ── Empty state ──────────────────────────────────────────────────────── */
 
 .hof-empty {
@@ -1644,66 +1722,116 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 
-/* ── Tokens panel ─────────────────────────────────────────────────────── */
+/* ── Design tokens ────────────────────────────────────────────────────── */
 
-.hof-tokens {
-    padding: calc(var(--hof-space) * 3);
-    flex: 1;
-    overflow-y: auto;
+.hof-tk-note {
+    min-height: 1.4em;
+    margin: 6px 0 0;
+    font-size: 0.8125rem;
+    color: var(--hof-good);
 }
 
-.hof-tokens-header h2 {
-    margin: 0 0 var(--hof-space) 0;
-}
-
-.hof-tokens-header p {
-    color: var(--hof-muted);
-    max-width: 60ch;
-}
-
-.hof-tokens-empty {
-    color: var(--hof-muted);
-}
-
-.hof-tokens-list {
-    list-style: none;
-    margin: calc(var(--hof-space) * 2) 0 0 0;
-    padding: 0;
+.hof-tk-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--hof-space);
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+    gap: 14px;
+    margin-top: 8px;
+    align-items: start;
 }
 
-.hof-tokens-item {
-    display: flex;
+@media (max-width: 900px) {
+    .hof-tk-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.hof-tk-list,
+.hof-tk-pad {
+    padding: 16px;
+}
+
+.hof-tk-side {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+}
+
+.hof-tk-sec {
+    margin: 0 0 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--hof-muted);
+}
+
+.hof-tk-list section + section {
+    margin-top: 14px;
+}
+
+.hof-tk-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 132px);
     align-items: center;
-    gap: var(--hof-space);
-    background: var(--hof-surface);
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.hof-tk-row label {
+    display: grid;
+    font-size: 0.8125rem;
+}
+
+.hof-tk-row label code {
+    font-size: 0.6875rem;
+    color: var(--hof-faint);
+    background: none;
+    padding: 0;
+}
+
+.hof-tk-row .hof-input {
+    grid-column: 3;
+    min-width: 0;
+}
+
+.hof-tk-swatch {
+    grid-column: 2;
+    width: 28px;
+    height: 28px;
+    padding: 0;
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-sm);
-    padding: calc(var(--hof-space) * 1.5);
+    background: none;
+    cursor: pointer;
 }
 
-.hof-tokens-swatch {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    flex-shrink: 0;
+.hof-tk-shadow {
+    display: block;
 }
 
-.hof-tokens-name {
-    font-weight: 500;
-    font-size: 0.875rem;
+.hof-tk-css {
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px 10px;
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-bg);
+    color: var(--hof-text);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    resize: vertical;
+    box-sizing: border-box;
 }
 
-.hof-tokens-value {
-    margin-left: auto;
-    color: var(--hof-muted);
+.hof-tk-pre {
+    margin: 0;
+    padding: 10px 12px;
+    overflow-x: auto;
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-bg);
     font-size: 0.75rem;
-    max-width: 50%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.5;
+    white-space: pre-wrap;
 }
 
 /* ── Dashboard view ───────────────────────────────────────────────────── */

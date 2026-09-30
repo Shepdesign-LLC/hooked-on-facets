@@ -1,0 +1,16 @@
+{
+    "--hof-primary": "#534AB7",
+    "--hof-on-primary": "#FFFFFF",
+    "--hof-text": "#221D52",
+    "--hof-muted": "#625D85",
+    "--hof-surface": "#FFFFFF",
+    "--hof-bg": "#F5F4FB",
+    "--hof-border": "#DDDAEE",
+    "--hof-danger": "#D85A30",
+    "--hof-radius-sm": "6px",
+    "--hof-radius-md": "8px",
+    "--hof-radius-pill": "999px",
+    "--hof-space": "8px",
+    "--hof-font-body": "inherit",
+    "--hof-font-mono": "ui-monospace, \"SF Mono\", Menlo, monospace"
+}

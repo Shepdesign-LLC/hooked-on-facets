@@ -12,6 +12,12 @@ import {
     IconX,
 } from '@tabler/icons-react';
 import { applyFilter } from '../api.js';
+import Tip from './ui/Tip.jsx';
+
+const DEPLOY_TIP =
+    "Two levels of saving. Sync writes one facet's look back to that facet. Deploy writes every facet in this blueprint " +
+    'to the Shop archive template at once, so the whole sandbox becomes the live page. Until you do one of those, ' +
+    'nothing on the site changes.';
 
 const VARIANTS    = ['Card', 'Grid', 'Swipe'];
 const CARD_SIZES  = ['Small', 'Medium', 'Large'];
@@ -112,147 +118,159 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
     };
 
     return (
-        <div className="hof-bp">
-            <div className="hof-bp-bar">
-                <button type="button" className="hof-bp-back" onClick={onBack} aria-label="Back">
-                    <IconArrowLeft size={14} stroke={1.75} />
-                </button>
-                <span className="hof-bp-crumb">Sandbox</span>
-                <IconChevronRight size={12} stroke={1.75} className="hof-bp-sep" aria-hidden="true" />
-                <span className="hof-bp-crumb hof-bp-crumb-active">Shop archive blueprint</span>
-                <div className="hof-bp-bar-actions">
-                    <button type="button" className="hof-bp-chip">
-                        <IconDeviceDesktop size={13} stroke={1.75} aria-hidden="true" />
-                        <span>Desktop</span>
-                    </button>
-                    <button type="button" className="hof-bp-chip hof-bp-chip-icon" aria-label="Toggle preview">
-                        <IconEye size={13} stroke={1.75} aria-hidden="true" />
-                    </button>
-                    <button type="button" className="hof-bp-deploy">
-                        <IconCloudUpload size={13} stroke={1.75} aria-hidden="true" />
-                        <span>Deploy</span>
-                    </button>
+        <>
+            <div className="hof-view-header">
+                <div className="hof-view-heading">
+                    <h2 className="hof-view-title">Blueprint</h2>
+                    <p className="hof-lede">
+                        Try a facet&apos;s look and motion against live products. Sync saves one facet; Deploy saves the
+                        whole blueprint to the template. Until then nothing on the site changes.
+                    </p>
                 </div>
             </div>
-
-            <div className="hof-bp-grid">
-                <section className="hof-bp-canvas">
-                    <span className="hof-bp-results-pill">
-                        <IconLink size={11} stroke={1.75} aria-hidden="true" />
-                        <span>
-                            Bricks · Shop archive ·{' '}
-                            {resultCount === null ? '— results' : `${resultCount.toLocaleString()} results`} matching
-                        </span>
-                    </span>
-
-                    <Stage
-                        variant={variant}
-                        deckDepth={deckDepth}
-                        style={stageStyle}
-                        editing={editing}
-                    />
-
-                    <div className="hof-bp-response">
-                        <p className="hof-eyebrow hof-bp-response-label">Products responding live</p>
-                        <div className="hof-bp-response-bars">
-                            <span className="hof-bp-response-bar" style={{ opacity: 1 }}></span>
-                            <span className="hof-bp-response-bar" style={{ opacity: 0.7 }}></span>
-                            <span className="hof-bp-response-bar" style={{ opacity: 0.5 }}></span>
-                            <span className="hof-bp-response-bar hof-bp-response-bar-muted"></span>
-                            <span className="hof-bp-response-bar hof-bp-response-bar-muted"></span>
-                        </div>
-                    </div>
-                </section>
-
-                <aside className="hof-bp-inspector">
-                    <p className="hof-eyebrow">Editing</p>
-
-                    {editable.length > 1 && (
-                        <div className="hof-bp-facet-picker" role="tablist" aria-label="Pick facet to edit">
-                            {editable.map((f) => (
-                                <button
-                                    key={f.name}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={f.name === selectedName}
-                                    className={`hof-bp-facet-chip ${f.name === selectedName ? 'is-active' : ''}`}
-                                    onClick={() => setSelectedName(f.name)}
-                                >
-                                    {f.label || f.name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    <h2 className="hof-bp-inspector-title">{editing?.label || editing?.name || 'No facet'}</h2>
-                    <p className="hof-bp-inspector-subtitle">
-                        {DISPLAY_LABELS[editing?.display] || 'Checkbox'} facet
-                    </p>
-
-                    <Field label="Variant">
-                        <Segmented options={VARIANTS} value={variant} onChange={setVariant} />
-                    </Field>
-
-                    <Field label="Card size">
-                        <Segmented options={CARD_SIZES} value={cardSize} onChange={setCardSize} />
-                    </Field>
-
-                    <Field label="Deck depth">
-                        <div className="hof-bp-slider">
-                            <input
-                                type="range"
-                                min="1"
-                                max="10"
-                                value={deckDepth}
-                                onChange={(e) => setDeckDepth(Number(e.target.value))}
-                                className="hof-bp-slider-input"
-                                aria-label="Deck depth"
-                            />
-                            <span className="hof-bp-slider-value">{deckDepth}</span>
-                        </div>
-                    </Field>
-
-                    <Field label="Animation">
-                        <div className="hof-bp-radio-group">
-                            {ANIMATIONS.map((a) => (
-                                <label key={a} className={`hof-bp-radio ${animation === a ? 'is-active' : ''}`}>
-                                    <input
-                                        type="radio"
-                                        name="hof-bp-animation"
-                                        checked={animation === a}
-                                        onChange={() => setAnimation(a)}
-                                    />
-                                    <span className="hof-bp-radio-dot" aria-hidden="true"></span>
-                                    <span>{a}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </Field>
-
-                    {toast && (
-                        <div className={`hof-bp-toast hof-bp-toast-${toast.type}`} role={toast.type === 'err' ? 'alert' : 'status'}>
-                            {toast.type === 'ok'
-                                ? <IconCheck size={13} stroke={1.75} aria-hidden="true" />
-                                : <IconAlertCircle size={13} stroke={1.75} aria-hidden="true" />
-                            }
-                            <span>{toast.message}</span>
-                        </div>
-                    )}
-
-                    <div className="hof-bp-inspector-cta">
-                        <button
-                            type="button"
-                            className="hof-btn hof-btn-primary hof-bp-sync"
-                            onClick={sync}
-                            disabled={!editing || !dirty || syncing}
-                        >
-                            <IconArrowUpRight size={14} stroke={1.75} aria-hidden="true" />
-                            <span>{syncing ? 'Syncing…' : dirty ? 'Sync to query loop' : 'Synced'}</span>
+            <div className="hof-bp">
+                <div className="hof-bp-bar">
+                    <button type="button" className="hof-bp-back" onClick={onBack} aria-label="Back">
+                        <IconArrowLeft size={14} stroke={1.75} />
+                    </button>
+                    <span className="hof-bp-crumb">Sandbox</span>
+                    <IconChevronRight size={12} stroke={1.75} className="hof-bp-sep" aria-hidden="true" />
+                    <span className="hof-bp-crumb hof-bp-crumb-active">Shop archive blueprint</span>
+                    <div className="hof-bp-bar-actions">
+                        <button type="button" className="hof-bp-chip">
+                            <IconDeviceDesktop size={13} stroke={1.75} aria-hidden="true" />
+                            <span>Desktop</span>
                         </button>
+                        <button type="button" className="hof-bp-chip hof-bp-chip-icon" aria-label="Toggle preview">
+                            <IconEye size={13} stroke={1.75} aria-hidden="true" />
+                        </button>
+                        <button type="button" className="hof-bp-deploy">
+                            <IconCloudUpload size={13} stroke={1.75} aria-hidden="true" />
+                            <span>Deploy blueprint</span>
+                        </button>
+                        <Tip text={DEPLOY_TIP} align="left" />
                     </div>
-                </aside>
+                </div>
+
+                <div className="hof-bp-grid">
+                    <section className="hof-bp-canvas">
+                        <span className="hof-bp-results-pill">
+                            <IconLink size={11} stroke={1.75} aria-hidden="true" />
+                            <span>
+                                Bricks · Shop archive ·{' '}
+                                {resultCount === null ? '— results' : `${resultCount.toLocaleString()} results`} matching
+                            </span>
+                        </span>
+
+                        <Stage
+                            variant={variant}
+                            deckDepth={deckDepth}
+                            style={stageStyle}
+                            editing={editing}
+                        />
+
+                        <div className="hof-bp-response">
+                            <p className="hof-eyebrow hof-bp-response-label">Products responding live</p>
+                            <div className="hof-bp-response-bars">
+                                <span className="hof-bp-response-bar" style={{ opacity: 1 }}></span>
+                                <span className="hof-bp-response-bar" style={{ opacity: 0.7 }}></span>
+                                <span className="hof-bp-response-bar" style={{ opacity: 0.5 }}></span>
+                                <span className="hof-bp-response-bar hof-bp-response-bar-muted"></span>
+                                <span className="hof-bp-response-bar hof-bp-response-bar-muted"></span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <aside className="hof-bp-inspector">
+                        <p className="hof-eyebrow">Editing</p>
+
+                        {editable.length > 1 && (
+                            <div className="hof-bp-facet-picker" role="tablist" aria-label="Pick facet to edit">
+                                {editable.map((f) => (
+                                    <button
+                                        key={f.name}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={f.name === selectedName}
+                                        className={`hof-bp-facet-chip ${f.name === selectedName ? 'is-active' : ''}`}
+                                        onClick={() => setSelectedName(f.name)}
+                                    >
+                                        {f.label || f.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <h2 className="hof-bp-inspector-title">{editing?.label || editing?.name || 'No facet'}</h2>
+                        <p className="hof-bp-inspector-subtitle">
+                            {DISPLAY_LABELS[editing?.display] || 'Checkbox'} facet
+                        </p>
+
+                        <Field label="Variant">
+                            <Segmented options={VARIANTS} value={variant} onChange={setVariant} />
+                        </Field>
+
+                        <Field label="Card size">
+                            <Segmented options={CARD_SIZES} value={cardSize} onChange={setCardSize} />
+                        </Field>
+
+                        <Field label="Deck depth">
+                            <div className="hof-bp-slider">
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="10"
+                                    value={deckDepth}
+                                    onChange={(e) => setDeckDepth(Number(e.target.value))}
+                                    className="hof-bp-slider-input"
+                                    aria-label="Deck depth"
+                                />
+                                <span className="hof-bp-slider-value">{deckDepth}</span>
+                            </div>
+                        </Field>
+
+                        <Field label="Animation">
+                            <div className="hof-bp-radio-group">
+                                {ANIMATIONS.map((a) => (
+                                    <label key={a} className={`hof-bp-radio ${animation === a ? 'is-active' : ''}`}>
+                                        <input
+                                            type="radio"
+                                            name="hof-bp-animation"
+                                            checked={animation === a}
+                                            onChange={() => setAnimation(a)}
+                                        />
+                                        <span className="hof-bp-radio-dot" aria-hidden="true"></span>
+                                        <span>{a}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </Field>
+
+                        {toast && (
+                            <div className={`hof-bp-toast hof-bp-toast-${toast.type}`} role={toast.type === 'err' ? 'alert' : 'status'}>
+                                {toast.type === 'ok'
+                                    ? <IconCheck size={13} stroke={1.75} aria-hidden="true" />
+                                    : <IconAlertCircle size={13} stroke={1.75} aria-hidden="true" />
+                                }
+                                <span>{toast.message}</span>
+                            </div>
+                        )}
+
+                        <div className="hof-bp-inspector-cta">
+                            <button
+                                type="button"
+                                className="hof-btn hof-btn-primary hof-bp-sync"
+                                onClick={sync}
+                                disabled={!editing || !dirty || syncing}
+                            >
+                                <IconArrowUpRight size={14} stroke={1.75} aria-hidden="true" />
+                                <span>{syncing ? 'Syncing…' : dirty ? 'Sync to query loop' : 'Synced'}</span>
+                            </button>
+                        </div>
+                    </aside>
+                </div>
             </div>
-        </div>
+        </>
     );
 }
 

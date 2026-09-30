@@ -7,12 +7,12 @@ import FacetsList from './components/FacetsList.jsx';
 import Shell from './components/Shell.jsx';
 import HelpDrawer from './components/HelpDrawer.jsx';
 import FacetEditor from './components/FacetEditor.jsx';
-import TokensPanel from './components/TokensPanel.jsx';
+import DesignTokens from './components/DesignTokens.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Blueprint from './components/Blueprint.jsx';
 import Indexer from './components/Indexer.jsx';
 import QueryLoops from './components/QueryLoops.jsx';
-import AiSettings from './components/AiSettings.jsx';
+import Settings from './components/Settings.jsx';
 import SeoSettings from './components/SeoSettings.jsx';
 import LicenseSettings from './components/LicenseSettings.jsx';
 import { VIEWS, availableViews } from './lib/views.js';
@@ -69,6 +69,12 @@ export default function App({ bootstrap }) {
     useEffect(() => {
         refreshStats();
     }, [refreshStats]);
+
+    // Numbers on the Indexer and Facets screens come from the index, so look
+    // again whenever one of them opens.
+    useEffect(() => {
+        if (view === 'indexer' || view === 'facets') refreshStats();
+    }, [view, refreshStats]);
 
     // A running background job changes every facet's status; poll until it ends.
     const jobRunning = !!stats?.background?.running;
@@ -503,7 +509,7 @@ export default function App({ bootstrap }) {
                     );
                 })()}
 
-                {view === 'tokens' && <TokensPanel tokens={bootstrap.tokens || {}} />}
+                {view === 'tokens' && <DesignTokens initial={bootstrap.designTokens} facets={facets} />}
 
                 {view === 'blueprint' && (
                     <Blueprint
@@ -513,7 +519,7 @@ export default function App({ bootstrap }) {
                     />
                 )}
 
-                {view === 'indexer' && <Indexer />}
+                {view === 'indexer' && <Indexer facets={facets} stats={stats} onRefresh={refreshStats} />}
 
                 {view === 'queryloops' && <QueryLoops />}
 
@@ -526,18 +532,7 @@ export default function App({ bootstrap }) {
                 )}
 
                 {view === 'settings' && (
-                    bootstrap.proActive ? (
-                        <AiSettings bootstrap={bootstrap} />
-                    ) : (
-                        <div className="hof-panel">
-                            <p>
-                                AI settings (the Ask facet) are part of{' '}
-                                <a href="https://hookedonfacets.com/#pricing" target="_blank" rel="noreferrer">
-                                    HOF Pro
-                                </a>.
-                            </p>
-                        </div>
-                    )
+                    <Settings bootstrap={bootstrap} onPostTypesChanged={refreshStats} />
                 )}
             </Shell>
             <HelpDrawer

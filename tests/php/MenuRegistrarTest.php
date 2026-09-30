@@ -24,6 +24,7 @@ final class MenuRegistrarTest extends TestCase {
         Monkey\setUp();
         Functions\when( '__' )->returnArg();
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value ) => $value );
+        Functions\when( 'get_option' )->alias( static fn( $name, $default = false ) => $default );
     }
 
     protected function tearDown(): void {
