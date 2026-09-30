@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
     facetStatus,
-    orderPostTypes,
     facetValues,
     groupFacets,
     pickSuggestions,

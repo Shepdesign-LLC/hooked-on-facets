@@ -1110,7 +1110,7 @@ final class Indexer implements Bootable, \HookedOnFacets\Contracts\IndexJobs {
      *
      * @return string[]
      */
-    public static function configured_post_types(): array {
+    public function indexed_post_types(): array {
         /**
          * Filter post types eligible for HOF indexing.
          *

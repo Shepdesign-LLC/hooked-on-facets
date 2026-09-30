@@ -60,35 +60,3 @@ export const getIndexerStats = () => request('indexer/stats');
 // (woocommerce | acf | metabox | pods).
 export const getSuggestions = (integration) =>
     request(`integrations/${integration}/suggest`);
-
-// What a facet can read from on one post type: taxonomies, integration
-// fields and title search, with real counts.
-export const getSources = (postType, options = {}) =>
-    request(`sources?post_type=${encodeURIComponent(postType)}`, options);
-
-// Run an unsaved facet against live content. `selection` is what the shopper
-// has picked in the preview: { values, match, min, max, q }.
-export const previewFacet = (facet, selection = {}, options = {}) =>
-    request('facets/preview', {
-        method: 'POST',
-        body: JSON.stringify({ facet, selection }),
-        ...options,
-    });
-
-// Every public post type with its item count and whether indexing is on.
-export const getPostTypes = () => request('post-types');
-
-// Switch indexing on or off. `indexed` is the full list of slugs to index;
-// turning one on queues a background index for that type alone.
-export const savePostTypes = (indexed) =>
-    request('post-types', {
-        method: 'PUT',
-        body: JSON.stringify({ indexed }),
-    });
-
-// Design tokens: values, site CSS and its scope, stored in the hof_tokens option.
-export const saveTokens = ({ tokens, custom_css, scope, facet }) =>
-    request('tokens', {
-        method: 'PUT',
-        body: JSON.stringify({ tokens, custom_css, scope, facet }),
-    });

@@ -8,10 +8,6 @@
  *   POST /reindex (admin)     → trigger full reindex
  *   GET  /reindex/status (admin) → current index stats (rows, objects, per-facet)
  *   GET  /indexer/stats (admin)  → item counts per post type + per-facet values / status
- *   GET  /sources (admin)        → what a facet can read from, per post type
- *   GET|PUT /post-types (admin)  → which post types the index covers
- *   GET|PUT /tokens (admin)      → design tokens + site CSS
- *   POST /facets/preview (admin) → run an unsaved facet against live content
  *   GET  /telemetry (admin)   → resolver timings + hooked-loop counts
  *   DELETE /telemetry (admin) → reset all telemetry counters
  *
