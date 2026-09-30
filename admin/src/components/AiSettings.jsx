@@ -79,7 +79,7 @@ export default function AiSettings({ bootstrap }) {
                         Powers the conversational <em>Ask</em> facet — turning natural-language requests
                         like <em>"red shoes under $50"</em> into editable filter chips via the Anthropic API.
                         Bring your own key — it's stored on this site and never sent to the browser or
-                        shared with Hooked on Facets.
+                        shared with hooked on facets.
                     </p>
                 </div>
             </header>

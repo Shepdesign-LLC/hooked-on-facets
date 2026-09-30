@@ -29,6 +29,21 @@ major version. Each version links to its full GitHub release notes.
 
 - The Facets screen is a list that opens an editor, replacing the sidebar.
   Drag reorder is replaced by move up / down within a post type group.
+- **Admin restyled on the brand tokens.** Page, cards, buttons, pills and
+  controls read `--hof-*` tokens only: 1px borders, 8px panels, 6px controls,
+  no shadows or gradients. A top bar and a left rail (Main, Studio, System)
+  replace the dark sidebar and breadcrumb bar; below 900px the rail is a
+  scrolling strip. WordPress's own sidebar and admin bar are untouched.
+- Geist Sans and Geist Mono now ship with the admin bundle instead of loading
+  from Google Fonts, so wp-admin makes no request to a font CDN.
+- The WordPress menu entry is one item named `hooked on facets`, with no submenu.
+- The Help button style is the only coral button; the Create facet and Reindex
+  calls to action are primary purple.
+
+### Fixed
+
+- Admin token overrides from the `hof_admin_css_tokens` filter printed before
+  the bundle's own defaults, so the defaults silently won. They now print after.
 
 ## [1.1.1] - 2026-09-18
 

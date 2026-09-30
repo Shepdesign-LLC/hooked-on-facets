@@ -97,11 +97,11 @@ export default function Dashboard({ facets, productsIndexed, telemetry, onCreate
             )}
 
             <div className="hof-dash-actions">
-                <button type="button" className="hof-btn hof-btn-coral" onClick={onCreateFacet}>
+                <button type="button" className="hof-btn hof-btn-primary" onClick={onCreateFacet}>
                     <IconPlus size={15} stroke={2} aria-hidden="true" />
                     Create new facet
                 </button>
-                <button type="button" className="hof-btn hof-btn-outline" onClick={onOpenBlueprint}>
+                <button type="button" className="hof-btn" onClick={onOpenBlueprint}>
                     <IconTools size={15} stroke={2} aria-hidden="true" />
                     Blueprint sandbox
                 </button>

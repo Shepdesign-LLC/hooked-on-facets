@@ -47,7 +47,7 @@ export default function Indexer() {
                 <h2 className="hof-view-title">Indexer</h2>
                 <button
                     type="button"
-                    className="hof-btn hof-btn-coral"
+                    className="hof-btn hof-btn-primary"
                     onClick={runReindex}
                     disabled={running}
                 >

@@ -66,7 +66,7 @@ export default function QueryLoops() {
                 <div className="hof-view-actions">
                     <button
                         type="button"
-                        className="hof-btn hof-btn-outline"
+                        className="hof-btn"
                         onClick={reload}
                         disabled={loading || resetting}
                         title="Reload"

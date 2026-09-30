@@ -135,7 +135,7 @@ export default function SeoSettings({ bootstrap }) {
                     <p className="hof-ai-settings-sub">
                         Faceted URLs spawn near-duplicate, crawl-bloating pages. These controls keep the
                         filtered long tail tidy — general SEO plugins don't understand the <code>?hof[*]</code>
-                        query shape, so Hooked on Facets manages it.
+                        query shape, so hooked on facets manages it.
                     </p>
                 </div>
             </header>
