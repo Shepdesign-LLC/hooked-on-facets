@@ -55,9 +55,11 @@ final class MenuRegistrar implements Bootable {
             . '<circle cx="36" cy="14" r="14" fill="#D85A30" stroke="#F1EFE8" stroke-width="1.5"/>'
             . '</svg>';
 
+        // One top-level item and no submenu: the nine screens live in the
+        // app's own rail, so WordPress's sidebar stays a single entry.
         add_menu_page(
-            __( 'Hooked on Facets', 'hooked-on-facets' ),
-            __( 'Facets', 'hooked-on-facets' ),
+            __( 'hooked on facets', 'hooked-on-facets' ),
+            __( 'hooked on facets', 'hooked-on-facets' ),
             'manage_options',
             self::PAGE_SLUG,
             [ $this, 'render_page' ],
@@ -98,17 +100,23 @@ final class MenuRegistrar implements Bootable {
             ] )
         );
 
+        $style_handle = 'wp-admin';
         if ( $this->is_vite_dev() ) {
             $this->enqueue_dev( $inline );
         } else {
-            if ( ! $this->enqueue_prod( $inline ) ) {
+            $handle = $this->enqueue_prod( $inline );
+            if ( $handle === null ) {
                 return;
             }
+            $style_handle = $handle;
         }
 
         // Tokens live as inline CSS scoped to the admin shell — no rebuild needed
-        // when the hof_admin_css_tokens filter changes them at runtime.
-        wp_add_inline_style( 'wp-admin', $this->token_css_block( $tokens ) );
+        // when the hof_admin_css_tokens filter changes them at runtime. Attached
+        // to the app's own stylesheet (not wp-admin's) so it prints AFTER the
+        // defaults in tokens.css; at equal specificity the later rule wins, and
+        // before this the bundle's defaults silently beat the filter.
+        wp_add_inline_style( $style_handle, $this->token_css_block( $tokens ) );
     }
 
     public function script_as_module( string $tag, string $handle, string $src ): string {
@@ -149,16 +157,21 @@ final class MenuRegistrar implements Bootable {
         wp_enqueue_script( 'hof-admin-main' );
     }
 
-    private function enqueue_prod( string $inline ): bool {
+    /**
+     * @return string|null The handle of the app's stylesheet, or null when the
+     *                     build is missing. Falls back to 'wp-admin' when the
+     *                     bundle carries no CSS of its own.
+     */
+    private function enqueue_prod( string $inline ): ?string {
         $manifest = $this->read_manifest();
         if ( ! $manifest || ! isset( $manifest[ self::ENTRY ] ) ) {
             add_action( 'admin_notices', static function (): void {
                 printf(
                     '<div class="notice notice-error"><p>%s</p></div>',
-                    esc_html__( 'Hooked on Facets: admin assets are missing. Run `npm install && npm run build` in the plugin directory.', 'hooked-on-facets' )
+                    esc_html__( 'hooked on facets: admin assets are missing. Run `npm install && npm run build` in the plugin directory.', 'hooked-on-facets' )
                 );
             } );
-            return false;
+            return null;
         }
 
         $entry = $manifest[ self::ENTRY ];
@@ -173,18 +186,22 @@ final class MenuRegistrar implements Bootable {
         wp_add_inline_script( 'hof-admin-main', $inline, 'before' );
         wp_enqueue_script( 'hof-admin-main' );
 
-        $this->enqueue_manifest_css( $manifest, $entry );
-        return true;
+        return $this->enqueue_manifest_css( $manifest, $entry ) ?? 'wp-admin';
     }
 
-    private function enqueue_manifest_css( array $manifest, array $entry ): void {
+    /**
+     * @return string|null The last stylesheet handle enqueued.
+     */
+    private function enqueue_manifest_css( array $manifest, array $entry ): ?string {
         $seen = [];
+        $last = null;
 
-        $enqueue = static function ( string $css_path ) use ( &$seen ) {
+        $enqueue = static function ( string $css_path ) use ( &$seen, &$last ) {
             if ( isset( $seen[ $css_path ] ) ) {
                 return;
             }
             $seen[ $css_path ] = true;
+            $last              = 'hof-admin-' . md5( $css_path );
             wp_enqueue_style(
                 'hof-admin-' . md5( $css_path ),
                 HOF_PLUGIN_URL . 'assets/dist/' . $css_path,
@@ -205,6 +222,8 @@ final class MenuRegistrar implements Bootable {
                 $enqueue( $css );
             }
         }
+
+        return $last;
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
@@ -276,16 +295,16 @@ final class MenuRegistrar implements Bootable {
          */
         return apply_filters( 'hof_admin_css_tokens', [
             '--hof-primary'    => '#534AB7',
-            '--hof-on-primary' => '#F1EFE8',
+            '--hof-on-primary' => '#FFFFFF',
             '--hof-surface'    => '#FFFFFF',
-            '--hof-bg'         => '#E6E3D9',
-            '--hof-border'     => '#D3D1C7',
-            '--hof-text'       => '#2C2C2A',
-            '--hof-muted'      => '#5F5E5A',
+            '--hof-bg'         => '#F5F4FB',
+            '--hof-border'     => '#DDDAEE',
+            '--hof-text'       => '#221D52',
+            '--hof-muted'      => '#625D85',
             '--hof-danger'     => '#D85A30',
-            '--hof-radius-ui'  => '8px',
+            '--hof-radius-ui'  => '6px',
             '--hof-space'      => '8px',
-            '--hof-font'       => "'Geist', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif",
+            '--hof-font'       => "'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif",
         ] );
     }
 
@@ -303,6 +322,8 @@ final class MenuRegistrar implements Bootable {
             }
             $lines[] = sprintf( '%s: %s;', $safe_key, $safe_value );
         }
-        return '.hof-admin, #hof-admin-root { ' . implode( ' ', $lines ) . ' }';
+        // The page body is included so the WordPress content area behind the
+        // app follows --hof-bg when a filter changes it.
+        return 'body.toplevel_page_hooked-on-facets, .hof-admin, #hof-admin-root { ' . implode( ' ', $lines ) . ' }';
     }
 }
