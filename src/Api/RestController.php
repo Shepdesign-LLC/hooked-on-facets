@@ -7,6 +7,7 @@
  *   POST /filter              → resolve filter state to IDs + drill-down counts
  *   POST /reindex (admin)     → trigger full reindex
  *   GET  /reindex/status (admin) → current index stats (rows, objects, per-facet)
+ *   GET  /indexer/stats (admin)  → item counts per post type + per-facet values / status
  *   GET  /telemetry (admin)   → resolver timings + hooked-loop counts
  *   DELETE /telemetry (admin) → reset all telemetry counters
  *
@@ -107,6 +108,12 @@ final class RestController implements Bootable {
         register_rest_route( self::NAMESPACE_V1, '/reindex/status', [
             'methods'             => \WP_REST_Server::READABLE,
             'callback'            => [ $this, 'reindex_status' ],
+            'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+        ] );
+
+        register_rest_route( self::NAMESPACE_V1, '/indexer/stats', [
+            'methods'             => \WP_REST_Server::READABLE,
+            'callback'            => [ $this, 'indexer_stats' ],
             'permission_callback' => static fn() => current_user_can( 'manage_options' ),
         ] );
 
@@ -354,6 +361,8 @@ final class RestController implements Bootable {
                 $display = 'checkbox';
             }
 
+            $post_type = isset( $def['post_type'] ) ? sanitize_key( (string) $def['post_type'] ) : '';
+
             $clean[]       = [
                 'name'     => $name,
                 'label'    => isset( $def['label'] ) ? sanitize_text_field( (string) $def['label'] ) : $name,
@@ -361,7 +370,7 @@ final class RestController implements Bootable {
                 'kind'     => $kind,
                 'display'  => $display,
                 'settings' => $this->sanitize_settings( $def['settings'] ?? null, $display ),
-            ];
+            ] + ( $post_type !== '' ? [ 'post_type' => $post_type ] : [] );
             $seen[ $name ] = true;
         }
 
@@ -545,6 +554,11 @@ final class RestController implements Bootable {
             'indexed' => $count,
             'elapsed' => round( $elapsed, 3 ),
         ], $stats ), 200 );
+    }
+
+    public function indexer_stats( \WP_REST_Request $request ): \WP_REST_Response {
+        $facets = array_values( (array) get_option( Indexer::OPTION_FACETS, [] ) );
+        return new \WP_REST_Response( ( new IndexerStats( $this->indexer ) )->snapshot( $facets ), 200 );
     }
 
     public function reindex_status( \WP_REST_Request $request ): \WP_REST_Response {

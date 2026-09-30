@@ -100,14 +100,14 @@ final class WooCommerce implements Bootable {
                 $cfg['display'] = 'swatch';
             }
 
-            $out[] = $cfg;
+            $out[] = $cfg + [ 'post_type' => 'product' ];
         }
 
         // Meta facets — only suggest if at least one product has the meta.
         foreach ( $this->candidate_meta() as $meta_key => $cfg ) {
             if ( isset( $taken[ $cfg['name'] ] ) ) continue;
             if ( ! $this->meta_in_use( $meta_key ) ) continue;
-            $out[] = $cfg;
+            $out[] = $cfg + [ 'post_type' => 'product' ];
         }
 
         return $out;
