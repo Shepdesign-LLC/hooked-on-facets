@@ -25,10 +25,49 @@ major version. Each version links to its full GitHub release notes.
   dimmed empty values. Same URLs and links as list style, styled from the
   `--hof-*` tokens. Every facet wrapper now also carries `hof-facet--<slug>`.
 
+- **Help drawer** — a Help button in the top right of every screen opens a
+  drawer with docs search, an "On this screen" note that follows the screen (and
+  the facet editor), Start here and Reference links, and support. Closes on
+  Escape, the close button or a click outside; focus moves to the search box on
+  open and returns to the Help button on close.
+
+- **Design tokens editor** — edit the `--hof-*` tokens, see the change in a live
+  preview of a list facet and a button facet (rendered with the real public
+  stylesheet), copy the generated CSS, or reset to brand. Custom CSS loads after
+  the tokens, site-wide or scoped to one facet (`.hof-facet--<slug>`), is
+  sanitized on save (no `@import`, `expression()`, script URLs or non-http
+  `url()`) and is stored with the tokens in the `hof_tokens` option.
+  `GET|PUT /tokens`. Saved values now reach the front end.
+- **Settings tabs** — Ask, Sources and Post types. Ask gains a Provider select
+  (only providers your HOF Pro supports are selectable). Post types lists what
+  can be indexed with a switch each; turning one on indexes just that type in
+  the background, without emptying the index. `GET|PUT /post-types`.
+- **Indexer** — a status pill per facet (Fresh, Indexing n%, Not indexed), a
+  Post types stat, a WP-CLI hint and a Reindex that follows the background job.
+- Help tips on the Dashboard, Query loops (Intercept), Blueprint (Deploy
+  blueprint) and SEO (Canonical, Noindex threshold).
+
 ### Changed
 
 - The Facets screen is a list that opens an editor, replacing the sidebar.
   Drag reorder is replaced by move up / down within a post type group.
+- **Admin restyled on the brand tokens.** Page, cards, buttons, pills and
+  controls read `--hof-*` tokens only: 1px borders, 8px panels, 6px controls,
+  no shadows or gradients. A top bar and a left rail (Main, Studio, System)
+  replace the dark sidebar and breadcrumb bar; below 900px the rail is a
+  scrolling strip. WordPress's own sidebar and admin bar are untouched.
+- Geist Sans and Geist Mono now ship with the admin bundle instead of loading
+  from Google Fonts, so wp-admin makes no request to a font CDN.
+- The WordPress menu entry is one item named `hooked on facets`, with no submenu.
+- The Query loops screen is a table; the Blueprint action reads "Deploy blueprint"; numbers on
+  the Dashboard, Query loops and Indexer use tabular figures.
+- The Help button style is the only coral button; the Create facet and Reindex
+  calls to action are primary purple.
+
+### Fixed
+
+- Admin token overrides from the `hof_admin_css_tokens` filter printed before
+  the bundle's own defaults, so the defaults silently won. They now print after.
 
 ## [1.1.1] - 2026-09-18
 

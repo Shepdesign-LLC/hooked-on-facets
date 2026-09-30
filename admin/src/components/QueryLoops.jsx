@@ -1,27 +1,28 @@
 import { useEffect, useState } from 'react';
-import {
-    IconArchive,
-    IconArrowsShuffle,
-    IconCategory,
-    IconCheck,
-    IconHome,
-    IconQuestionMark,
-    IconRotate,
-    IconSearch,
-    IconTrash,
-} from '@tabler/icons-react';
+import { IconRotate, IconTrash } from '@tabler/icons-react';
 import { getTelemetry, resetTelemetry } from '../api.js';
+import Tip from './ui/Tip.jsx';
+import { ago, fmt } from '../lib/format.js';
 
-// Visual + semantic chip for each intercept type. Kept aligned with the
-// signature scheme QueryHook::loop_signature() emits server-side.
-const TYPE_META = {
-    archive: { label: 'Post type archive', Icon: IconArchive },
-    tax:     { label: 'Taxonomy',          Icon: IconCategory },
-    search:  { label: 'Search',            Icon: IconSearch },
-    home:    { label: 'Home',              Icon: IconHome },
-    main:    { label: 'Main query',        Icon: IconArrowsShuffle },
-    opt_in:  { label: 'Opt-in (block / shortcode)', Icon: IconCheck },
-    unknown: { label: 'Unknown',           Icon: IconQuestionMark },
+const INTERCEPT_TIP =
+    "How HOF found the loop. Main query, archive, taxonomy, search and home are the page's own query, which includes " +
+    'a Gutenberg Query Loop on a block theme. Bricks class means a query loop element tagged hof. Elementor means a ' +
+    'widget with Query ID hof. Opt-in means a block or shortcode targeted it.';
+
+// Label for each intercept type. Kept aligned with the signature scheme
+// QueryHook::loop_signature() and the page-builder integrations emit.
+const TYPE_LABEL = {
+    archive:    'Post type archive',
+    tax:        'Taxonomy',
+    search:     'Search',
+    home:       'Home',
+    main:       'Main query',
+    opt_in:     'Opt-in (block / shortcode)',
+    bricks:     'Bricks class: hof',
+    elementor:  'Elementor Query ID: hof',
+    breakdance: 'Breakdance Array Query',
+    divi:       'Divi module',
+    unknown:    'Unknown',
 };
 
 export default function QueryLoops() {
@@ -66,7 +67,7 @@ export default function QueryLoops() {
                 <div className="hof-view-actions">
                     <button
                         type="button"
-                        className="hof-btn hof-btn-outline"
+                        className="hof-btn"
                         onClick={reload}
                         disabled={loading || resetting}
                         title="Reload"
@@ -120,30 +121,30 @@ export default function QueryLoops() {
                     No intercepts captured yet. The engine records a loop the first time it binds facets to a query.
                 </p>
             ) : (
-                <ul className="hof-loops-list">
-                    {signatures.map((s) => {
-                        const meta = TYPE_META[s.type] || TYPE_META.unknown;
-                        const Icon = meta.Icon;
-                        return (
-                            <li key={s.signature} className="hof-dash-facet">
-                                <Icon className="hof-dash-facet-icon" size={18} stroke={1.5} aria-hidden="true" />
-                                <div className="hof-dash-facet-text">
-                                    <p className="hof-dash-facet-name">
-                                        <code className="hof-loops-sig">{s.signature}</code>
-                                    </p>
-                                    <p className="hof-dash-facet-source">
-                                        {meta.label} · post_type: <code>{s.post_type}</code>
-                                        {s.first ? ` · first seen ${ago(s.first)}` : ''}
-                                        {s.last && s.last !== s.first ? ` · last ${ago(s.last)}` : ''}
-                                    </p>
-                                </div>
-                                <span className="hof-chip">
-                                    {fmt(s.count)} hit{s.count === 1 ? '' : 's'}
-                                </span>
-                            </li>
-                        );
-                    })}
-                </ul>
+                <div className="hof-table-wrap">
+                    <table className="hof-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Loop</th>
+                                <th scope="col">Intercept<Tip text={INTERCEPT_TIP} /></th>
+                                <th scope="col">Post type</th>
+                                <th scope="col">Last seen</th>
+                                <th scope="col" className="hof-num">Hits</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {signatures.map((s) => (
+                                <tr key={s.signature}>
+                                    <td><code className="hof-loops-sig">{s.signature}</code></td>
+                                    <td><span className="hof-chip">{TYPE_LABEL[s.type] || TYPE_LABEL.unknown}</span></td>
+                                    <td><code>{s.post_type}</code></td>
+                                    <td>{s.last ? ago(s.last) : '—'}</td>
+                                    <td className="hof-num">{fmt(s.count)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );
@@ -156,23 +157,4 @@ function Stat({ label, value }) {
             <p className="hof-stat-value">{value}</p>
         </div>
     );
-}
-
-function fmt(n) {
-    if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
-    return n.toLocaleString();
-}
-
-function ago(ts) {
-    const seconds = Math.floor(Date.now() / 1000 - ts);
-    if (seconds < 5)     return 'just now';
-    if (seconds < 60)    return `${seconds}s ago`;
-    const mins = Math.floor(seconds / 60);
-    if (mins < 60)       return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24)      return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 30)       return `${days}d ago`;
-    const months = Math.floor(days / 30);
-    return `${months}mo ago`;
 }
