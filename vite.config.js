@@ -23,8 +23,8 @@ export default defineConfig({
         sourcemap: true,
         rollupOptions: {
             input: {
-                admin: resolve(__dirname, 'admin/src/main.jsx'),
-                public: resolve(__dirname, 'public/src/main.js'),
+                admin: resolve(import.meta.dirname, 'admin/src/main.jsx'),
+                public: resolve(import.meta.dirname, 'public/src/main.js'),
             },
             output: {
                 entryFileNames: '[name]/[name].[hash].js',

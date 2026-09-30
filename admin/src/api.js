@@ -53,3 +53,10 @@ export const applyFilter = (filters, page = 1, perPage = 20) =>
         method: 'POST',
         body: JSON.stringify({ filters, page, per_page: perPage }),
     });
+
+export const getIndexerStats = () => request('indexer/stats');
+
+// Net-new facet suggestions from one source integration
+// (woocommerce | acf | metabox | pods).
+export const getSuggestions = (integration) =>
+    request(`integrations/${integration}/suggest`);

@@ -1,0 +1,911 @@
+<title>hooked on facets admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --page: #F5F4FB; --surface: #FFFFFF; --tint: #EEECF8; --line: #DDDAEE;
+    --ink: #221D52; --muted: #625D85; --faint: #8F8BB0;
+    --hook: #534AB7; --hook-deep: #3C3489; --hook-light: #7F77DD; --coral: #D85A30;
+    --on-hook: #FFFFFF; --good: #2E7D5B; --warn-bg: #FBEFEA;
+    --wp-bar: #1D2327; --wp-side: #23282D; --wp-side-text: #A7AAAD; --wp-side-on: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #16132F; --surface: #1D1942; --tint: #262157; --line: #3C3489;
+      --ink: #F3F2FA; --muted: #B3AEDA; --faint: #8F8BB0;
+      --hook: #7F77DD; --hook-deep: #A9A3EC; --hook-light: #534AB7; --on-hook: #16132F; --good: #6FCBA0; --warn-bg: #3A2418;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #16132F; --surface: #1D1942; --tint: #262157; --line: #3C3489;
+    --ink: #F3F2FA; --muted: #B3AEDA; --faint: #8F8BB0;
+    --hook: #7F77DD; --hook-deep: #A9A3EC; --hook-light: #534AB7; --on-hook: #16132F; --good: #6FCBA0; --warn-bg: #3A2418;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--wp-side); color: var(--ink); font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; }
+  code, .mono { font-family: "Geist Mono", SFMono-Regular, Menlo, Consolas, monospace; }
+  code { font-size: .92em; background: var(--tint); padding: 1px 5px; border-radius: 4px; }
+  a { color: var(--hook); }
+  :focus-visible { outline: 2px solid var(--hook); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  /* WordPress chrome, stock */
+  .wp-bar { height: 32px; background: var(--wp-bar); color: #C3C4C7; display: flex; align-items: center; gap: 20px; padding: 0 12px; font-size: 13px; padding-top: env(safe-area-inset-top, 0px); box-sizing: content-box; }
+  .wp-bar .site { color: #F0F0F1; } .wp-bar .right { margin-left: auto; }
+  .frame { display: flex; min-height: calc(100% - 32px); }
+  .wp-side { width: 160px; flex: none; background: var(--wp-side); color: var(--wp-side-text); padding: 8px 0; font-size: 13.5px; }
+  .wp-side div { padding: 8px 12px; }
+  .wp-side .on { background: var(--hook); color: var(--wp-side-on); font-weight: 500; }
+  .wp-side .sub { padding: 4px 12px 4px 24px; font-size: 13px; cursor: pointer; }
+  .wp-side .sub.on { background: transparent; color: #fff; font-weight: 500; }
+  .wp-side .grp { padding: 8px 12px 2px 24px; font-size: 10.5px; letter-spacing: .6px; text-transform: uppercase; color: #6F7377; }
+  @media (max-width: 720px) { .wp-side { display: none; } }
+
+  .content { flex: 1; min-width: 0; background: var(--page); padding: 20px 24px 48px; }
+  @media (max-width: 720px) { .content { padding: 16px 16px 40px; } }
+
+  .topbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .mark { width: 36px; height: 36px; display: block; flex: none; }
+  .top-right { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .shell { display: grid; grid-template-columns: 172px 1fr; gap: 24px; align-items: start; }
+  .rail { position: sticky; top: calc(12px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; gap: 14px; }
+  .rail .grp { display: flex; flex-direction: column; gap: 1px; }
+  .rail .grp::before { content: attr(data-l); font-size: 10.5px; letter-spacing: .6px; text-transform: uppercase; color: var(--faint); padding: 0 10px 5px; }
+  .rail button { display: flex; align-items: center; gap: 9px; text-align: left; background: none; border: 0; border-left: 2px solid transparent; padding: 7px 10px; border-radius: 0 6px 6px 0; color: var(--muted); cursor: pointer; font-size: 13.5px; }
+  .rail button svg { width: 15px; height: 15px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .rail button:hover { color: var(--ink); background: var(--tint); }
+  .rail button[aria-current="page"] { color: var(--hook); background: var(--tint); border-left-color: var(--hook); font-weight: 500; }
+  .rail .foot { margin-top: 6px; padding: 10px; border-top: 1px solid var(--line); font-size: 12px; color: var(--faint); line-height: 1.5; }
+  .rail .foot b { color: var(--muted); font-weight: 500; display: block; }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; gap: 12px; }
+    .rail { position: static; flex-direction: row; overflow-x: auto; gap: 10px; padding-bottom: 6px; }
+    .rail .grp { flex-direction: row; flex: none; gap: 2px; }
+    .rail .grp::before { padding: 0; align-self: center; margin-right: 4px; }
+    .rail button { border-left: 0; border-bottom: 2px solid transparent; border-radius: 6px 6px 0 0; white-space: nowrap; padding: 6px 9px; }
+    .rail button[aria-current="page"] { border-bottom-color: var(--hook); }
+    .rail .foot { display: none; }
+  }
+  .main { min-width: 0; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 500; line-height: 1.2; text-decoration: none; color: var(--ink); }
+  .btn.primary { background: var(--hook); border-color: var(--hook); color: var(--on-hook); }
+  .btn.quiet { border-color: transparent; background: transparent; color: var(--muted); }
+  .btn.sm { padding: 5px 9px; font-size: 13px; }
+  .btn.help { border-color: var(--coral); color: var(--coral); }
+  .btn.danger { color: var(--coral); }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  .screen { display: none; } .screen.on { display: block; }
+  h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; margin: 0; text-wrap: balance; }
+  h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  h3.sec { font-size: 11.5px; font-weight: 500; letter-spacing: .5px; text-transform: uppercase; color: var(--faint); margin: 0 0 12px; }
+  .lede { color: var(--muted); margin: 4px 0 0; max-width: 72ch; }
+  .head { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .eyebrow { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+  .eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); display: inline-block; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); display: inline-block; }
+  .pill.good { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, var(--line)); } .pill.good i { background: var(--good); }
+  .pill.busy { color: var(--coral); border-color: color-mix(in srgb, var(--coral) 40%, var(--line)); } .pill.busy i { background: var(--coral); }
+  .pill.pro { color: var(--hook); border-color: color-mix(in srgb, var(--hook) 40%, var(--line)); font-weight: 500; }
+  .chip { display: inline-block; padding: 2px 7px; border-radius: 5px; background: var(--tint); font-size: 12px; color: var(--ink); }
+
+  .tip { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--line); color: var(--faint); font-size: 10.5px; font-weight: 600; cursor: help; vertical-align: middle; margin-left: 4px; background: var(--surface); }
+  .tip::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 8px); transform: translateX(-50%); width: 250px; padding: 8px 10px; border-radius: 6px; background: var(--ink); color: var(--page); font-size: 12px; font-weight: 400; line-height: 1.4; text-align: left; white-space: normal; z-index: 20; opacity: 0; pointer-events: none; transition: opacity .12s; }
+  .tip:hover::after, .tip:focus::after { opacity: 1; }
+  .tip.left::after { left: auto; right: 0; transform: none; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .pad { padding: 16px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .stat .l { font-size: 12px; color: var(--muted); } .stat .v { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; font-variant-numeric: tabular-nums; } .stat .v small { font-size: 12px; font-weight: 400; color: var(--faint); margin-left: 3px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
+  .bar { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; }
+  .bar .n { width: 110px; flex: none; } .bar .t { flex: 1; height: 8px; background: var(--tint); border-radius: 4px; overflow: hidden; } .bar .t i { display: block; height: 100%; background: var(--hook); } .bar .c { width: 44px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .zero { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; } .zero:last-child { border-bottom: 0; } .zero span:last-child { color: var(--faint); font-variant-numeric: tabular-nums; }
+
+  .suggest { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; margin-bottom: 16px; border: 1px solid var(--line); border-left: 3px solid var(--coral); border-radius: 6px; background: var(--surface); }
+  .suggest .label { font-weight: 500; }
+  .suggest .items { display: flex; gap: 8px; flex-wrap: wrap; }
+  .suggest .items button { background: var(--tint); border: 0; border-radius: 6px; padding: 5px 9px; cursor: pointer; font-size: 13px; }
+  .suggest .items button span { color: var(--muted); }
+
+  .table-wrap { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 640px; }
+  th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12.5px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr.r { cursor: pointer; } tbody tr.r:hover td { background: var(--tint); }
+  tr.g td { background: var(--page); color: var(--muted); font-size: 12.5px; font-weight: 500; padding: 7px 14px; }
+  tr.g td .mono { font-weight: 400; color: var(--faint); }
+  td .name { font-weight: 500; } td .slug { color: var(--faint); font-size: 12px; }
+  td.num { font-variant-numeric: tabular-nums; color: var(--muted); }
+
+  /* editor */
+  .editor { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } }
+  .step { padding: 16px; border-bottom: 1px solid var(--line); } .step:last-child { border-bottom: 0; }
+  .step-h { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .step-h a { font-size: 12px; margin-left: auto; text-decoration: none; }
+  label.f { display: block; font-size: 12.5px; color: var(--muted); margin: 10px 0 4px; }
+  select, input[type="text"], input[type="search"], input[type="number"], input[type="password"] { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--page); color: var(--ink); font: inherit; }
+  .name-input { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; background: transparent; border: 0; border-bottom: 1px dashed var(--line); padding: 2px 0; width: 100%; color: var(--ink); font-family: inherit; }
+  .name-input:focus { outline: none; border-bottom-color: var(--hook); }
+  .explain { margin-top: 8px; padding: 10px 12px; border-radius: 6px; background: var(--tint); font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .explain b { color: var(--ink); font-weight: 500; }
+  .types { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .type { text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); cursor: pointer; display: flex; flex-direction: column; gap: 1px; }
+  .type b { font-weight: 500; font-size: 13px; } .type small { color: var(--faint); font-size: 11.5px; line-height: 1.3; }
+  .type[aria-pressed="true"] { border-color: var(--hook); background: color-mix(in srgb, var(--hook) 10%, var(--surface)); }
+  .type:disabled { cursor: not-allowed; opacity: .55; }
+  .type .tag { align-self: flex-start; margin-top: 3px; font-size: 10.5px; padding: 1px 6px; border-radius: 4px; background: var(--tint); color: var(--hook); font-weight: 500; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; background: var(--surface); padding: 5px 10px; cursor: pointer; font-size: 13px; }
+  .seg button[aria-pressed="true"] { background: var(--hook); color: var(--on-hook); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; }
+  .row span { font-size: 13.5px; }
+  .toggle { width: 34px; height: 20px; border-radius: 999px; border: 0; background: var(--line); position: relative; cursor: pointer; flex: none; }
+  .toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); transition: left .15s; }
+  .toggle[aria-checked="true"] { background: var(--hook); } .toggle[aria-checked="true"]::after { left: 17px; }
+  .check { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; }
+  .check input { accent-color: var(--hook); margin: 3px 0 0; width: 16px; height: 16px; }
+  .check b { font-weight: 500; display: block; } .check p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+  .preview { padding: 16px; }
+  .preview-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .preview-h .mono { font-size: 12px; color: var(--faint); }
+  .store { display: grid; grid-template-columns: 210px 1fr; gap: 18px; }
+  @media (max-width: 560px) { .store { grid-template-columns: 1fr; } }
+  .facet { border: 1px solid var(--line); border-radius: 6px; padding: 12px; align-self: start; }
+  .facet h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+  .facet label { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13.5px; cursor: pointer; }
+  .facet label.child { padding-left: 14px; }
+  .facet label .n { margin-left: auto; color: var(--faint); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .facet label.dim { color: var(--faint); }
+  .facet input[type="checkbox"], .facet input[type="radio"] { accent-color: var(--hook); margin: 0; }
+  .facet .more { background: none; border: 0; color: var(--hook); padding: 4px 0 0; cursor: pointer; font-size: 12.5px; }
+  .fbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fbtn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid var(--hook); background: transparent; color: var(--hook); cursor: pointer; font-size: 13px; font-weight: 500; line-height: 1.2; }
+  .fbtn.pill { border-radius: 999px; } .fbtn.square { border-radius: 6px; }
+  .fbtn.solid { background: var(--tint); }
+  .fbtn[aria-pressed="true"] { background: var(--hook); color: var(--on-hook); }
+  .fbtn .c { font-size: 11px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, currentColor 14%, transparent); font-variant-numeric: tabular-nums; }
+  .fbtn.empty { opacity: .45; cursor: not-allowed; border-style: dashed; }
+  .sw-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sw { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .sw[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--surface); }
+  .range-out { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  input[type="range"] { width: 100%; accent-color: var(--hook); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+  .prod { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
+  .prod .swatch { height: 64px; }
+  .prod .t { padding: 7px 8px 8px; font-size: 12px; line-height: 1.3; }
+  .prod .t b { display: block; font-weight: 500; } .prod .t span { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .count { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .empty { padding: 24px; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); text-align: center; grid-column: 1 / -1; }
+  .placement { margin-top: 20px; }
+  .place-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .place { padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+  .place b { display: block; font-weight: 500; margin-bottom: 4px; font-size: 13px; }
+  .place code { display: block; font-size: 12.5px; color: var(--hook-deep); word-break: break-all; background: none; padding: 0; }
+  .place .btn, .place .note { margin-top: 8px; }
+
+  /* blueprint */
+  .bp { display: grid; grid-template-columns: 1fr minmax(280px, 340px); gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .bp { grid-template-columns: 1fr; } }
+  .bp-crumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .bp-crumbs b { color: var(--ink); font-weight: 500; }
+  .bp-stage { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; min-height: 380px; display: flex; flex-direction: column; }
+  .bp-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .bp-tabs button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; }
+  .bp-tabs button[aria-pressed="true"] { border-color: var(--hook); color: var(--hook); font-weight: 500; }
+  .deck { position: relative; margin: 20px auto 10px; }
+  .card { position: absolute; left: 0; top: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; transition: transform .25s, opacity .25s; }
+  .card .img { height: 62%; } .card .t { padding: 8px 10px; font-size: 12px; } .card .t small { color: var(--faint); display: block; } .card .t b { font-weight: 500; }
+  .deck-actions { display: flex; justify-content: center; gap: 12px; margin-top: 8px; }
+  .deck-actions button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 16px; cursor: pointer; font-size: 13px; }
+  .deck-actions .inc { border-color: var(--hook); color: var(--hook); font-weight: 500; }
+  .bp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+  .bp-live { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+  .inspector .step-h small { margin-left: auto; color: var(--faint); font-size: 12px; }
+  .radios { display: flex; gap: 6px; flex-wrap: wrap; }
+  .radios button { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px; }
+  .radios button[aria-pressed="true"] { border-color: var(--hook); background: color-mix(in srgb, var(--hook) 10%, var(--surface)); }
+
+  /* tokens */
+  .tokens { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .tokens { grid-template-columns: 1fr; } }
+  .tok { display: grid; grid-template-columns: 26px 1fr 110px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .tok:last-child { border-bottom: 0; }
+  .tok .swb { width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--line); background: var(--tint); }
+  .tok code { background: none; padding: 0; font-size: 12.5px; }
+  .tok input { padding: 4px 7px; font-size: 12.5px; font-family: "Geist Mono", monospace; }
+  .tok input[type="color"] { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 5px; background: none; }
+  .tokprev { padding: 18px; border-radius: 8px; }
+  .tokprev .f { border: 1px solid var(--hof-border); border-radius: var(--hof-radius-md); padding: var(--hof-space); background: var(--hof-surface); color: var(--hof-text); font-family: var(--hof-font-sans); max-width: 280px; }
+  .tokprev .f h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+  .tokprev .f label { display: flex; gap: 8px; align-items: center; padding: 3px 0; font-size: 13.5px; }
+  .tokprev .f label .n { margin-left: auto; color: var(--hof-muted); font-size: 12px; }
+  .tokprev .f input { accent-color: var(--hof-primary); }
+  .tokprev .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .tokprev .chips span { background: var(--hof-primary); color: var(--hof-on-primary); border-radius: var(--hof-radius-pill); padding: 3px 9px; font-size: 12px; }
+  .tokprev .btnp { margin-top: 12px; display: inline-block; background: var(--hof-primary); color: var(--hof-on-primary); border-radius: var(--hof-radius-md); padding: 7px 12px; font-size: 13px; font-weight: 500; }
+  pre.css { margin: 0; padding: 12px 14px; background: var(--tint); border-radius: 6px; font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; }
+
+  .simple { max-width: 800px; }
+  .simple .panel { padding: 4px 16px; margin-bottom: 14px; }
+  .simple .row { border-bottom: 1px solid var(--line); padding: 11px 0; } .simple .row:last-child { border-bottom: 0; }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .tabs button { background: none; border: 0; padding: 8px 10px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tabs button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--hook); font-weight: 500; }
+  .tabpane { display: none; } .tabpane.on { display: block; }
+  .status { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 6px; border: 1px solid var(--line); margin-bottom: 12px; font-weight: 500; }
+  .status.ok { background: color-mix(in srgb, var(--good) 8%, var(--surface)); border-color: color-mix(in srgb, var(--good) 35%, var(--line)); }
+  .status.warn { background: var(--warn-bg); border-color: color-mix(in srgb, var(--coral) 35%, var(--line)); }
+  .status .sub { font-weight: 400; color: var(--muted); font-size: 13px; }
+  ul.plain { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; } ul.plain li { margin: 6px 0; }
+
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(380px, 100%); background: var(--surface); border-left: 1px solid var(--line); padding: 20px; padding-top: calc(20px + env(safe-area-inset-top, 0px)); transform: translateX(100%); transition: transform .18s; z-index: 30; overflow-y: auto; }
+  .drawer.open { transform: none; }
+  .drawer h2 { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; } .drawer h2 button { margin-left: auto; }
+  .drawer .ctx { padding: 12px; border-radius: 6px; border-left: 3px solid var(--coral); background: var(--tint); margin-bottom: 14px; font-size: 13px; }
+  .drawer .ctx b { display: block; font-weight: 500; margin-bottom: 2px; }
+  .drawer h5 { margin: 16px 0 6px; font-size: 12px; font-weight: 500; color: var(--faint); letter-spacing: .3px; text-transform: uppercase; }
+  .drawer a.doc { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); font-size: 13.5px; }
+  .drawer a.doc span { color: var(--faint); font-size: 12px; }
+  .drawer .ask { margin-top: 18px; padding: 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; color: var(--muted); }
+  .scrim { position: fixed; inset: 0; background: rgba(34, 29, 82, .35); z-index: 29; display: none; } .scrim.open { display: block; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--page); padding: 8px 14px; border-radius: 6px; font-size: 13px; opacity: 0; transition: opacity .15s; pointer-events: none; z-index: 40; }
+  .toast.show { opacity: 1; }
+  .note { color: var(--muted); font-size: 13px; margin-top: 14px; }
+</style>
+
+<div class="wp-bar"><span class="site">Ridgeline Supply Co.</span><span>Updates 2</span><span>Comments</span><span class="right">Howdy, Ryan</span></div>
+<div class="frame">
+  <nav class="wp-side" aria-label="WordPress menu">
+    <div>Dashboard</div><div>Posts</div><div>Media</div><div>Pages</div><div>Trail guides</div><div>WooCommerce</div><div>Products</div>
+    <div class="on">hooked on facets</div>
+    <div>Bricks</div><div>Appearance</div><div>Plugins</div><div>Settings</div>
+  </nav>
+
+  <main class="content">
+    <div class="topbar">
+      <svg class="mark" viewBox="0 0 24 24" aria-label="hooked on facets"><path d="M12 2 21 7.2v9.6L12 22 3 16.8V7.2z" fill="var(--hook)"/><path d="M12 2v10l9-4.8z" fill="var(--hook-deep)"/><path d="M12 12v10l9-5.2V7.2z" fill="var(--hook-light)"/><circle cx="12" cy="3" r="2.6" fill="var(--coral)"/></svg>
+      <div style="font-weight:600; letter-spacing:-0.2px">hooked on facets</div>
+      <div class="top-right">
+        <span class="pill good"><i></i>Index up to date<span class="tip left" tabindex="0" data-tip="HOF keeps its own fast lookup table of every value you facet on. It rebuilds in the background when you save a facet or edit content. Green means the table matches your content right now.">?</span></span>
+        <span class="pill pro">Pro</span>
+        <button class="btn help" id="helpbtn">Help</button>
+      </div>
+    </div>
+
+    <div class="shell">
+    <nav class="rail nav" aria-label="hooked on facets">
+      <div class="grp" data-l="Main">
+        <button data-go="dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</button>
+        <button data-go="facets" aria-current="page"><svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>Facets</button>
+        <button data-go="loops"><svg viewBox="0 0 24 24"><path d="M4 7h11l-3-3M20 17H9l3 3"/><path d="M4 7c0 6 4 10 16 10" opacity=".5"/></svg>Query loops</button>
+        <button data-go="indexer"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Indexer</button>
+      </div>
+      <div class="grp" data-l="Studio">
+        <button data-go="blueprint"><svg viewBox="0 0 24 24"><path d="M4 20 20 4M14 4h6v6M10 20H4v-6"/></svg>Blueprint</button>
+        <button data-go="tokens"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="15.5" cy="10" r="1.2"/><path d="M12 21c-2 0-2-3 0-3h2a2 2 0 0 0 0-4h-1"/></svg>Design tokens</button>
+      </div>
+      <div class="grp" data-l="System">
+        <button data-go="seo"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>SEO</button>
+        <button data-go="license"><svg viewBox="0 0 24 24"><circle cx="8" cy="14" r="4"/><path d="m11 11 9-9M15 7l2 2M18 4l2 2"/></svg>License</button>
+        <button data-go="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+      </div>
+      <div class="foot"><b>v1.0.0-beta.2</b>Pro · 2 of 5 sites<br>Index fresh · 4.2 ms</div>
+    </nav>
+    <div class="main">
+
+    <!-- ================= DASHBOARD ================= -->
+    <section class="screen" id="s-dashboard">
+      <div class="head">
+        <div><span class="eyebrow"><i></i>Auto-Hook Engine · Live</span><h1>Hooking 3 query loops automatically.</h1><p class="lede">2,418 intercepts captured so far across 3 loops. No shortcodes, no template rewrites: HOF detects your loops and binds the facets you configure.</p></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="l">Avg query time · last 200<span class="tip" tabindex="0" data-tip="How long the index takes to answer a filter, measured on this site. Under 50 ms means a filter change feels instant.">?</span></div><div class="v">4.2<small>ms</small></div></div>
+        <div class="stat"><div class="l">Items indexed</div><div class="v">1,596<small>3 post types</small></div></div>
+        <div class="stat"><div class="l">Active facets</div><div class="v">9<small>of 9</small></div></div>
+        <div class="stat"><div class="l">Filters this week</div><div class="v">6,230</div></div>
+      </div>
+      <div class="two">
+        <div class="panel pad"><h3 class="sec">Most-used facets</h3>
+          <div class="bar"><span class="n">Category</span><div class="t"><i style="width:88%"></i></div><span class="c">2,140</span></div>
+          <div class="bar"><span class="n">Price</span><div class="t"><i style="width:64%"></i></div><span class="c">1,560</span></div>
+          <div class="bar"><span class="n">Color</span><div class="t"><i style="width:41%"></i></div><span class="c">990</span></div>
+          <div class="bar"><span class="n">Site search</span><div class="t"><i style="width:33%"></i></div><span class="c">810</span></div>
+          <div class="bar"><span class="n">Region</span><div class="t"><i style="width:18%"></i></div><span class="c">430</span></div>
+        </div>
+        <div class="panel pad"><h3 class="sec">Filters that find nothing<span class="tip" tabindex="0" data-tip="Combinations shoppers tried that returned zero results. Each one is a product you don't stock, a value that's mis-tagged, or a facet that needs Hide empty values turned on.">?</span></h3>
+          <div class="zero"><span>Jackets + Ember + under $60</span><span>41</span></div>
+          <div class="zero"><span>Kestrel + Camp</span><span>27</span></div>
+          <div class="zero"><span>Superstitions + Easy + over 10 mi</span><span>12</span></div>
+          <div class="zero"><span>search: "snowshoes"</span><span>9</span></div>
+        </div>
+      </div>
+      <p class="note">Your facets live one screen over. Suggestions from content that has no facet yet show up there too.</p>
+    </section>
+
+    <!-- ================= FACETS ================= -->
+    <section class="screen on" id="s-facets">
+      <div class="head">
+        <div><h1>Facets</h1><p class="lede">Filters and search for any post type. Click one to edit it and watch it work.</p></div>
+        <div class="top-right"><button class="btn primary" data-go="editor" data-new="1" data-pt="product">New facet</button></div>
+      </div>
+      <div class="suggest">
+        <span class="label">Found in your content</span>
+        <div class="items">
+          <button data-go="editor" data-pt="guide" data-src="tax:season">Trail guides: Season <span>→ checkbox</span></button>
+          <button data-go="editor" data-pt="product" data-src="tax:pa_color">Products: Color <span>→ swatches</span></button>
+          <button data-go="editor" data-pt="guide" data-src="meta:distance">Trail guides: Distance <span>→ range</span></button>
+        </div>
+        <span class="pill" style="margin-left:auto">3 without a facet yet</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Facet</th><th>Type</th><th>Source<span class="tip" tabindex="0" data-tip="Where the values come from. A taxonomy is a WordPress grouping like categories or tags. An attribute is a WooCommerce taxonomy like size or color. A field is a custom field from ACF, Meta Box or Pods.">?</span></th><th>Placed in</th><th>Values</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr class="g"><td colspan="6">Everywhere <span class="mono">· all post types</span></td></tr>
+            <tr class="r" data-go="editor" data-pt="product" data-src="search"><td><div class="name">Site search</div><div class="slug mono">search</div></td><td><span class="chip">Search</span></td><td>Title, content, fields</td><td>Header</td><td class="num">—</td><td><span class="pill good"><i></i>Indexed</span></td></tr>
+            <tr class="r" data-go="editor" data-pt="product" data-src="search"><td><div class="name">Ask</div><div class="slug mono">ask</div></td><td><span class="chip">Ask</span></td><td>All indexed fields</td><td>Header</td><td class="num">—</td><td><span class="pill good"><i></i>Indexed</span></td></tr>
+            <tr class="g"><td colspan="6">Products <span class="mono">· WooCommerce · 1,200 items</span></td></tr>
+            <tr class="r" data-go="editor" data-pt="product" data-src="tax:pa_brand"><td><div class="name">Brand</div><div class="slug mono">brand</div></td><td><span class="chip">Checkbox</span></td><td>Attribute: pa_brand</td><td>Shop sidebar</td><td class="num">8</td><td><span class="pill good"><i></i>Indexed</span></td></tr>
+            <tr class="r" data-go="editor" data-pt="product" data-src="tax:product_cat"><td><div class="name">Category</div><div class="slug mono">category</div></td><td><span class="chip">Hierarchy</span></td><td>Taxonomy: product_cat</td><td>Shop sidebar</td><td class="num">23</td><td><span class="pill good"><i></i>Indexed</span></td></tr>
+            <tr class="r" data-go="editor" data-pt="product" data-src="meta:_price"><td><div class="name">Price</div><div class="slug mono">price</div></td><td><span class="chip">Range</span></td><td>WooCommerce price</td><td>Shop sidebar</td><td class="num">—</td><td><span class="pill good"><i></i>Indexed</span></td></tr>
+            <tr class="r" data-go="editor" data-pt="product" data-src="tax:pa_color"><td><div class="name">Color</div><div class="slug mono">color</div></td><td><span class="chip">Fluid swatches</span></td><td>Attribute: pa_color</td><td>Shop sidebar</td><td class="num">8</td><td><span class="pill busy"><i></i>Indexing</span></td></tr>
+            <tr class="r" data-go="editor" data-pt="product" data-src="tax:pa_color"><td><div class="name">Color deck</div><div class="slug mono">color_deck</div></td><td><span class="chip">Swipe deck</span></td><td>Attribute: pa_color</td><td>Shop hero</td><td class="num">8</td><td><span class="pill good"><i></i>Indexed</span></td></tr>
+            <tr class="g"><td colspan="6">Trail guides <span class="mono">· custom post type · 84 items</span></td></tr>
+            <tr class="r" data-go="editor" data-pt="guide" data-src="tax:region"><td><div class="name">Region</div><div class="slug mono">region</div></td><td><span class="chip">Checkbox</span></td><td>Taxonomy: region</td><td>Guides archive</td><td class="num">5</td><td><span class="pill good"><i></i>Indexed</span></td></tr>
+            <tr class="r" data-go="editor" data-pt="guide" data-src="acf:difficulty"><td><div class="name">Difficulty</div><div class="slug mono">difficulty</div></td><td><span class="chip">Radio</span></td><td>ACF: difficulty</td><td>Guides archive</td><td class="num">3</td><td><span class="pill good"><i></i>Indexed</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Grouped by what the facet applies to. Search and Ask work across every post type you index, which is why they sit at the top.</p>
+    </section>
+
+    <!-- ================= EDITOR ================= -->
+    <section class="screen" id="s-editor">
+      <div class="head">
+        <div style="flex:1; min-width:240px">
+          <button class="btn quiet sm" data-go="facets" style="margin-left:-9px">← Facets</button>
+          <input class="name-input" id="fname" type="text" value="Brand" aria-label="Facet name">
+          <p class="lede">Every change updates the preview. Save writes it to the site and re-indexes in the background.</p>
+        </div>
+        <div class="top-right">
+          <span class="pill" id="savestate"><i></i>No changes</span>
+          <button class="btn" id="discard">Discard</button>
+          <button class="btn primary" id="save">Save facet</button>
+        </div>
+      </div>
+      <div class="editor">
+        <div class="panel">
+          <div class="step">
+            <div class="step-h"><h2>Applies to</h2><span class="tip" tabindex="0" data-tip="The post type this facet filters. Products is WooCommerce. Trail guides is a custom post type on this site. Pick Everywhere for a search that spans all of them.">?</span><a href="https://hookedonfacets.com/docs/post-types/" target="_blank" rel="noopener">Docs</a></div>
+            <div class="seg" id="pt"><button data-v="product" aria-pressed="true">Products</button><button data-v="guide" aria-pressed="false">Trail guides</button><button data-v="post" aria-pressed="false">Posts</button></div>
+          </div>
+          <div class="step">
+            <div class="step-h"><h2>Source</h2><span class="tip" tabindex="0" data-tip="The data the facet reads. Pick it before the type, because the source decides which types make sense.">?</span><a href="https://hookedonfacets.com/docs/sources/" target="_blank" rel="noopener">Docs</a></div>
+            <select id="src" aria-label="Source"></select>
+            <div class="explain" id="explain"></div>
+          </div>
+          <div class="step">
+            <div class="step-h"><h2>Type</h2><span class="tip" tabindex="0" data-tip="How the facet looks and behaves on the page. Greyed types don't fit this source; the reason is written on each one.">?</span><a href="https://hookedonfacets.com/docs/facet-types/" target="_blank" rel="noopener">Docs</a></div>
+            <div class="types" id="types"></div>
+          </div>
+          <div class="step" id="behavior">
+            <div class="step-h"><h2>Behavior</h2></div>
+            <div id="beh-list">
+              <div class="row"><span>Match<span class="tip" tabindex="0" data-tip="Any: show items that have at least one of the picked values. All: show only items that have every picked value. Most stores want Any.">?</span></span><div class="seg" id="match"><button aria-pressed="true" data-v="any">Any</button><button aria-pressed="false" data-v="all">All</button></div></div>
+              <div class="row"><span>Show counts</span><button class="toggle" id="counts" role="switch" aria-checked="true" aria-label="Show counts"></button></div>
+              <div class="row"><span>Hide values with no results</span><button class="toggle" id="hidezero" role="switch" aria-checked="false" aria-label="Hide values with no results"></button></div>
+              <div class="row"><span>Collapse after 5 values</span><button class="toggle" id="collapse" role="switch" aria-checked="true" aria-label="Collapse after five"></button></div>
+            </div>
+            <div id="beh-range" hidden>
+              <div class="row"><span>Step</span><input type="number" id="stepv" value="10" style="width:90px"></div>
+              <div class="row"><span>Show min and max inputs</span><button class="toggle" role="switch" aria-checked="true" aria-label="Show inputs"></button></div>
+            </div>
+            <div id="beh-search" hidden>
+              <label class="f" for="ph">Placeholder</label>
+              <input type="text" id="ph" value="Search trail guides and products">
+              <div class="row" style="margin-top:8px"><span>Search in<span class="tip" tabindex="0" data-tip="Which parts of each item the search reads. Fields means any custom field you've indexed, so a search for 'moderate' can match an ACF difficulty value.">?</span></span><span><span class="chip">Title</span> <span class="chip">Content</span> <span class="chip">Fields</span></span></div>
+              <div class="row"><span>Results as you type</span><button class="toggle" role="switch" aria-checked="true" aria-label="Live results"></button></div>
+            </div>
+            <div id="beh-swipe" hidden>
+              <p class="note" style="margin:0">Variant, card size, deck depth and animation are tuned in <button class="btn quiet sm" data-go="blueprint" style="padding:0 2px">Blueprint</button> against live products, then synced back here.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-h"><h2>Display</h2></div>
+            <label class="f" for="lbl">Label</label><input type="text" id="lbl" value="Brand">
+            <label class="f" for="sort">Sort values by</label><select id="sort"><option>Most items first</option><option>A to Z</option><option>Site order</option></select>
+            <div id="disp-list">
+              <div class="row" style="margin-top:8px"><span>Style<span class="tip" tabindex="0" data-tip="List is the classic checkbox or radio column. Buttons renders each value as a tappable button, styled from your Design tokens so it matches the site. Same filtering either way.">?</span></span><div class="seg" id="style"><button aria-pressed="true" data-v="list">List</button><button aria-pressed="false" data-v="buttons">Buttons</button></div></div>
+              <div id="btnopts" hidden>
+                <div class="row"><span>Shape</span><div class="seg" id="shape"><button aria-pressed="true" data-v="pill">Pill</button><button aria-pressed="false" data-v="square">Square</button></div></div>
+                <div class="row"><span>Fill</span><div class="seg" id="fill"><button aria-pressed="true" data-v="outline">Outline</button><button aria-pressed="false" data-v="solid">Tinted</button></div></div>
+                <div class="row"><span>Count on the button</span><button class="toggle" id="bcount" role="switch" aria-checked="true" aria-label="Count on button"></button></div>
+                <div class="row"><span>Show values with no results<span class="tip" tabindex="0" data-tip="On: a value with zero matches still renders, dimmed and not clickable, so shoppers see the full set. Off: it disappears until something matches.">?</span></span><button class="toggle" id="bempty" role="switch" aria-checked="true" aria-label="Show empty values"></button></div>
+                <p class="note" style="margin:6px 0 0">Colors, radius and font come from <button class="btn quiet sm" data-go="tokens" style="padding:0 2px">Design tokens</button>. Override per facet with the <code>hof-facet--brand</code> class.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel preview">
+          <div class="preview-h"><h2>Preview</h2><span class="mono" id="pstats"></span><span class="pill good" style="margin-left:auto"><i></i>Live</span></div>
+          <div class="store"><div class="facet" id="facet"></div><div><div class="count" id="count"></div><div class="grid" id="grid"></div></div></div>
+        </div>
+      </div>
+      <div class="placement">
+        <h2 style="margin-bottom:10px">Place it</h2>
+        <div class="place-grid">
+          <div class="place"><b>Shortcode</b><code id="sc">[hof_facet name="brand"]</code><button class="btn sm copy" data-copy-from="sc">Copy</button></div>
+          <div class="place"><b>Block</b><code>hooked on facets → Facet</code><span class="note" style="display:block">Search "facet" in the block inserter, then pick this one.</span></div>
+          <div class="place"><b>Bricks element</b><code>HOF Facet</code><span class="note" style="display:block">Drag it into any template. Tag the query loop with class <code>hof</code> and it binds.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= QUERY LOOPS ================= -->
+    <section class="screen" id="s-loops">
+      <div class="head">
+        <div><h1>Query loops</h1><p class="lede">Every WP_Query loop the Auto-Hook Engine intercepts, by intercept type and post type. Counts increment on every page the engine binds.<span class="tip" tabindex="0" data-tip="A query loop is the part of a page that lists items: the product grid, the blog list, a Bricks query loop. HOF hooks into it so filters swap the results without a reload.">?</span></p></div>
+        <div class="top-right"><button class="btn">Reload</button><button class="btn danger">Reset counters</button></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="l">Distinct loops</div><div class="v">3</div></div>
+        <div class="stat"><div class="l">Total intercepts</div><div class="v">2,418</div></div>
+        <div class="stat"><div class="l">Avg query time</div><div class="v">4.2<small>ms</small></div></div>
+      </div>
+      <h3 class="sec">Hooked loops</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Loop</th><th>Intercept<span class="tip" tabindex="0" data-tip="How HOF found the loop. Main query is the archive itself. Bricks class means a query loop element tagged hof. Elementor means a widget with Query ID hof.">?</span></th><th>Post type</th><th>Template</th><th>Hits</th><th>Avg</th></tr></thead>
+          <tbody>
+            <tr><td><div class="name">Shop archive</div><div class="slug mono">archive-product</div></td><td><span class="chip">Main query</span></td><td>Products</td><td>Bricks: Shop archive</td><td class="num">1,904</td><td class="num">3.8 ms</td></tr>
+            <tr><td><div class="name">Trail guides archive</div><div class="slug mono">archive-guide</div></td><td><span class="chip">Bricks class: hof</span></td><td>Trail guides</td><td>Bricks: Guides</td><td class="num">402</td><td class="num">2.1 ms</td></tr>
+            <tr><td><div class="name">Home featured</div><div class="slug mono">core/query</div></td><td><span class="chip">Gutenberg</span></td><td>Products</td><td>Page: Home</td><td class="num">112</td><td class="num">6.4 ms</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Not seeing a loop? Visit the page with a filter in the URL (<code>?hof[brand]=alder</code>) and it appears here. Binding is opt-in: Elementor by Query ID, Bricks by CSS class, Breakdance by Array Query.</p>
+    </section>
+
+    <!-- ================= INDEXER ================= -->
+    <section class="screen" id="s-indexer">
+      <div class="head">
+        <div><h1>Indexer</h1><p class="lede">The lookup table behind every filter. Rebuilds run in the background through Action Scheduler; saving a facet or editing content updates it incrementally.</p></div>
+        <div class="top-right"><span class="pill good" id="idxstate"><i></i>Last full rebuild 2 h ago · 19.4 s</span><button class="btn primary" id="reindex">Reindex now</button></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="l">Index rows</div><div class="v">14,206</div></div>
+        <div class="stat"><div class="l">Distinct objects</div><div class="v">1,596</div></div>
+        <div class="stat"><div class="l">Facets in index</div><div class="v">9</div></div>
+        <div class="stat"><div class="l">Post types</div><div class="v">3<small>of 5</small></div></div>
+      </div>
+      <h3 class="sec">Per-facet breakdown</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Facet</th><th>Post type</th><th>Rows</th><th>Objects</th><th>Updated</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Category</td><td>Products</td><td class="num">3,610</td><td class="num">1,200</td><td class="num">2 h ago</td><td><span class="pill good"><i></i>Fresh</span></td></tr>
+            <tr><td>Brand</td><td>Products</td><td class="num">1,200</td><td class="num">1,200</td><td class="num">2 h ago</td><td><span class="pill good"><i></i>Fresh</span></td></tr>
+            <tr><td>Price</td><td>Products</td><td class="num">1,200</td><td class="num">1,200</td><td class="num">2 h ago</td><td><span class="pill good"><i></i>Fresh</span></td></tr>
+            <tr><td>Color</td><td>Products</td><td class="num">2,840</td><td class="num">1,160</td><td class="num">running</td><td><span class="pill busy"><i></i>Indexing 96%</span></td></tr>
+            <tr><td>Region</td><td>Trail guides</td><td class="num">84</td><td class="num">84</td><td class="num">1 d ago</td><td><span class="pill good"><i></i>Fresh</span></td></tr>
+            <tr><td>Difficulty</td><td>Trail guides</td><td class="num">84</td><td class="num">84</td><td class="num">1 d ago</td><td><span class="pill good"><i></i>Fresh</span></td></tr>
+            <tr><td>Site search</td><td>All</td><td class="num">5,188</td><td class="num">1,596</td><td class="num">2 h ago</td><td><span class="pill good"><i></i>Fresh</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">WP-CLI: <code>wp hof reindex</code> for everything, <code>wp hof reindex --post=123</code> for one item.</p>
+    </section>
+
+    <!-- ================= BLUEPRINT ================= -->
+    <section class="screen" id="s-blueprint">
+      <div class="bp-crumbs"><span>Sandbox</span><span>›</span><b>Shop archive blueprint</b><span class="tip" tabindex="0" data-tip="A sandbox for the visual facets. Change how a facet looks and moves here, against live products, without touching the saved facet. Sync when you like it.">?</span></div>
+      <div class="head">
+        <div><h1>Blueprint</h1><p class="lede">Try a facet's look and motion against live products. Sync saves one facet; Deploy saves the whole blueprint to the template. Until then nothing on the site changes.</p></div>
+        <div class="top-right"><span class="seg"><button aria-pressed="true">Desktop</button><button aria-pressed="false">Phone</button></span><button class="btn" id="bpdeploy">Deploy blueprint</button><span class="tip left" tabindex="0" data-tip="Two levels of saving. Sync writes one facet's look back to that facet. Deploy writes every facet in this blueprint to the Shop archive template at once, so the whole sandbox becomes the live page. Until you do one of those, nothing on the site changes.">?</span></div>
+      </div>
+      <div class="bp">
+        <div class="bp-stage">
+          <div class="bp-tabs" id="bptabs"><button aria-pressed="true" data-f="Color deck">Color deck</button><button aria-pressed="false" data-f="Color">Color</button><button aria-pressed="false" data-f="Category">Category</button><button aria-pressed="false" data-f="Price">Price</button></div>
+          <div id="bpstage"></div>
+          <div class="bp-live"><span class="eyebrow"><i></i>Products responding live</span><span id="bpcount">1,200 products · 4 ms</span></div>
+        </div>
+        <div class="panel inspector">
+          <div class="step"><div class="step-h"><h2>Editing</h2><small id="bpname">Color deck · Swipe deck</small></div><p class="lede" style="margin:0">Source: Attribute pa_color · 8 values</p></div>
+          <div class="step"><div class="step-h"><h2>Variant</h2></div><div class="radios" id="bpvar"><button aria-pressed="false" data-v="Card">Card</button><button aria-pressed="false" data-v="Grid">Grid</button><button aria-pressed="true" data-v="Swipe">Swipe</button></div></div>
+          <div class="step"><div class="step-h"><h2>Card size</h2></div><div class="radios" id="bpsize"><button aria-pressed="false" data-v="Small">Small</button><button aria-pressed="true" data-v="Medium">Medium</button><button aria-pressed="false" data-v="Large">Large</button></div></div>
+          <div class="step"><div class="step-h"><h2>Deck depth</h2><small id="bpdepthv">3</small></div><input type="range" id="bpdepth" min="1" max="5" value="3" aria-label="Deck depth"></div>
+          <div class="step"><div class="step-h"><h2>Animation</h2></div><div class="radios" id="bpanim"><button aria-pressed="true" data-v="Spring">Spring</button><button aria-pressed="false" data-v="Linear">Linear</button></div></div>
+          <div class="step"><button class="btn primary" id="bpsync" style="width:100%; justify-content:center">Sync to Color deck</button><p class="note" style="margin:8px 0 0">Writes these four settings to the Color deck facet. Deploy, top right, does this for every facet in the blueprint and pushes the layout to the Shop archive template.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= DESIGN TOKENS ================= -->
+    <section class="screen" id="s-tokens">
+      <div class="head">
+        <div><h1>Design tokens</h1><p class="lede">CSS variables that every HOF surface reads, admin and public. Change one here and every facet on the site follows. Override per site in theme CSS or with the <code>hof_admin_css_tokens</code> filter.<span class="tip" tabindex="0" data-tip="A token is a named value like --hof-primary. Facets use the name, not the color, so changing the value restyles everything at once. Bricks global classes on HOF elements read these same variables.">?</span></p></div>
+        <div class="top-right"><button class="btn" id="tokreset">Reset to brand</button><button class="btn" id="tokcopy">Copy CSS</button><button class="btn primary" id="toksave">Save tokens</button></div>
+      </div>
+      <div class="tokens">
+        <div class="panel pad" id="toklist"></div>
+        <div>
+          <div class="panel tokprev" id="tokprev">
+            <h3 class="sec">Live preview</h3>
+            <div class="f hof-facet hof-facet--brand"><h4 class="hof-facet__label">Brand</h4><label><input type="checkbox" checked>Alder<span class="n">5</span></label><label><input type="checkbox">Kestrel<span class="n">4</span></label><label><input type="checkbox">Orin<span class="n">3</span></label><div class="fbtns" style="margin-top:10px"><button class="hof-btn fbtn pill" aria-pressed="true" style="border-color:var(--hof-primary);background:var(--hof-primary);color:var(--hof-on-primary)">Alder<span class="c">5</span></button><button class="hof-btn fbtn pill" aria-pressed="false" style="border-color:var(--hof-primary);color:var(--hof-primary)">Kestrel<span class="c">4</span></button><button class="hof-btn fbtn pill empty" disabled style="border-color:var(--hof-primary);color:var(--hof-primary)">Tundra<span class="c">0</span></button></div><div class="chips"><span>Alder ×</span><span>Under $200 ×</span></div><span class="btnp">Apply filters</span></div>
+            <style id="customcss-live"></style>
+          </div>
+          <div class="panel" style="margin-top:14px"><div class="pad">
+            <div class="step-h" style="margin-bottom:8px"><h3 class="sec" style="margin:0">Custom CSS</h3><span class="tip" tabindex="0" data-tip="Anything you write here loads after the tokens, on the front end and in this preview. Use the hof- classes and the tokens above. Scope it to one facet with .hof-facet--<slug>, or leave it site-wide.">?</span><a href="https://hookedonfacets.com/docs/design-tokens/" target="_blank" rel="noopener" style="margin-left:auto;font-size:12px;text-decoration:none">Class reference</a></div>
+            <div class="row" style="padding:0 0 8px"><span>Scope</span><div class="seg" id="cssscope"><button aria-pressed="true" data-v="site">Site-wide</button><button aria-pressed="false" data-v="facet">This facet</button></div></div>
+            <textarea id="customcss" rows="7" spellcheck="false" aria-label="Custom CSS" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--page);color:var(--ink);font-family:'Geist Mono',SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.5;resize:vertical">.hof-btn { text-transform: uppercase; letter-spacing: .04em; }
+.hof-facet__label { font-weight: 600; }</textarea>
+            <p class="note" style="margin:8px 0 0">Live in the preview as you type. Saved with the tokens.</p>
+          </div></div>
+          <div class="panel" style="margin-top:14px"><div class="pad"><h3 class="sec">Generated CSS</h3><pre class="css" id="tokcss"></pre></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SEO ================= -->
+    <section class="screen simple" id="s-seo">
+      <div class="head"><div><h1>SEO</h1><p class="lede">Faceted URLs spawn near-duplicate, crawl-bloating pages. These controls keep the filtered long tail tidy. General SEO plugins don't understand the <code>?hof[*]</code> query shape, so HOF manages it.</p></div><div class="top-right"><button class="btn primary">Save</button></div></div>
+      <h3 class="sec">Crawl and indexing</h3>
+      <div class="panel">
+        <label class="check"><input type="checkbox" checked><span><b>Canonical to the clean URL<span class="tip" tabindex="0" data-tip="A canonical tag tells Google which URL is the real one. Pointing every filtered view at the unfiltered page means ranking signals stack on one URL instead of scattering across thousands.">?</span></b><p>Point filtered views at the unfiltered base URL so ranking signals consolidate. Skipped automatically if Yoast, Rank Math, AIOSEO or SEOPress is active, since they own canonical.</p></span></label>
+        <label class="check"><input type="checkbox" checked><span><b>Noindex stacked filters</b><p>Add noindex,follow once enough facets are combined, so the combinatorial long tail stays out of the index while links are still crawled.</p></span></label>
+        <div class="row" style="padding:6px 0 12px 26px"><span>Noindex threshold<span class="tip" tabindex="0" data-tip="How many facets have to be active before the page is marked noindex. 2 keeps single-facet pages like /shop/?brand=alder indexable and hides everything broader.">?</span></span><input type="number" value="2" style="width:80px" aria-label="Noindex threshold"></div>
+        <label class="check"><input type="checkbox" checked><span><b>Append filters to the page title</b><p>Adds "· Brand: Alder, Color: Ember" to the document title so an indexed single-facet page reads meaningfully in search results.</p></span></label>
+      </div>
+      <h3 class="sec">Pretty faceted URLs</h3>
+      <div class="panel">
+        <label class="check"><input type="checkbox"><span><b>Rewrite filters into the path</b><p>Turns <code>/shop/?hof[brand]=alder</code> into <code>/shop/filter/brand/alder/</code> on the shop and product archives. Clean, crawlable, shareable. Legacy query URLs 301-redirect to the pretty form.</p></span></label>
+        <div class="row" style="padding:6px 0 12px 26px"><span>URL segment</span><input type="text" value="filter" style="width:120px" aria-label="URL segment"></div>
+      </div>
+    </section>
+
+    <!-- ================= LICENSE ================= -->
+    <section class="screen simple" id="s-license">
+      <div class="head"><div><h1>License</h1><p class="lede">Activate this site against your hooked on facets license. Activation turns on automatic updates and unlocks the Pro facets.</p></div></div>
+      <h3 class="sec">Current status</h3>
+      <div class="panel" style="padding:16px">
+        <div class="status ok"><span class="pill good"><i></i>Active</span><span>Pro · Plus plan · 2 of 5 sites in use<span class="sub"> · renews Sep 28, 2027</span></span></div>
+        <div class="row"><span>License key</span><span class="mono" style="color:var(--muted)">hof_••••••••••••••••••7Q2K</span></div>
+        <div class="row"><span>This site</span><span class="mono" style="color:var(--muted)">ridgelinesupply.com</span></div>
+        <div class="row" style="padding-top:12px"><span></span><span><button class="btn sm">Manage sites</button> <button class="btn sm">Deactivate here</button></span></div>
+      </div>
+      <h3 class="sec">How licensing works</h3>
+      <div class="panel" style="padding:12px 16px">
+        <ul class="plain">
+          <li>One license covers one, five or twenty-five sites, depending on your plan. Move a seat between sites any time from your account.</li>
+          <li>An active license enables updates through WordPress's standard plugin updater. New releases show up in Plugins like any other update.</li>
+          <li>Beta program: opt in from your account and you'll receive beta builds as normal updates, flagged Beta in the plugin list.</li>
+          <li>Need a key or want to change plan? <a href="https://hookedonfacets.com/pricing/" target="_blank" rel="noopener">hookedonfacets.com/pricing</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================= SETTINGS ================= -->
+    <section class="screen simple" id="s-settings">
+      <div class="head"><div><h1>Settings</h1><p class="lede">Ask, sources and post types. Nothing here is needed to make your first facet.</p></div></div>
+      <div class="tabs" id="settabs"><button aria-pressed="true" data-t="ask">Ask</button><button aria-pressed="false" data-t="sources">Sources</button><button aria-pressed="false" data-t="pts">Post types</button></div>
+      <div class="tabpane on" id="t-ask">
+        <p class="lede" style="margin:0 0 14px">Powers the Ask facet: turns "red shoes under $50" into editable filter chips through an AI provider. Bring your own key. It's stored on this site and never sent to the browser or to hooked on facets.</p>
+        <h3 class="sec">Provider and key</h3>
+        <div class="panel" style="padding:16px">
+          <div class="status ok"><span class="pill good"><i></i>Configured</span><span>Anthropic · key fingerprint <code>sk-ant-api03-t…XC9wAA</code></span></div>
+          <label class="f" for="prov">Provider<span class="tip" tabindex="0" data-tip="Ask works with any of these. Anthropic is the default because prompt caching keeps each turn cheap and the models handle structured filter output well. Pick another if your team already has keys there.">?</span></label>
+          <select id="prov"><option>Anthropic (recommended)</option><option>OpenAI</option><option>Google</option><option>OpenRouter</option></select>
+          <label class="f" for="model">Model</label>
+          <select id="model"><option>claude-haiku-4-5 · fastest, cheapest</option><option>claude-sonnet-5</option></select>
+          <label class="f" for="key">Replace with a new key</label>
+          <input type="password" id="key" placeholder="sk-ant-api03-…">
+          <div class="row" style="padding-top:12px"><span></span><span><button class="btn primary sm">Save key</button> <button class="btn sm">Clear key</button></span></div>
+        </div>
+        <h3 class="sec">Cost and privacy</h3>
+        <div class="panel" style="padding:12px 16px">
+          <ul class="plain">
+            <li>Each turn of an ask calls your provider and counts against your account credits. Typical cost on Haiku 4.5 is a fraction of a cent per turn.</li>
+            <li>The shopper's free-text turn, plus the constraints they've already accepted, is sent along with your facet schema. Products and customer data are not sent.</li>
+            <li>Revoke or rotate the key at your provider any time. Rotation only requires saving the new key here.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="tabpane" id="t-sources">
+        <div class="panel">
+          <div class="row"><span>WooCommerce<br><span style="color:var(--muted);font-size:12.5px">Categories, attributes, price, stock</span></span><span class="pill good"><i></i>Connected</span></div>
+          <div class="row"><span>ACF<br><span style="color:var(--muted);font-size:12.5px">Simple fields in Free. Repeater, flexible, relationship, gallery in Pro</span></span><span class="pill good"><i></i>Connected</span></div>
+          <div class="row"><span>Meta Box<br><span style="color:var(--muted);font-size:12.5px">Not installed</span></span><span class="pill"><i></i>Off</span></div>
+          <div class="row"><span>Pods<br><span style="color:var(--muted);font-size:12.5px">Not installed</span></span><span class="pill"><i></i>Off</span></div>
+        </div>
+      </div>
+      <div class="tabpane" id="t-pts">
+        <div class="panel">
+          <div class="row"><span>Products<br><span style="color:var(--muted);font-size:12.5px">1,200 items · WooCommerce</span></span><button class="toggle" role="switch" aria-checked="true" aria-label="Index products"></button></div>
+          <div class="row"><span>Trail guides<br><span style="color:var(--muted);font-size:12.5px">84 items · custom post type</span></span><button class="toggle" role="switch" aria-checked="true" aria-label="Index guides"></button></div>
+          <div class="row"><span>Posts<br><span style="color:var(--muted);font-size:12.5px">312 items</span></span><button class="toggle" role="switch" aria-checked="true" aria-label="Index posts"></button></div>
+          <div class="row"><span>Pages<br><span style="color:var(--muted);font-size:12.5px">14 items</span></span><button class="toggle" role="switch" aria-checked="false" aria-label="Index pages"></button></div>
+          <div class="row"><span>Dealers<br><span style="color:var(--muted);font-size:12.5px">0 items · custom post type</span></span><button class="toggle" role="switch" aria-checked="false" aria-label="Index dealers"></button></div>
+        </div>
+        <p class="note">Turning a post type on indexes it in the background and makes it available under Applies to in the facet editor.</p>
+      </div>
+    </section>
+    </div>
+    </div>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Help">
+  <h2>Help <button class="btn quiet sm" id="helpclose">Close</button></h2>
+  <input type="search" id="helpq" placeholder="Search the docs" aria-label="Search the docs">
+  <div class="ctx" id="helpctx" style="margin-top:12px"><b>On this screen</b>Facets list.</div>
+  <h5>Start here</h5>
+  <a class="doc" href="https://hookedonfacets.com/docs/getting-started/" target="_blank" rel="noopener">Your first facet in 3 minutes <span>Guide</span></a>
+  <a class="doc" href="https://hookedonfacets.com/docs/post-types/" target="_blank" rel="noopener">Filtering a custom post type <span>Guide</span></a>
+  <a class="doc" href="https://hookedonfacets.com/docs/search/" target="_blank" rel="noopener">Site search that searches fields too <span>Guide</span></a>
+  <a class="doc" href="https://hookedonfacets.com/docs/bricks/" target="_blank" rel="noopener">Binding a Bricks query loop <span>Guide</span></a>
+  <h5>Reference</h5>
+  <a class="doc" href="https://hookedonfacets.com/docs/facet-types/" target="_blank" rel="noopener">All 16 facet types <span>Reference</span></a>
+  <a class="doc" href="https://hookedonfacets.com/docs/sources/" target="_blank" rel="noopener">Sources: taxonomies, attributes, fields <span>Reference</span></a>
+  <a class="doc" href="https://hookedonfacets.com/docs/blueprint/" target="_blank" rel="noopener">Blueprint and the visual facets <span>Reference</span></a>
+  <a class="doc" href="https://hookedonfacets.com/docs/design-tokens/" target="_blank" rel="noopener">Design tokens and theme CSS <span>Reference</span></a>
+  <a class="doc" href="https://hookedonfacets.com/docs/seo/" target="_blank" rel="noopener">SEO for faceted URLs <span>Reference</span></a>
+  <a class="doc" href="https://hookedonfacets.com/docs/ask/" target="_blank" rel="noopener">Setting up Ask with your own key <span>Reference</span></a>
+  <a class="doc" href="https://hookedonfacets.com/docs/wp-cli/" target="_blank" rel="noopener">WP-CLI commands <span>Reference</span></a>
+  <div class="ask">Stuck? Reply to any HOF email or open a <a href="https://github.com/Shepdesign/hooked-on-facets/issues" target="_blank" rel="noopener">GitHub issue</a>. Pro customers get priority email support from the License screen.</div>
+</aside>
+<div class="toast" id="toast">Copied</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var colors = { Plum: '#534AB7', Lilac: '#7F77DD', Ember: '#D85A30', Ink: '#221D52', Slate: '#3C3489', Mist: '#B3AEDA', Clay: '#E8855F', Moss: '#5E7D5B' };
+  var data = {
+    product: [
+      ['Summit shell', 'Alder', 189, 'Lilac', 'Apparel/Jackets'], ['Trail runner 2', 'Kestrel', 129, 'Ember', 'Footwear/Trail'],
+      ['Basecamp tent', 'Alder', 349, 'Slate', 'Camp/Shelter'], ['Ridge pack 32', 'Orin', 159, 'Plum', 'Packs/Day'],
+      ['Merino base', 'Kestrel', 79, 'Mist', 'Apparel/Base layers'], ['Ember stove', 'Hollow', 64, 'Ember', 'Camp/Kitchen'],
+      ['Day pack 18', 'Orin', 89, 'Lilac', 'Packs/Day'], ['Rain kilt', 'Alder', 59, 'Ink', 'Apparel/Jackets'],
+      ['Down puffy', 'Kestrel', 219, 'Plum', 'Apparel/Jackets'], ['Camp chair', 'Hollow', 49, 'Slate', 'Camp/Furniture'],
+      ['Scout knife', 'Pike', 39, 'Ink', 'Tools/Blades'], ['Bivy sack', 'Alder', 139, 'Lilac', 'Camp/Shelter'],
+      ['Headlamp', 'Pike', 29, 'Mist', 'Tools/Light'], ['Field bottle', 'Sable', 24, 'Clay', 'Camp/Kitchen'],
+      ['Wool beanie', 'Kestrel', 32, 'Plum', 'Apparel/Hats'], ['Guide gloves', 'Sable', 45, 'Moss', 'Apparel/Gloves'],
+      ['Trek pole', 'Orin', 69, 'Lilac', 'Tools/Poles'], ['Dry bag 10', 'Wren', 19, 'Ink', 'Packs/Accessories']
+    ],
+    guide: [
+      ['Bright Angel to Plateau Point', 'Grand Canyon', 12.2, 'Clay', 'Hard'], ['West Fork of Oak Creek', 'Mogollon Rim', 6.5, 'Moss', 'Easy'],
+      ['Flatiron via Siphon Draw', 'Superstitions', 5.5, 'Ember', 'Hard'], ['Piestewa summit', 'Sonoran', 2.4, 'Clay', 'Moderate'],
+      ['Mount Baldy loop', 'White Mountains', 16, 'Moss', 'Hard'], ['Fossil Springs', 'Mogollon Rim', 8, 'Mist', 'Moderate'],
+      ['Wave Cave', 'Superstitions', 3, 'Ember', 'Easy'], ['Tom’s Thumb', 'Sonoran', 4.2, 'Clay', 'Moderate'],
+      ['Widforss trail', 'Grand Canyon', 10, 'Moss', 'Moderate'], ['Escudilla lookout', 'White Mountains', 6, 'Slate', 'Easy'],
+      ['Horton Creek', 'Mogollon Rim', 8.5, 'Mist', 'Moderate'], ['Hieroglyphic trail', 'Superstitions', 3, 'Ember', 'Easy']
+    ],
+    post: [
+      ['Choosing a shell for monsoon season', 'Gear', 0, 'Lilac', 'Guides'], ['Why we index instead of query', 'Engineering', 0, 'Plum', 'Behind the scenes'],
+      ['Spring trail report', 'Trails', 0, 'Moss', 'Reports'], ['Packing for the Rim', 'Trails', 0, 'Clay', 'Guides'],
+      ['Meet the Kestrel line', 'Gear', 0, 'Ember', 'Brands'], ['How Visual DNA matches color', 'Engineering', 0, 'Slate', 'Behind the scenes']
+    ]
+  };
+  var ptMeta = { product: { count: '1,200', unit: '$', noun: 'products' }, guide: { count: '84', unit: 'mi', noun: 'guides' }, post: { count: '312', unit: '', noun: 'posts' } };
+  var sources = {
+    product: [
+      { v: 'tax:pa_brand', label: 'Attribute: pa_brand (8 values)', field: 1, all: ['Alder', 'Kestrel', 'Orin', 'Hollow', 'Pike', 'Sable', 'Wren', 'Tundra'], kinds: ['checkbox', 'radio', 'dropdown'], explain: '<b>Attribute</b> is what WooCommerce calls a product taxonomy such as brand, size or color. <b>pa_brand</b> is its internal name (pa stands for product attribute). <b>8 values</b> means eight brands exist. One of them, Tundra, has no products yet.' },
+      { v: 'tax:product_cat', label: 'Taxonomy: product_cat (23 terms)', field: 4, kinds: ['checkbox', 'radio', 'dropdown', 'hierarchy'], explain: '<b>Taxonomy</b> is a WordPress grouping. <b>product_cat</b> is the internal name for product categories. <b>23 terms</b> means 23 categories exist, and some are nested, so Hierarchy is available.' },
+      { v: 'tax:pa_color', label: 'Attribute: pa_color (8 values)', field: 3, kinds: ['checkbox', 'radio', 'dropdown', 'swatches', 'swipe'], explain: '<b>pa_color</b> is the color attribute. Each value has a hex stored on the term, so Fluid swatches can render real color circles and Swipe deck can show cards.' },
+      { v: 'meta:_price', label: 'WooCommerce price', field: 2, kinds: ['range'], explain: 'The product’s <b>price</b>, read from WooCommerce directly. Numeric, so it becomes a range slider.' },
+      { v: 'search', label: 'Title, description, fields', field: 0, kinds: ['search', 'ask'], explain: '<b>Full text</b> across the title, description and every indexed field. Powers Search and Ask.' }
+    ],
+    guide: [
+      { v: 'tax:region', label: 'Taxonomy: region (5 terms)', field: 1, kinds: ['checkbox', 'radio', 'dropdown'], explain: '<b>region</b> is a custom taxonomy registered for the Trail guides post type. <b>5 terms</b> means five regions are in use. Custom post types work exactly like products here.' },
+      { v: 'tax:season', label: 'Taxonomy: season (4 terms)', field: null, kinds: ['checkbox', 'radio', 'dropdown'], explain: '<b>season</b> is a custom taxonomy with four terms. No guide has a season assigned yet, so the preview is empty until you tag some.' },
+      { v: 'acf:difficulty', label: 'ACF: difficulty (select, 3 options)', field: 4, kinds: ['checkbox', 'radio', 'dropdown'], explain: '<b>ACF</b> means the value lives in an Advanced Custom Fields field. <b>difficulty</b> is a select with three options. Simple ACF fields are in Free; repeaters and relationships need Pro.' },
+      { v: 'meta:distance', label: 'ACF: distance (number, miles)', field: 2, kinds: ['range'], explain: 'A numeric ACF field. HOF reads the number and offers a range slider with the real min and max from your content.' },
+      { v: 'search', label: 'Title, content, fields', field: 0, kinds: ['search', 'ask'], explain: '<b>Full text</b> across title, content and every indexed field on Trail guides.' }
+    ],
+    post: [
+      { v: 'tax:category', label: 'Taxonomy: category (6 terms)', field: 1, kinds: ['checkbox', 'radio', 'dropdown', 'hierarchy'], explain: 'The built-in post <b>category</b> taxonomy.' },
+      { v: 'tax:post_tag', label: 'Taxonomy: post_tag (41 terms)', field: 4, kinds: ['checkbox', 'radio', 'dropdown'], explain: 'Built-in post <b>tags</b>. Flat, so no hierarchy.' },
+      { v: 'search', label: 'Title, content, fields', field: 0, kinds: ['search', 'ask'], explain: '<b>Full text</b> across posts.' }
+    ]
+  };
+  var typeDefs = [
+    ['checkbox', 'Checkbox', 'Pick several', false], ['radio', 'Radio', 'Pick one', false], ['dropdown', 'Dropdown', 'Compact, pick one', false],
+    ['toggle', 'Toggle', 'Needs a yes/no field', false], ['range', 'Range', 'Needs a number', false], ['search', 'Search', 'Needs text', false],
+    ['date', 'Date range', 'Needs a date', false], ['hierarchy', 'Hierarchy', 'Needs a nested taxonomy', true],
+    ['swatches', 'Fluid swatches', 'Needs a color attribute', true], ['swipe', 'Swipe deck', 'Needs a visual source', true],
+    ['ask', 'Ask', 'Set up in Settings → Ask', true], ['dna', 'Visual DNA', 'Needs product images', true]
+  ];
+  var st;
+  function reset(pt, srcv, typ) {
+    var s = sources[pt || 'product'];
+    var src = s.find(function (x) { return x.v === srcv; }) || s[0];
+    var t = typ || (src.kinds[0] === 'range' ? 'range' : src.kinds[0] === 'search' ? 'search' : srcv === 'tax:pa_color' ? 'swatches' : srcv === 'tax:product_cat' ? 'hierarchy' : 'checkbox');
+    st = { pt: pt || 'product', src: src, type: t, match: 'any', counts: true, hidezero: false, collapse: true, sel: [], expanded: false, max: null, q: '', style: 'list', shape: 'pill', fill: 'outline', bcount: true, bempty: true };
+  }
+  function renderSources() { $('src').innerHTML = sources[st.pt].map(function (s) { return '<option value="' + s.v + '"' + (s.v === st.src.v ? ' selected' : '') + '>' + s.label + '</option>'; }).join(''); $('explain').innerHTML = st.src.explain; }
+  function renderTypes() {
+    $('types').innerHTML = typeDefs.map(function (t) {
+      var ok = st.src.kinds.indexOf(t[0]) > -1 && t[0] !== 'dna' && t[0] !== 'ask';
+      var hint = ok ? ({ checkbox: 'Pick several', radio: 'Pick one', dropdown: 'Compact, pick one', range: 'Slider with min and max', search: 'Results as you type', hierarchy: 'Nested, expandable', swatches: 'Real color circles', swipe: 'Tune it in Blueprint' })[t[0]] : t[2];
+      return '<button class="type" data-type="' + t[0] + '" aria-pressed="' + (st.type === t[0]) + '"' + (ok ? '' : ' disabled') + '><b>' + t[1] + '</b><small>' + hint + '</small>' + (t[3] ? '<span class="tag">Pro</span>' : '') + '</button>';
+    }).join('');
+    var isList = ['checkbox', 'radio', 'dropdown', 'hierarchy', 'swatches'].indexOf(st.type) > -1;
+    $('disp-list').hidden = !(st.type === 'checkbox' || st.type === 'radio'); $('btnopts').hidden = st.style !== 'buttons'; $('beh-list').hidden = !isList; $('beh-range').hidden = st.type !== 'range'; $('beh-search').hidden = st.type !== 'search'; $('beh-swipe').hidden = st.type !== 'swipe';
+  }
+  function renderChrome() {
+    $('pt').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === st.pt)); });
+    var slug = ($('fname').value || 'facet').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    $('sc').textContent = '[hof_facet name="' + slug + '"]';
+    $('pstats').textContent = ptMeta[st.pt].count + ' ' + ptMeta[st.pt].noun + ' · ' + st.src.v + ' · ' + (3 + Math.round(Math.random() * 4)) + ' ms';
+  }
+  function rows() { return data[st.pt]; }
+  function vals(r) { return st.src.field === null ? null : r[st.src.field]; }
+  function tally() { var t = {}; if (st.src.field === null) return t; (st.src.all || []).forEach(function (k) { t[k] = 0; }); rows().forEach(function (r) { var v = String(vals(r)); t[v] = (t[v] || 0) + 1; }); return t; }
+  function filtered() {
+    return rows().filter(function (r) {
+      if (st.type === 'range') return st.max === null || r[2] <= st.max;
+      if (st.type === 'search') return !st.q || (r[0] + ' ' + r[1] + ' ' + r[4]).toLowerCase().indexOf(st.q.toLowerCase()) > -1;
+      if (!st.sel.length) return true;
+      var v = String(vals(r));
+      if (st.type === 'hierarchy') return st.sel.some(function (s) { return v === s || v.indexOf(s + '/') === 0; });
+      return st.match === 'all' ? st.sel.length === 1 && st.sel[0] === v : st.sel.indexOf(v) > -1;
+    });
+  }
+  function renderFacet() {
+    var f = $('facet'), label = $('lbl').value || 'Facet', t = tally(), html = '<h3>' + label + '</h3>';
+    if (st.src.field === null) { f.innerHTML = html + '<div class="empty" style="padding:14px">No values yet. Tag some ' + ptMeta[st.pt].noun + ' with a ' + st.src.v.split(':')[1] + ' and they appear here.</div>'; return; }
+    if (st.type === 'range') {
+      var nums = rows().map(function (r) { return r[2]; }), lo = Math.min.apply(null, nums), hi = Math.max.apply(null, nums), cur = st.max === null ? hi : st.max, u = ptMeta[st.pt].unit;
+      f.innerHTML = html + '<input type="range" id="rng" min="' + lo + '" max="' + hi + '" step="' + ($('stepv').value || 1) + '" value="' + cur + '" aria-label="Maximum"><div class="range-out"><span>' + (u === '$' ? '$' + lo : lo + ' ' + u) + '</span><span>up to ' + (u === '$' ? '$' + cur : cur + ' ' + u) + '</span></div>'; return;
+    }
+    if (st.type === 'search') { f.innerHTML = html + '<input type="search" id="sq" placeholder="' + ($('ph').value || 'Search') + '" value="' + st.q.replace(/"/g, '&quot;') + '" aria-label="Search"><p style="margin:8px 0 0;font-size:12px;color:var(--faint)">Searches title, content and fields. Try "moderate" or "Alder".</p>'; return; }
+    var keys = Object.keys(t);
+    if (st.hidezero) keys = keys.filter(function (k) { return t[k] > 0; });
+    keys.sort(function (a, b) { return $('sort').selectedIndex === 1 ? a.localeCompare(b) : t[b] - t[a]; });
+    if (st.type === 'swatches' || st.type === 'swipe') {
+      html += '<div class="sw-row">' + keys.map(function (k) { return '<button class="sw" data-v="' + k + '" aria-pressed="' + (st.sel.indexOf(k) > -1) + '" title="' + k + (st.counts ? ' (' + t[k] + ')' : '') + '" style="background:' + (colors[k] || '#999') + '" aria-label="' + k + '"></button>'; }).join('') + '</div>';
+      if (st.type === 'swipe') html += '<p style="margin:8px 0 0;font-size:12px;color:var(--faint)">Shown as swatches here. The deck itself renders in Blueprint.</p>';
+      if (st.sel.length) html += '<p style="margin:8px 0 0;font-size:12px;color:var(--muted)">' + st.sel.join(', ') + '</p>';
+      f.innerHTML = html; return;
+    }
+    if (st.type === 'hierarchy') {
+      var tree = {}; keys.forEach(function (k) { var p = k.split('/'); (tree[p[0]] = tree[p[0]] || []).push(k); });
+      Object.keys(tree).sort().forEach(function (parent) {
+        var pc = tree[parent].reduce(function (a, k) { return a + t[k]; }, 0);
+        html += '<label><input type="checkbox" value="' + parent + '"' + (st.sel.indexOf(parent) > -1 ? ' checked' : '') + '>' + parent + (st.counts ? '<span class="n">' + pc + '</span>' : '') + '</label>';
+        tree[parent].forEach(function (k) { html += '<label class="child"><input type="checkbox" value="' + k + '"' + (st.sel.indexOf(k) > -1 ? ' checked' : '') + '>' + k.split('/')[1] + (st.counts ? '<span class="n">' + t[k] + '</span>' : '') + '</label>'; });
+      });
+      f.innerHTML = html; return;
+    }
+    if (st.type === 'dropdown') { f.innerHTML = html + '<select id="dd" aria-label="' + label + '"><option value="">Any</option>' + keys.map(function (k) { return '<option value="' + k + '"' + (st.sel[0] === k ? ' selected' : '') + '>' + k + (st.counts ? ' (' + t[k] + ')' : '') + '</option>'; }).join('') + '</select>'; return; }
+    if (st.style === 'buttons' && (st.type === 'checkbox' || st.type === 'radio')) {
+      var bk = st.bempty ? keys : keys.filter(function (k) { return t[k] > 0; });
+      html += '<div class="fbtns">' + bk.map(function (k) { var on = st.sel.indexOf(k) > -1, empty = t[k] === 0; return '<button class="fbtn ' + st.shape + ' ' + (st.fill === 'solid' ? 'solid' : '') + (empty ? ' empty' : '') + '" data-v="' + k + '" aria-pressed="' + on + '"' + (empty ? ' disabled' : '') + '>' + k + (st.bcount ? '<span class="c">' + t[k] + '</span>' : '') + '</button>'; }).join('') + '</div>';
+      f.innerHTML = html; return;
+    }
+    var shown = st.collapse && !st.expanded ? keys.slice(0, 5) : keys;
+    html += shown.map(function (k) { var on = st.sel.indexOf(k) > -1; return '<label' + (st.match === 'all' && st.sel.length && !on ? ' class="dim"' : '') + '><input type="' + (st.type === 'radio' ? 'radio' : 'checkbox') + '" name="f" value="' + k + '"' + (on ? ' checked' : '') + '>' + k + (st.counts ? '<span class="n">' + t[k] + '</span>' : '') + '</label>'; }).join('');
+    if (st.collapse && keys.length > 5) html += '<button class="more" id="more">' + (st.expanded ? 'Show fewer' : 'Show ' + (keys.length - 5) + ' more') + '</button>';
+    f.innerHTML = html;
+  }
+  function renderGrid() {
+    var out = filtered(), all = rows();
+    var what = st.type === 'search' && st.q ? ' matching “' + st.q + '”' : (st.sel.length ? ' · ' + st.sel.map(function (s) { return s.split('/').pop(); }).join(st.match === 'all' ? ' and ' : ', ') : '');
+    $('count').textContent = out.length + ' of ' + all.length + ' ' + ptMeta[st.pt].noun + what;
+    if (!out.length) { $('grid').innerHTML = '<div class="empty">Nothing matches. ' + (st.match === 'all' && st.sel.length > 1 ? 'An item has one ' + $('lbl').value.toLowerCase() + ', so "All" only works with one pick.' : 'Try a different pick.') + '</div>'; return; }
+    $('grid').innerHTML = out.slice(0, 12).map(function (r) { var meta = st.pt === 'product' ? r[1] + ' · $' + r[2] : (st.pt === 'guide' ? r[1] + ' · ' + r[2] + ' mi · ' + r[4] : r[1]); return '<div class="prod"><div class="swatch" style="background:' + (colors[r[3]] || '#999') + '"></div><div class="t"><b>' + r[0] + '</b><span>' + meta + '</span></div></div>'; }).join('');
+  }
+  function renderAll() { renderSources(); renderTypes(); renderChrome(); renderFacet(); renderGrid(); }
+  function dirty() { $('savestate').className = 'pill busy'; $('savestate').innerHTML = '<i></i>Unsaved changes'; }
+  $('facet').addEventListener('change', function (e) { var v = e.target.value; if (e.target.id === 'dd') st.sel = v ? [v] : []; else if (e.target.type === 'radio') st.sel = [v]; else if (e.target.type === 'checkbox') { var i = st.sel.indexOf(v); i > -1 ? st.sel.splice(i, 1) : st.sel.push(v); } renderFacet(); renderGrid(); });
+  $('facet').addEventListener('input', function (e) { if (e.target.id === 'rng') { st.max = Number(e.target.value); renderGrid(); e.target.nextElementSibling.lastElementChild.textContent = 'up to ' + (ptMeta[st.pt].unit === '$' ? '$' + st.max : st.max + ' ' + ptMeta[st.pt].unit); } if (e.target.id === 'sq') { st.q = e.target.value; renderGrid(); } });
+  $('facet').addEventListener('click', function (e) { if (e.target.id === 'more') { st.expanded = !st.expanded; renderFacet(); } var fb = e.target.closest('.fbtn'); if (fb && !fb.disabled) { var fv = fb.dataset.v, fi = st.sel.indexOf(fv); if (st.type === 'radio') st.sel = fi > -1 ? [] : [fv]; else fi > -1 ? st.sel.splice(fi, 1) : st.sel.push(fv); renderFacet(); renderGrid(); } var sw = e.target.closest('.sw'); if (sw) { var v = sw.dataset.v, i = st.sel.indexOf(v); i > -1 ? st.sel.splice(i, 1) : st.sel.push(v); renderFacet(); renderGrid(); } });
+  $('pt').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; var name = $('fname').value; reset(b.dataset.v); $('fname').value = name; dirty(); renderAll(); });
+  $('src').addEventListener('change', function () { var name = $('fname').value; reset(st.pt, $('src').value); $('fname').value = name; $('lbl').value = name; dirty(); renderAll(); });
+  $('types').addEventListener('click', function (e) { var b = e.target.closest('.type'); if (!b || b.disabled) return; st.type = b.dataset.type; st.sel = []; st.max = null; st.q = ''; dirty(); renderTypes(); renderFacet(); renderGrid(); });
+  $('match').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; $('match').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); }); b.setAttribute('aria-pressed', 'true'); st.match = b.dataset.v; dirty(); renderFacet(); renderGrid(); });
+  ['counts', 'hidezero', 'collapse'].forEach(function (k) { $(k).addEventListener('click', function () { st[k] = !st[k]; $(k).setAttribute('aria-checked', String(st[k])); dirty(); renderFacet(); }); });
+  ['style', 'shape', 'fill'].forEach(function (id) { $(id).addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; $(id).querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); }); b.setAttribute('aria-pressed', 'true'); st[id] = b.dataset.v; $('btnopts').hidden = st.style !== 'buttons'; dirty(); renderFacet(); }); });
+  ['bcount', 'bempty'].forEach(function (k) { $(k).addEventListener('click', function () { st[k] = !st[k]; $(k).setAttribute('aria-checked', String(st[k])); dirty(); renderFacet(); }); });
+  $('lbl').addEventListener('input', function () { dirty(); renderFacet(); }); $('ph').addEventListener('input', function () { dirty(); renderFacet(); }); $('stepv').addEventListener('input', function () { dirty(); renderFacet(); }); $('sort').addEventListener('change', function () { dirty(); renderFacet(); }); $('fname').addEventListener('input', function () { dirty(); renderChrome(); });
+  $('save').addEventListener('click', function () { $('savestate').className = 'pill busy'; $('savestate').innerHTML = '<i></i>Indexing'; toast('Saved. Indexing ' + ptMeta[st.pt].count + ' ' + ptMeta[st.pt].noun + ' in the background.'); setTimeout(function () { $('savestate').className = 'pill good'; $('savestate').innerHTML = '<i></i>Saved and indexed'; }, 1600); });
+  $('discard').addEventListener('click', function () { openEditor(st.pt, st.src.v, null, st.type); $('savestate').className = 'pill'; $('savestate').innerHTML = '<i></i>No changes'; });
+  var names = { 'tax:pa_brand': 'Brand', 'tax:product_cat': 'Category', 'tax:pa_color': 'Color', 'meta:_price': 'Price', 'search': 'Site search', 'tax:region': 'Region', 'tax:season': 'Season', 'acf:difficulty': 'Difficulty', 'meta:distance': 'Distance', 'tax:category': 'Category', 'tax:post_tag': 'Tags' };
+  function openEditor(pt, srcv, isNew, typ) {
+    reset(pt, srcv, typ); var nm = isNew ? 'New facet' : (typ === 'swipe' ? 'Color deck' : (names[st.src.v] || 'Facet'));
+    $('fname').value = nm; $('lbl').value = isNew ? 'Brand' : nm.replace(' deck', '');
+    $('match').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.v === 'any')); });
+    $('counts').setAttribute('aria-checked', 'true'); $('hidezero').setAttribute('aria-checked', 'false'); $('collapse').setAttribute('aria-checked', 'true'); $('sort').selectedIndex = 0; ['style', 'shape', 'fill'].forEach(function (id) { $(id).querySelectorAll('button').forEach(function (x, i) { x.setAttribute('aria-pressed', String(i === 0)); }); }); $('bcount').setAttribute('aria-checked', 'true'); $('bempty').setAttribute('aria-checked', 'true');
+    $('savestate').className = 'pill'; $('savestate').innerHTML = '<i></i>' + (isNew ? 'Unsaved' : 'No changes'); renderAll();
+  }
+
+  // ---------- blueprint ----------
+  var bp = { facet: 'Color deck', variant: 'Swipe', size: 'Medium', depth: 3, anim: 'Spring', i: 0 };
+  var dims = { Small: [132, 168], Medium: [160, 190], Large: [196, 230] };
+  var bpItems = Object.keys(colors).map(function (k) { return [k, colors[k]]; });
+  function renderBp() {
+    $('bpname').textContent = bp.facet + ' · ' + (bp.facet === 'Color deck' ? 'Swipe deck' : bp.facet === 'Color' ? 'Fluid swatches' : bp.facet === 'Category' ? 'Hierarchy' : 'Range');
+    $('bpsync').textContent = 'Sync to ' + bp.facet; $('bpdepthv').textContent = bp.depth;
+    var s = $('bpstage'), d = dims[bp.size], w = d[0], h = d[1];
+    if (bp.variant === 'Swipe') {
+      var html = '<div class="deck" style="width:' + (w + bp.depth * 8) + 'px;height:' + (h + bp.depth * 8) + 'px">';
+      for (var k = Math.min(bp.depth, bpItems.length) - 1; k >= 0; k--) { var it = bpItems[(bp.i + k) % bpItems.length]; var ease = bp.anim === 'Spring' ? 'cubic-bezier(.34,1.56,.64,1)' : 'linear'; html += '<div class="card" style="width:' + w + 'px;height:' + h + 'px;transform:translate(' + (k * 8) + 'px,' + (k * 8) + 'px) rotate(' + (k * 1.5) + 'deg);opacity:' + (1 - k * .18) + ';z-index:' + (10 - k) + ';transition-timing-function:' + ease + '"><div class="img" style="background:' + it[1] + '"></div><div class="t"><small>Color · ' + ((bp.i + k) % bpItems.length + 1) + ' of ' + bpItems.length + '</small><b>' + it[0] + '</b></div></div>'; }
+      html += '</div><div class="deck-actions"><button id="bpskip">Skip</button><button class="inc" id="bpinc">Include</button></div>';
+      s.innerHTML = html;
+    } else if (bp.variant === 'Grid') {
+      s.innerHTML = '<div class="bp-grid">' + bpItems.map(function (it) { return '<div class="prod"><div class="swatch" style="background:' + it[1] + ';height:' + Math.round(h * .45) + 'px"></div><div class="t"><b>' + it[0] + '</b><span>' + Math.round(Math.random() * 200 + 40) + ' products</span></div></div>'; }).join('') + '</div>';
+    } else {
+      s.innerHTML = '<div style="display:flex;gap:12px;flex-wrap:wrap">' + bpItems.slice(0, 4).map(function (it) { return '<div class="prod" style="width:' + w + 'px"><div class="swatch" style="background:' + it[1] + ';height:' + Math.round(h * .55) + 'px"></div><div class="t"><b>' + it[0] + '</b><span>Tap to filter</span></div></div>'; }).join('') + '</div>';
+    }
+    $('bpcount').textContent = '1,200 products · ' + (3 + Math.round(Math.random() * 3)) + ' ms';
+  }
+  $('bpstage').addEventListener('click', function (e) { if (e.target.id === 'bpskip' || e.target.id === 'bpinc') { bp.i = (bp.i + 1) % bpItems.length; if (e.target.id === 'bpinc') toast('Included ' + bpItems[(bp.i + bpItems.length - 1) % bpItems.length][0] + '. 1,200 → ' + Math.round(Math.random() * 300 + 100) + ' products.'); renderBp(); } });
+  ['bpvar', 'bpsize', 'bpanim'].forEach(function (id) { $(id).addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; $(id).querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); }); b.setAttribute('aria-pressed', 'true'); bp[id === 'bpvar' ? 'variant' : id === 'bpsize' ? 'size' : 'anim'] = b.dataset.v; renderBp(); }); });
+  $('bpdepth').addEventListener('input', function () { bp.depth = Number($('bpdepth').value); renderBp(); });
+  $('bptabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; $('bptabs').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); }); b.setAttribute('aria-pressed', 'true'); bp.facet = b.dataset.f; renderBp(); });
+  $('bpsync').addEventListener('click', function () { toast('Synced to ' + bp.facet + '. Open it in Facets to see the settings.'); });
+  $('bpdeploy').addEventListener('click', function () { toast('Blueprint deployed to Shop archive template.'); });
+
+  // ---------- design tokens ----------
+  var brandTokens = [['--hof-primary', '#534AB7', 'c'], ['--hof-on-primary', '#FFFFFF', 'c'], ['--hof-text', '#221D52', 'c'], ['--hof-muted', '#625D85', 'c'], ['--hof-surface', '#FFFFFF', 'c'], ['--hof-bg', '#F5F4FB', 'c'], ['--hof-border', '#DDDAEE', 'c'], ['--hof-danger', '#D85A30', 'c'], ['--hof-radius-sm', '4px', 't'], ['--hof-radius-md', '6px', 't'], ['--hof-radius-pill', '999px', 't'], ['--hof-space', '12px', 't'], ['--hof-font-sans', 'Geist, system-ui, sans-serif', 't'], ['--hof-font-mono', 'Geist Mono, monospace', 't']];
+  var tokens = brandTokens.map(function (t) { return t.slice(); });
+  function renderTokens() {
+    $('toklist').innerHTML = '<h3 class="sec">Tokens</h3>' + tokens.map(function (t, i) { return '<div class="tok">' + (t[2] === 'c' ? '<input type="color" value="' + t[1] + '" data-i="' + i + '" aria-label="' + t[0] + '">' : '<span class="swb"></span>') + '<code>' + t[0] + '</code><input type="text" value="' + t[1].replace(/"/g, '&quot;') + '" data-i="' + i + '" aria-label="' + t[0] + ' value"></div>'; }).join('');
+    var custom = ($('customcss').value || '').trim();
+    var scoped = custom && $('cssscope').querySelector('[aria-pressed="true"]').dataset.v === 'facet' ? custom.replace(/(^|\n)\s*([^{\n]+)\{/g, '$1.hof-facet--brand $2{') : custom;
+    var css = ':root {\n' + tokens.map(function (t) { return '  ' + t[0] + ': ' + t[1] + ';'; }).join('\n') + '\n}' + (scoped ? '\n\n/* custom */\n' + scoped : '');
+    $('tokcss').textContent = css;
+    $('customcss-live').textContent = scoped.replace(/(^|\n)\s*([^{\n]+)\{/g, '$1#tokprev $2{');
+    tokens.forEach(function (t) { $('tokprev').style.setProperty(t[0], t[1]); });
+    $('tokprev').style.background = 'var(--hof-bg)';
+  }
+  $('toklist').addEventListener('input', function (e) { var i = e.target.dataset.i; if (i === undefined) return; tokens[i][1] = e.target.value; renderTokens(); var inp = $('toklist').querySelectorAll('[data-i="' + i + '"]'); inp.forEach(function (x) { if (x !== e.target && x.type === 'text') x.value = e.target.value; }); });
+  $('customcss').addEventListener('input', renderTokens);
+  $('cssscope').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; $('cssscope').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); }); b.setAttribute('aria-pressed', 'true'); renderTokens(); });
+  $('tokreset').addEventListener('click', function () { tokens = brandTokens.map(function (t) { return t.slice(); }); renderTokens(); toast('Reset to brand defaults.'); });
+  $('toksave').addEventListener('click', function () { toast('Tokens and custom CSS saved. Every facet on the site uses them now.'); });
+  $('tokcopy').addEventListener('click', function () { var txt = $('tokcss').textContent; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { toast('CSS copied'); }, function () { toast('Select the CSS and copy'); }); else toast('Select the CSS and copy'); });
+
+  // ---------- indexer ----------
+  $('reindex').addEventListener('click', function () { var b = $('reindex'); b.disabled = true; b.textContent = 'Rebuilding…'; $('idxstate').className = 'pill busy'; $('idxstate').innerHTML = '<i></i>Background job queued in Action Scheduler'; setTimeout(function () { b.disabled = false; b.textContent = 'Reindex now'; $('idxstate').className = 'pill good'; $('idxstate').innerHTML = '<i></i>Reindexed 1,596 objects in 19.4 s'; toast('Reindexed 1,596 objects in 19.4 s'); }, 2200); });
+
+  // ---------- settings tabs ----------
+  $('settabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; $('settabs').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); }); b.setAttribute('aria-pressed', 'true'); document.querySelectorAll('.tabpane').forEach(function (p) { p.classList.toggle('on', p.id === 't-' + b.dataset.t); }); });
+
+  // ---------- navigation ----------
+  var helpCtx = { dashboard: 'Dashboard. Live numbers from the Auto-Hook Engine plus which facets people use and which filters return nothing.', facets: 'Facets list. Click any row to edit, or start from a suggestion under "Found in your content".', editor: 'Facet editor. Source first, then type. The preview on the right runs against your indexed content.', loops: 'Query loops. Every loop HOF has hooked, with hit counts. If a page isn’t filtering, check it’s listed here.', indexer: 'Indexer. The lookup table behind every filter. Reindex here if counts look wrong after a bulk import.', blueprint: 'Blueprint. A sandbox for the visual facets. Nothing changes on the site until you sync or deploy.', tokens: 'Design tokens. CSS variables every HOF surface reads. Change one, restyle everything.', seo: 'SEO. Canonical, noindex and title rules for filtered URLs. Defaults are safe for almost every store.', license: 'License. Your plan, sites and key. Beta program opt-in lives here too.', settings: 'Settings. Ask provider and key, sources, and which post types get indexed.' };
+  function go(name) {
+    document.querySelectorAll('.screen').forEach(function (s) { s.classList.toggle('on', s.id === 's-' + name); });
+    var navName = name === 'editor' ? 'facets' : name;
+    document.querySelectorAll('.nav button').forEach(function (b) { b.dataset.go === navName ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'); });
+    $('helpctx').innerHTML = '<b>On this screen</b>' + helpCtx[name]; window.scrollTo(0, 0);
+  }
+  document.addEventListener('click', function (e) { var t = e.target.closest('[data-go]'); if (!t) return; if (t.dataset.go === 'editor') { var typ = t.querySelector && t.querySelector('.chip') && t.querySelector('.chip').textContent === 'Swipe deck' ? 'swipe' : null; openEditor(t.dataset.pt || 'product', t.dataset.src, t.dataset.new, typ); } go(t.dataset.go); });
+
+  // ---------- help ----------
+  function openHelp(o) { $('drawer').classList.toggle('open', o); $('scrim').classList.toggle('open', o); if (o) $('helpq').focus(); }
+  $('helpbtn').addEventListener('click', function () { openHelp(true); }); $('helpclose').addEventListener('click', function () { openHelp(false); }); $('scrim').addEventListener('click', function () { openHelp(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') openHelp(false); });
+  $('helpq').addEventListener('input', function () { var q = $('helpq').value.toLowerCase(); document.querySelectorAll('.drawer a.doc').forEach(function (a) { a.style.display = !q || a.textContent.toLowerCase().indexOf(q) > -1 ? '' : 'none'; }); });
+
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 2200); }
+  document.querySelectorAll('.copy').forEach(function (b) { b.addEventListener('click', function () { var el = $(b.dataset.copyFrom), txt = el.textContent; function fb() { var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Select and copy'); } if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { toast('Copied'); }, fb); else fb(); }); });
+
+  openEditor('product', 'tax:pa_brand', null); renderBp(); renderTokens(); go('facets');
+})();
+</script>

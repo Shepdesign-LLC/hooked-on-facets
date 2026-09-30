@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+    IconArrowLeft,
     IconArrowsShuffle,
     IconChevronRight,
     IconDatabase,
@@ -11,9 +12,10 @@ import {
     IconSettings,
     IconTools,
 } from '@tabler/icons-react';
-import { saveFacets } from './api.js';
+import { getIndexerStats, getSuggestions, saveFacets } from './api.js';
+import { pickSuggestions } from './lib/facets.js';
 import { countInvalid } from './validation.js';
-import Sidebar from './components/Sidebar.jsx';
+import FacetsList from './components/FacetsList.jsx';
 import FacetEditor from './components/FacetEditor.jsx';
 import TokensPanel from './components/TokensPanel.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -55,7 +57,12 @@ export default function App({ bootstrap }) {
     const [facets, setFacets] = useState(() =>
         Array.isArray(bootstrap.facets) ? bootstrap.facets : []
     );
-    const [selectedIdx, setSelectedIdx] = useState(facets.length > 0 ? 0 : null);
+    const [selectedIdx, setSelectedIdx] = useState(null);
+    // Facets screen has two states: the grouped list, and one facet's editor.
+    const [facetsScreen, setFacetsScreen] = useState('list');
+    const [stats, setStats] = useState(null);
+    const [rawSuggestions, setRawSuggestions] = useState([]);
+    const editBaseline = useRef(null);
     const [dirty, setDirty] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
@@ -72,13 +79,86 @@ export default function App({ bootstrap }) {
         [selectedIdx]
     );
 
-    const addFacet = () => {
-        setFacets((prev) => {
-            const next = [...prev, blankFacet()];
-            setSelectedIdx(next.length - 1);
-            return next;
+    const refreshStats = useCallback(() => {
+        getIndexerStats().then(setStats).catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        refreshStats();
+    }, [refreshStats]);
+
+    // A running background job changes every facet's status; poll until it ends.
+    const jobRunning = !!stats?.background?.running;
+    useEffect(() => {
+        if (!jobRunning) return undefined;
+        const t = setTimeout(refreshStats, 4000);
+        return () => clearTimeout(t);
+    }, [jobRunning, stats, refreshStats]);
+
+    // "Found in your content": suggestions from every active source integration.
+    useEffect(() => {
+        const integrations = [
+            bootstrap.woocommerceActive && 'woocommerce',
+            bootstrap.acfActive && 'acf',
+            bootstrap.metaboxActive && 'metabox',
+            bootstrap.podsActive && 'pods',
+        ].filter(Boolean);
+        if (integrations.length === 0) return;
+        let live = true;
+        Promise.allSettled(integrations.map(getSuggestions)).then((results) => {
+            if (!live) return;
+            setRawSuggestions(
+                results.flatMap((r) =>
+                    r.status === 'fulfilled' && r.value?.available && Array.isArray(r.value.facets)
+                        ? r.value.facets
+                        : []
+                )
+            );
         });
+        return () => { live = false; };
+    }, [bootstrap.woocommerceActive, bootstrap.acfActive, bootstrap.metaboxActive, bootstrap.podsActive]);
+
+    const suggestions = pickSuggestions(rawSuggestions, facets, stats);
+
+    // Remember the state at the moment an editor opens so Discard can restore it.
+    const openEditor = (idx) => {
+        editBaseline.current = { facets: JSON.stringify(facets), dirty };
+        setSelectedIdx(idx);
+        setFacetsScreen('editor');
+        setView('facets');
+    };
+
+    const closeEditor = () => {
+        setFacetsScreen('list');
+    };
+
+    const discardEdits = () => {
+        const base = editBaseline.current;
+        if (!base) return;
+        const restored = JSON.parse(base.facets);
+        setFacets(restored);
+        setDirty(base.dirty);
+        if (selectedIdx === null || selectedIdx >= restored.length) {
+            setSelectedIdx(null);
+            setFacetsScreen('list');
+        }
+    };
+
+    const addFacet = () => {
+        editBaseline.current = { facets: JSON.stringify(facets), dirty };
+        setFacets([...facets, blankFacet()]);
+        setSelectedIdx(facets.length);
         setDirty(true);
+        setFacetsScreen('editor');
+        setView('facets');
+    };
+
+    const addSuggestion = (suggested) => {
+        editBaseline.current = { facets: JSON.stringify(facets), dirty };
+        setFacets([...facets, suggested]);
+        setSelectedIdx(facets.length);
+        setDirty(true);
+        setFacetsScreen('editor');
         setView('facets');
     };
 
@@ -101,12 +181,9 @@ export default function App({ bootstrap }) {
                 alert(emptyMsg);
                 return;
             }
-            setFacets((prev) => {
-                const next = [...prev, ...suggested];
-                setSelectedIdx(prev.length); // jump to the first new one
-                return next;
-            });
+            setFacets((prev) => [...prev, ...suggested]);
             setDirty(true);
+            setFacetsScreen('list');
             setView('facets');
         } catch (e) {
             alert('Could not fetch suggestions: ' + (e?.message || 'unknown'));
@@ -149,7 +226,8 @@ export default function App({ bootstrap }) {
         const next = facets.filter((_, i) => i !== idx);
         setFacets(next);
         if (selectedIdx === idx) {
-            setSelectedIdx(next.length > 0 ? Math.max(0, idx - 1) : null);
+            setSelectedIdx(null);
+            setFacetsScreen('list');
         } else if (selectedIdx !== null && idx < selectedIdx) {
             setSelectedIdx(selectedIdx - 1);
         }
@@ -178,7 +256,6 @@ export default function App({ bootstrap }) {
         };
         const next = [...facets.slice(0, idx + 1), clone, ...facets.slice(idx + 1)];
         setFacets(next);
-        setSelectedIdx(idx + 1);
         setDirty(true);
     };
 
@@ -210,6 +287,7 @@ export default function App({ bootstrap }) {
             const result = await saveFacets(facets);
             setFacets(Array.isArray(result.facets) ? result.facets : []);
             setDirty(false);
+            refreshStats();
         } catch (e) {
             setError(e?.message || 'Save failed');
         } finally {
@@ -293,92 +371,130 @@ export default function App({ bootstrap }) {
                                     ? 'Save changes'
                                     : 'Saved';
                         const saveDisabled = saving || !dirty || invalidCount > 0;
+                        const inEditor = facetsScreen === 'editor' && selected;
                         return (
                         <div className="hof-view-facets">
-                            <div className="hof-view-header">
-                                <h2 className="hof-view-title">Facets</h2>
-                                <div className="hof-view-actions">
-                                    {bootstrap?.woocommerceActive && (
-                                        <button
-                                            className="hof-btn"
-                                            onClick={addWooCommerceFacets}
-                                            type="button"
-                                            title="Add suggested facets based on the active WooCommerce store"
-                                        >
-                                            + WooCommerce facets
+                            {inEditor ? (
+                                <div className="hof-view-header">
+                                    <div className="hof-view-heading">
+                                        <button className="hof-btn hof-btn-ghost" onClick={closeEditor} type="button">
+                                            <IconArrowLeft size={14} stroke={1.75} aria-hidden="true" /> Facets
                                         </button>
-                                    )}
-                                    {bootstrap?.acfActive && (
-                                        <button
-                                            className="hof-btn"
-                                            onClick={addAcfFacets}
-                                            type="button"
-                                            title="Add suggested facets based on your Advanced Custom Fields"
-                                        >
-                                            + ACF facets
+                                    </div>
+                                    <div className="hof-view-actions">
+                                        {error && <span className="hof-error" role="alert">{error}</span>}
+                                        <span className={`hof-pill ${dirty ? 'hof-pill-busy' : ''}`}>
+                                            <i aria-hidden="true" />{dirty ? 'Unsaved changes' : 'No changes'}
+                                        </span>
+                                        <button className="hof-btn" onClick={discardEdits} type="button" disabled={!dirty}>
+                                            Discard
                                         </button>
-                                    )}
-                                    {bootstrap?.metaboxActive && (
                                         <button
-                                            className="hof-btn"
-                                            onClick={addMetaBoxFacets}
+                                            className={`hof-btn hof-btn-primary ${invalidCount > 0 ? 'hof-btn-blocked' : ''}`}
+                                            disabled={saveDisabled}
+                                            onClick={save}
                                             type="button"
-                                            title="Add suggested facets based on your Meta Box fields"
+                                            title={invalidCount > 0 ? 'Fix the validation issues before saving' : ''}
                                         >
-                                            + Meta Box facets
+                                            {saving ? 'Saving…' : invalidCount > 0 ? saveLabel : 'Save facet'}
                                         </button>
-                                    )}
-                                    {bootstrap?.podsActive && (
-                                        <button
-                                            className="hof-btn"
-                                            onClick={addPodsFacets}
-                                            type="button"
-                                            title="Add suggested facets based on your Pods fields"
-                                        >
-                                            + Pods facets
-                                        </button>
-                                    )}
-                                    {error && <span className="hof-error" role="alert">{error}</span>}
-                                    <button
-                                        className={`hof-btn hof-btn-primary ${invalidCount > 0 ? 'hof-btn-blocked' : ''}`}
-                                        disabled={saveDisabled}
-                                        onClick={save}
-                                        type="button"
-                                        title={invalidCount > 0 ? 'Fix the validation issues before saving' : ''}
-                                    >
-                                        {saveLabel}
-                                    </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="hof-facets-pane">
-                                <Sidebar
+                            ) : (
+                                <div className="hof-view-header">
+                                    <div className="hof-view-heading">
+                                        <h2 className="hof-view-title">Facets</h2>
+                                        <p className="hof-lede">
+                                            Filters and search for any post type. Click one to edit it and watch it work.
+                                        </p>
+                                    </div>
+                                    <div className="hof-view-actions">
+                                        {bootstrap?.woocommerceActive && (
+                                            <button
+                                                className="hof-btn"
+                                                onClick={addWooCommerceFacets}
+                                                type="button"
+                                                title="Add suggested facets based on the active WooCommerce store"
+                                            >
+                                                + WooCommerce facets
+                                            </button>
+                                        )}
+                                        {bootstrap?.acfActive && (
+                                            <button
+                                                className="hof-btn"
+                                                onClick={addAcfFacets}
+                                                type="button"
+                                                title="Add suggested facets based on your Advanced Custom Fields"
+                                            >
+                                                + ACF facets
+                                            </button>
+                                        )}
+                                        {bootstrap?.metaboxActive && (
+                                            <button
+                                                className="hof-btn"
+                                                onClick={addMetaBoxFacets}
+                                                type="button"
+                                                title="Add suggested facets based on your Meta Box fields"
+                                            >
+                                                + Meta Box facets
+                                            </button>
+                                        )}
+                                        {bootstrap?.podsActive && (
+                                            <button
+                                                className="hof-btn"
+                                                onClick={addPodsFacets}
+                                                type="button"
+                                                title="Add suggested facets based on your Pods fields"
+                                            >
+                                                + Pods facets
+                                            </button>
+                                        )}
+                                        {error && <span className="hof-error" role="alert">{error}</span>}
+                                        <button
+                                            className={`hof-btn ${dirty ? '' : 'hof-btn-primary'}`}
+                                            onClick={addFacet}
+                                            type="button"
+                                        >
+                                            New facet
+                                        </button>
+                                        {dirty && (
+                                            <button
+                                                className={`hof-btn hof-btn-primary ${invalidCount > 0 ? 'hof-btn-blocked' : ''}`}
+                                                disabled={saveDisabled}
+                                                onClick={save}
+                                                type="button"
+                                                title={invalidCount > 0 ? 'Fix the validation issues before saving' : ''}
+                                            >
+                                                {saveLabel}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {inEditor ? (
+                                <section className="hof-facets-content">
+                                    <FacetEditor
+                                        facet={selected}
+                                        onChange={updateSelected}
+                                        onDelete={deleteSelected}
+                                        allFacets={facets}
+                                        availableDisplays={bootstrap.availableDisplays}
+                                    />
+                                </section>
+                            ) : (
+                                <FacetsList
                                     facets={facets}
-                                    selectedIdx={selectedIdx}
-                                    onSelect={setSelectedIdx}
+                                    stats={stats}
+                                    suggestions={suggestions}
+                                    onOpen={openEditor}
                                     onAdd={addFacet}
+                                    onAddSuggestion={addSuggestion}
                                     onDuplicate={duplicateAt}
                                     onDelete={deleteAt}
-                                    onReorder={reorder}
+                                    onMove={reorder}
                                 />
-                                <section className="hof-facets-content">
-                                    {selected ? (
-                                        <FacetEditor
-                                            facet={selected}
-                                            onChange={updateSelected}
-                                            onDelete={deleteSelected}
-                                            allFacets={facets}
-                                            availableDisplays={bootstrap.availableDisplays}
-                                        />
-                                    ) : (
-                                        <div className="hof-empty">
-                                            <p>No facet selected.</p>
-                                            <button className="hof-btn" onClick={addFacet} type="button">
-                                                Create your first facet
-                                            </button>
-                                        </div>
-                                    )}
-                                </section>
-                            </div>
+                            )}
                         </div>
                         );
                     })()}
