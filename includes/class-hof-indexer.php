@@ -255,6 +255,76 @@ final class Indexer implements Bootable {
     }
 
     /**
+     * Whether swapping the stored facets for $new changes what the index
+     * should hold. Only fields the row builders read count: name, kind,
+     * source, the date_range display and the resolve setting. Labels, ordering
+     * and pure display settings don't, so editing them never reindexes.
+     *
+     * @param array<int, mixed> $old
+     * @param array<int, mixed> $new
+     */
+    public static function facets_need_reindex( array $old, array $new ): bool {
+        return self::index_signature( $old ) !== self::index_signature( $new );
+    }
+
+    /**
+     * @param array<int, mixed> $facets
+     */
+    private static function index_signature( array $facets ): string {
+        $sig = [];
+        foreach ( $facets as $f ) {
+            if ( ! is_array( $f ) || empty( $f['name'] ) ) {
+                continue;
+            }
+            $settings = is_array( $f['settings'] ?? null ) ? $f['settings'] : [];
+            $sig[ (string) $f['name'] ] = [
+                (string) ( $f['kind'] ?? '' ),
+                (string) ( $f['source'] ?? '' ),
+                ( $f['display'] ?? '' ) === 'date_range',
+                (string) ( $settings['resolve'] ?? '' ),
+            ];
+        }
+        ksort( $sig );
+        return md5( (string) wp_json_encode( $sig ) );
+    }
+
+    /**
+     * The index rows one facet definition would produce for the given
+     * objects, built in memory and never written. Goes through the same bulk
+     * row builders as a real reindex, so a preview and the saved facet agree
+     * on values, numerics and term depth.
+     *
+     * @param array<string, mixed> $facet    A facet definition (need not be saved).
+     * @param int[]                $post_ids Objects to build rows for.
+     * @return array<int, array<string, mixed>>
+     */
+    public function preview_rows( array $facet, array $post_ids ): array {
+        $name   = (string) ( $facet['name']   ?? '' );
+        $source = (string) ( $facet['source'] ?? '' );
+        $kind   = (string) ( $facet['kind']   ?? '' );
+        if ( $name === '' || $source === '' ) {
+            return [];
+        }
+
+        $is_date   = ( $facet['display'] ?? '' ) === 'date_range';
+        $resolve   = $this->resolve_kind( $facet );
+        $depth_map = $kind === 'taxonomy' ? $this->build_term_depth_map( $source ) : [];
+
+        $rows = [];
+        foreach ( array_chunk( array_values( array_unique( array_map( 'intval', $post_ids ) ) ), 1000 ) as $chunk ) {
+            $rows = array_merge( $rows, match ( $kind ) {
+                'taxonomy' => $this->bulk_rows_from_taxonomy( $chunk, $name, $source, $depth_map ),
+                'meta'     => $resolve !== null
+                    ? $this->bulk_rows_from_meta_resolved( $chunk, $name, $source, $resolve )
+                    : $this->bulk_rows_from_meta( $chunk, $name, $source, $is_date ),
+                'field'    => $this->bulk_rows_from_field( $chunk, $name, $source, $is_date ),
+                default    => [],
+            } );
+        }
+        return $rows;
+    }
+
+    /**
      * Reindex a single object: clear its rows, then insert fresh ones.
      */
     public function reindex_object( int $object_id, string $object_type = 'post' ): void {

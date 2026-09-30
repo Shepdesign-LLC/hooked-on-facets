@@ -8,6 +8,8 @@
  *   POST /reindex (admin)     → trigger full reindex
  *   GET  /reindex/status (admin) → current index stats (rows, objects, per-facet)
  *   GET  /indexer/stats (admin)  → item counts per post type + per-facet values / status
+ *   GET  /sources (admin)        → what a facet can read from, per post type
+ *   POST /facets/preview (admin) → run an unsaved facet against live content
  *   GET  /telemetry (admin)   → resolver timings + hooked-loop counts
  *   DELETE /telemetry (admin) → reset all telemetry counters
  *
@@ -109,6 +111,25 @@ final class RestController implements Bootable {
             'methods'             => \WP_REST_Server::READABLE,
             'callback'            => [ $this, 'reindex_status' ],
             'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+        ] );
+
+        register_rest_route( self::NAMESPACE_V1, '/sources', [
+            'methods'             => \WP_REST_Server::READABLE,
+            'callback'            => [ $this, 'sources' ],
+            'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+            'args'                => [
+                'post_type' => [ 'type' => 'string', 'required' => true ],
+            ],
+        ] );
+
+        register_rest_route( self::NAMESPACE_V1, '/facets/preview', [
+            'methods'             => \WP_REST_Server::CREATABLE,
+            'callback'            => [ $this, 'preview_facet' ],
+            'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+            'args'                => [
+                'facet'     => [ 'type' => 'object', 'required' => true ],
+                'selection' => [ 'type' => 'object', 'required' => false, 'default' => [] ],
+            ],
         ] );
 
         register_rest_route( self::NAMESPACE_V1, '/indexer/stats', [
@@ -320,12 +341,19 @@ final class RestController implements Bootable {
             return new \WP_REST_Response( [ 'message' => 'Invalid facets payload.' ], 400 );
         }
 
-        $clean = $this->sanitize_facets( $raw );
+        $clean    = $this->sanitize_facets( $raw );
+        $previous = (array) get_option( Indexer::OPTION_FACETS, [] );
         update_option( Indexer::OPTION_FACETS, $clean, true );
 
+        // A changed source means the index is stale for that facet. A reindex
+        // truncates the live index, so it is never started implicitly: report
+        // it and let the admin choose when to rebuild.
+        $reindex = Indexer::facets_need_reindex( $previous, $clean ) ? 'needed' : 'none';
+
         return new \WP_REST_Response( [
-            'facets' => $clean,
-            'saved'  => true,
+            'facets'  => $clean,
+            'saved'   => true,
+            'reindex' => $reindex,
         ], 200 );
     }
 
@@ -554,6 +582,46 @@ final class RestController implements Bootable {
             'indexed' => $count,
             'elapsed' => round( $elapsed, 3 ),
         ], $stats ), 200 );
+    }
+
+    public function sources( \WP_REST_Request $request ): \WP_REST_Response {
+        $post_type = sanitize_key( (string) $request->get_param( 'post_type' ) );
+        if ( $post_type === '' || ! post_type_exists( $post_type ) ) {
+            return new \WP_REST_Response( [ 'message' => 'Unknown post type.' ], 400 );
+        }
+
+        $catalog = new SourceCatalog( [
+            'WooCommerce' => fn() => $this->woocommerce && $this->woocommerce->is_active() ? $this->woocommerce->suggest( [] ) : [],
+            'ACF'         => fn() => $this->acf && $this->acf->is_active() ? $this->acf->suggest( [] ) : [],
+            'Meta Box'    => fn() => $this->metabox && $this->metabox->is_active() ? $this->metabox->suggest( [] ) : [],
+            'Pods'        => fn() => $this->pods && $this->pods->is_active() ? $this->pods->suggest( [] ) : [],
+        ] );
+
+        return new \WP_REST_Response( [ 'sources' => $catalog->for_post_type( $post_type ) ], 200 );
+    }
+
+    /**
+     * Run an unsaved facet against live content: values with counts, the
+     * matching total and a page of results, without touching the index.
+     */
+    public function preview_facet( \WP_REST_Request $request ): \WP_REST_Response {
+        $raw = $request->get_param( 'facet' );
+        if ( ! is_array( $raw ) ) {
+            return new \WP_REST_Response( [ 'message' => 'Invalid facet payload.' ], 400 );
+        }
+        if ( empty( $raw['name'] ) ) {
+            $raw['name'] = 'preview';
+        }
+
+        $clean = $this->sanitize_facets( [ $raw ] );
+        if ( $clean === [] ) {
+            return new \WP_REST_Response( [ 'message' => 'Facet is incomplete.' ], 400 );
+        }
+
+        $selection = $request->get_param( 'selection' );
+        $result    = ( new FacetPreview( $this->indexer ) )->run( $clean[0], is_array( $selection ) ? $selection : [], 12 );
+
+        return new \WP_REST_Response( $result, 200 );
     }
 
     public function indexer_stats( \WP_REST_Request $request ): \WP_REST_Response {
