@@ -25,6 +25,12 @@ major version. Each version links to its full GitHub release notes.
   dimmed empty values. Same URLs and links as list style, styled from the
   `--hof-*` tokens. Every facet wrapper now also carries `hof-facet--<slug>`.
 
+- **Help drawer** — a Help button in the top right of every screen opens a
+  drawer with docs search, an "On this screen" note that follows the screen (and
+  the facet editor), Start here and Reference links, and support. Closes on
+  Escape, the close button or a click outside; focus moves to the search box on
+  open and returns to the Help button on close.
+
 ### Changed
 
 - The Facets screen is a list that opens an editor, replacing the sidebar.

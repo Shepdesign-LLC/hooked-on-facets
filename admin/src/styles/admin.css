@@ -3009,3 +3009,139 @@ body.toplevel_page_hooked-on-facets .wrap {
     color: var(--hof-primary);
     font-weight: 500;
 }
+
+/* ── Help drawer ──────────────────────────────────────────────────────── */
+
+/* Sits under the WordPress admin bar (z-index 99999) so the bar stays usable,
+   and above everything the app draws. Closed, it is visibility:hidden so its
+   links can't be tabbed to or read by assistive tech. */
+.hof-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 99990;
+    background: var(--hof-scrim);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.18s, visibility 0s 0.18s;
+}
+
+.hof-scrim.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.18s;
+}
+
+.hof-drawer {
+    position: fixed;
+    top: var(--wp-admin--admin-bar--height, 32px);
+    right: 0;
+    bottom: 0;
+    z-index: 99991;
+    width: min(380px, 100%);
+    padding: 20px;
+    overflow-y: auto;
+    border-left: 1px solid var(--hof-border);
+    background: var(--hof-surface);
+    color: var(--hof-text);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 0.18s, visibility 0s 0.18s;
+}
+
+.hof-drawer.is-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.18s;
+}
+
+.hof-drawer-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.hof-drawer-head h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.hof-drawer-head .hof-btn {
+    margin-left: auto;
+}
+
+.hof-drawer-ctx {
+    margin: 12px 0 14px;
+    padding: 12px;
+    border-left: 3px solid var(--hof-danger);
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-tint);
+    font-size: 13px;
+}
+
+.hof-drawer-ctx b {
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+.hof-drawer-h {
+    margin: 16px 0 6px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--hof-faint);
+}
+
+.hof-drawer-doc {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--hof-border);
+    font-size: 13.5px;
+    color: var(--hof-text);
+    text-decoration: none;
+}
+
+.hof-drawer-doc:hover {
+    color: var(--hof-primary);
+}
+
+.hof-drawer-doc span {
+    flex: none;
+    font-size: 12px;
+    color: var(--hof-faint);
+}
+
+.hof-drawer-none {
+    margin: 16px 0 0;
+    font-size: 13px;
+    color: var(--hof-muted);
+}
+
+.hof-drawer-ask {
+    margin-top: 18px;
+    padding: 12px;
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-sm);
+    font-size: 13px;
+    color: var(--hof-muted);
+}
+
+.hof-drawer a {
+    color: var(--hof-primary);
+}
+
+.hof-drawer a.hof-drawer-doc {
+    color: var(--hof-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hof-scrim,
+    .hof-drawer {
+        transition: none;
+    }
+}
