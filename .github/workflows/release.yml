@@ -63,7 +63,15 @@ jobs:
           # A SemVer pre-release (1.2.0-beta, 0.13.1-alpha) must not become "Latest".
           PRERELEASE=""
           case "$VERSION" in *-*) PRERELEASE="--prerelease" ;; esac
+          # Notes come from this version's CHANGELOG.md section; GitHub's
+          # generated PR list is the fallback when the changelog has none.
+          if bash bin/release-notes.sh "$VERSION" > release-notes.md; then
+            NOTES=(--notes-file release-notes.md)
+          else
+            echo "::warning::No CHANGELOG.md section for $VERSION; using generated notes."
+            NOTES=(--generate-notes)
+          fi
           gh release create "v$VERSION" "dist/hooked-on-facets-$VERSION.zip" \
             --target "${{ github.sha }}" \
             --title "Hooked on Facets $VERSION" \
-            --generate-notes $PRERELEASE
+            "${NOTES[@]}" $PRERELEASE
