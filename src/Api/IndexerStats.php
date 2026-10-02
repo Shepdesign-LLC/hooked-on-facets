@@ -195,7 +195,13 @@ final class IndexerStats {
 
         $out = [];
         foreach ( $types as $slug ) {
-            $obj   = function_exists( 'get_post_type_object' ) ? get_post_type_object( $slug ) : null;
+            $obj = function_exists( 'get_post_type_object' ) ? get_post_type_object( $slug ) : null;
+            // The defaults name `product` before WooCommerce exists. An unregistered
+            // type has nothing to index or filter, and offering it as a facet's
+            // "Applies to" sends the editor to a route that can only 400.
+            if ( function_exists( 'get_post_type_object' ) && ! is_object( $obj ) ) {
+                continue;
+            }
             $label = is_object( $obj ) && isset( $obj->labels->name ) ? (string) $obj->labels->name : $slug;
             $out[] = [
                 'slug'   => $slug,

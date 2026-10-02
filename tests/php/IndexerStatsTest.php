@@ -97,6 +97,32 @@ final class IndexerStatsTest extends TestCase {
 
     // ── snapshot ─────────────────────────────────────────────────────────
 
+    public function test_unregistered_default_post_type_is_left_out(): void {
+        // A site without WooCommerce: the defaults still name `product`, but it
+        // is not a registered post type, so it must not reach the editor.
+        Functions\when( 'get_option' )->alias( static fn( $name, $default = false ) => $default );
+        Functions\when( 'apply_filters' )->alias( static fn( $hook, $value ) => $value );
+        Functions\when( 'get_taxonomy' )->justReturn( null );
+        Functions\when( 'get_post_types' )->justReturn( [ 'post', 'page' ] );
+        Functions\when( 'get_post_type_object' )->alias( static fn( $slug ) => match ( $slug ) {
+            'post'  => (object) [ 'labels' => (object) [ 'name' => 'Posts' ], '_builtin' => true ],
+            'page'  => (object) [ 'labels' => (object) [ 'name' => 'Pages' ], '_builtin' => true ],
+            default => null,
+        } );
+
+        $wpdb         = Mockery::mock();
+        $wpdb->prefix = 'wp_';
+        $wpdb->posts  = 'wp_posts';
+        $wpdb->shouldReceive( 'prepare' )->andReturnUsing( static fn( $sql, $args ) => $sql );
+        $wpdb->shouldReceive( 'get_row' )->andReturn( [ 'rows_n' => '0', 'objects_n' => '0' ] );
+        $wpdb->shouldReceive( 'get_results' )->andReturn( [] );
+        $GLOBALS['wpdb'] = $wpdb;
+
+        $out = ( new IndexerStats( new Indexer() ) )->snapshot( [] );
+
+        self::assertSame( [ 'post', 'page' ], array_column( $out['post_types'], 'slug' ) );
+    }
+
     public function test_snapshot_assembles_post_types_and_facet_stats(): void {
         Functions\when( 'get_option' )->alias( static fn( $name, $default = false ) => $default );
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value ) => $value );
@@ -106,6 +132,7 @@ final class IndexerStatsTest extends TestCase {
             return match ( $slug ) {
                 'product' => (object) [ 'labels' => (object) [ 'name' => 'Products' ], '_builtin' => false ],
                 'post'    => (object) [ 'labels' => (object) [ 'name' => 'Posts' ],    '_builtin' => true ],
+                'page'    => (object) [ 'labels' => (object) [ 'name' => 'Pages' ],    '_builtin' => true ],
                 default   => null,
             };
         } );
@@ -136,7 +163,7 @@ final class IndexerStatsTest extends TestCase {
         self::assertSame(
             [
                 [ 'slug' => 'post',    'label' => 'Posts',    'items' => 312,  'custom' => false ],
-                [ 'slug' => 'page',    'label' => 'page',     'items' => 0,    'custom' => false ],
+                [ 'slug' => 'page',    'label' => 'Pages',    'items' => 0,    'custom' => false ],
                 [ 'slug' => 'product', 'label' => 'Products', 'items' => 1200, 'custom' => false ],
             ],
             $out['post_types']
