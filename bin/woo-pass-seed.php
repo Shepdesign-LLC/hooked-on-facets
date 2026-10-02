@@ -21,8 +21,13 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'WooCommerce' ) || ! function_exists( 'wc_create_attribute' ) ) {
-    fwrite( STDERR, "WooCommerce isn't active. Run `wp plugin activate woocommerce` first.\n" );
-    return;
+    $msg = "WooCommerce isn't active. Run `wp plugin activate woocommerce` first.";
+    // Exit non-zero so a script or CI step that runs the seed sees the failure.
+    if ( class_exists( 'WP_CLI' ) ) {
+        WP_CLI::error( $msg );
+    }
+    fwrite( STDERR, $msg . "\n" );
+    exit( 1 );
 }
 
 /** Create a product attribute (global) and make sure its taxonomy is registered this request. */
