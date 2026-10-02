@@ -222,6 +222,17 @@ final class DesignTokensTest extends TestCase {
         }
     }
 
+    public function test_front_end_color_defaults_are_the_brand_set(): void {
+        $brand    = DesignTokens::brand();
+        $defaults = DesignTokens::defaults();
+
+        foreach ( [ '--hof-primary', '--hof-on-primary', '--hof-surface', '--hof-bg', '--hof-border', '--hof-text', '--hof-muted' ] as $name ) {
+            self::assertSame( $brand[ $name ], $defaults[ $name ], "$name must default to brand." );
+        }
+        self::assertSame( '#534AB7', $defaults['--hof-primary'], 'Hook purple, not the legacy blue.' );
+        self::assertSame( $brand['--hof-danger'], $defaults['--hof-accent'] );
+    }
+
     public function test_nothing_saved_reads_as_the_current_defaults(): void {
         $out = DesignTokens::get();
 

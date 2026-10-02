@@ -50,22 +50,26 @@ final class DesignTokens {
     }
 
     /**
-     * What the front end uses when nothing has been saved: the defaults it
-     * has always printed, plus the mono font the stylesheet defines.
+     * What the front end uses when nothing has been saved: the brand set for
+     * every token it covers, plus the tokens only the stylesheet defines.
+     * Colors come from brand() so "Reset to brand" and the front end can never
+     * disagree.
      *
      * @return array<string, string>
      */
     public static function defaults(): array {
+        $brand = self::brand();
+
         return [
             // Brand
-            '--hof-primary'    => '#5b6cff',
-            '--hof-on-primary' => '#ffffff',
-            '--hof-accent'     => '#e0364f',
-            '--hof-surface'    => '#ffffff',
-            '--hof-bg'         => '#f4f5fb',
-            '--hof-border'     => '#e3e4ec',
-            '--hof-text'       => '#1a1c2c',
-            '--hof-muted'      => '#6b6e7f',
+            '--hof-primary'    => $brand['--hof-primary'],
+            '--hof-on-primary' => $brand['--hof-on-primary'],
+            '--hof-accent'     => $brand['--hof-danger'], // facet coral; --hof-danger below follows it
+            '--hof-surface'    => $brand['--hof-surface'],
+            '--hof-bg'         => $brand['--hof-bg'],
+            '--hof-border'     => $brand['--hof-border'],
+            '--hof-text'       => $brand['--hof-text'],
+            '--hof-muted'      => $brand['--hof-muted'],
             '--hof-danger'     => 'var(--hof-accent)',
 
             // Spacing + radius scale
