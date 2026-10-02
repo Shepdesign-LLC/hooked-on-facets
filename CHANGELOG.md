@@ -9,6 +9,11 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+## [1.2.0-beta] - 2026-10-02
+
+The admin redesign, in beta. Every screen is restyled on the brand tokens and
+the facet editor is rebuilt around the source a facet reads from.
+
 ### Added
 
 - **Facets list grouped by post type** — Everywhere, Products, custom post
@@ -24,13 +29,11 @@ major version. Each version links to its full GitHub release notes.
   renders each value as a pill or square button with an optional count and
   dimmed empty values. Same URLs and links as list style, styled from the
   `--hof-*` tokens. Every facet wrapper now also carries `hof-facet--<slug>`.
-
 - **Help drawer** — a Help button in the top right of every screen opens a
   drawer with docs search, an "On this screen" note that follows the screen (and
   the facet editor), Start here and Reference links, and support. Closes on
   Escape, the close button or a click outside; focus moves to the search box on
   open and returns to the Help button on close.
-
 - **Design tokens editor** — edit the `--hof-*` tokens, see the change in a live
   preview of a list facet and a button facet (rendered with the real public
   stylesheet), copy the generated CSS, or reset to brand. Custom CSS loads after
@@ -49,7 +52,11 @@ major version. Each version links to its full GitHub release notes.
 
 ### Changed
 
-- **Front-end token defaults are the brand set.** A site that has never saved Design tokens now gets Hook purple (`#534AB7`) and the rest of the brand palette instead of the legacy blue (`#5b6cff`). The defaults are read from the same file as "Reset to brand", so the two can't drift. Sites that saved tokens are unaffected.
+- **Front-end token defaults are the brand set.** A site that has never saved
+  Design tokens now gets Hook purple (`#534AB7`) and the rest of the brand
+  palette instead of the legacy blue (`#5b6cff`), so facets on those sites change
+  color on update. The defaults come from the same file as "Reset to brand", so
+  the two can't drift. Sites that saved tokens are unaffected. (#73)
 - The Facets screen is a list that opens an editor, replacing the sidebar.
   Drag reorder is replaced by move up / down within a post type group.
 - **Admin restyled on the brand tokens.** Page, cards, buttons, pills and
@@ -69,6 +76,12 @@ major version. Each version links to its full GitHub release notes.
 
 - Admin token overrides from the `hof_admin_css_tokens` filter printed before
   the bundle's own defaults, so the defaults silently won. They now print after.
+- On sites with plain permalinks the facet editor listed no sources: the admin
+  built `?rest_route=…/sources?post_type=…` with a second `?`, so the request
+  404'd. Query strings now join with `&` when the REST base already has one. (#72)
+- On sites without WooCommerce the editor offered a `product` post type that
+  doesn't exist, and defaulted new facets to it. `GET /indexer/stats` now leaves
+  out unregistered post types. (#72)
 
 ## [1.1.1] - 2026-09-18
 
@@ -276,7 +289,8 @@ Custom-field source line — ACF, Meta Box, and Pods.
 
 - First public alpha.
 
-[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.2.0-beta...HEAD
+[1.2.0-beta]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.0-beta
 [1.1.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.1.1
 [1.1.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.1.0
 [1.0.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.0.1
