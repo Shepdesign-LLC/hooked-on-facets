@@ -5,7 +5,10 @@ const bootstrap = typeof window !== 'undefined' ? window.hofAdmin || {} : {};
 
 async function request(path, options = {}) {
     const base = bootstrap.restUrl || '/wp-json/hof/v1/';
-    const url = base + String(path).replace(/^\//, '');
+    const rel = String(path).replace(/^\//, '');
+    // With plain permalinks the base is `…/index.php?rest_route=/hof/v1/`, which
+    // already owns the `?`, so a path's own query string has to join with `&`.
+    const url = base.includes('?') ? base + rel.replace('?', '&') : base + rel;
 
     const headers = {
         'Content-Type': 'application/json',
