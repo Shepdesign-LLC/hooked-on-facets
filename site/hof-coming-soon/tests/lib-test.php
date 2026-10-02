@@ -24,8 +24,18 @@ $eq( hof_soon_is_home_request( '/blog/about', '/blog/' ), false, 'subdir inner' 
 $eq( hof_soon_bento_payload( 'a@b.co' ), array( 'subscribers' => array( array( 'email' => 'a@b.co' ) ) ), 'payload bare' );
 $eq( hof_soon_bento_payload( 'a@b.co', ' hof-beta ' )['subscribers'][0]['tags'], 'hof-beta', 'payload tags' );
 
+$eq( hof_soon_clean_name( "  Ryan <b>S</b>\n " ), 'Ryan bS/b', 'name drops angle brackets and collapses whitespace' );
+$eq( hof_soon_clean_name( str_repeat( 'a', 90 ) ), str_repeat( 'a', 60 ), 'name capped at 60' );
+$eq( hof_soon_clean_name( "\x00\x07" ), '', 'name empty when only control chars' );
+$eq( hof_soon_bento_payload( 'a@b.co', '', 'Ryan' )['subscribers'][0]['first_name'], 'Ryan', 'payload first_name' );
+$eq( isset( hof_soon_bento_payload( 'a@b.co' )['subscribers'][0]['first_name'] ), false, 'payload omits empty first_name' );
+
 $eq( hof_soon_queue_add( array( 'a@b.co' ), 'a@b.co' ), array( 'a@b.co' ), 'queue dedupes' );
 $eq( hof_soon_queue_add( array( 'a', 'b' ), 'c', 2 ), array( 'b', 'c' ), 'queue caps' );
+
+$eq( hof_soon_queue_add( array(), 'a@b.co', 500, 'Ryan' ), array( array( 'email' => 'a@b.co', 'first_name' => 'Ryan' ) ), 'queue keeps the name' );
+$eq( hof_soon_queue_add( array( array( 'email' => 'a@b.co', 'first_name' => 'R' ) ), 'a@b.co' ), array( array( 'email' => 'a@b.co', 'first_name' => 'R' ) ), 'queue dedupes name entries' );
+$eq( hof_soon_queue_entry( 'old@b.co' ), array( 'email' => 'old@b.co', 'first_name' => '' ), 'queue reads old string entries' );
 
 echo $fail ? "$fail failed\n" : "all passed\n";
 exit( $fail ? 1 : 0 );
