@@ -18,9 +18,20 @@ define( 'HOF_SOON_BENTO_SECRET_KEY',      '...' );
 define( 'HOF_SOON_BENTO_TAGS',            'hof-beta' ); // optional
 ```
 
-Sign-ups post to `POST /wp-json/hof-soon/v1/subscribe`, and the server forwards them to Bento's
-`/api/v1/batch/subscribers`. If Bento is unreachable or the constants are missing, the email is held in
-the `hof_soon_pending` option and retried hourly, and an admin notice shows the count.
+The form asks for an email and an optional first name. Sign-ups post to
+`POST /wp-json/hof-soon/v1/subscribe`, and the server forwards them to Bento's
+`/api/v1/batch/subscribers`. If Bento is unreachable or the constants are missing, the sign-up is held in
+the `hof_soon_pending` option and retried hourly. The visitor still sees success, and wp-admin shows
+what Bento said.
+
+## Check it reaches Bento
+
+```bash
+wp hof-soon test you@example.com
+```
+
+This sends one test subscriber and prints Bento's answer. Then look for it in your Bento people list.
+A 401 means a wrong key. A 404 usually means a wrong site UUID.
 
 ## Test
 

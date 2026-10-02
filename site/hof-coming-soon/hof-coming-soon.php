@@ -2,7 +2,7 @@
 /**
  * Plugin Name: hooked on facets — coming soon
  * Description: Serves one placeholder homepage with a Bento sign-up form on every front-end URL while the real site is built. Admins see the normal site. Deactivate to go live.
- * Version:     0.1.0
+ * Version:     0.2.0
  * Requires PHP: 8.0
  * License:     GPL-2.0-or-later
  *
@@ -18,6 +18,7 @@ defined( 'ABSPATH' ) || exit;
 
 const HOF_SOON_QUEUE = 'hof_soon_pending';
 const HOF_SOON_CRON  = 'hof_soon_retry';
+const HOF_SOON_LAST_ERROR = 'hof_soon_last_error';
 
 /** Pure helpers live in their own file so they can be tested without WordPress. */
 require_once __DIR__ . '/includes/lib.php';
@@ -91,9 +92,10 @@ function hof_soon_subscribe( WP_REST_Request $request ): WP_REST_Response {
 	}
 	set_transient( $ip_key, $hits + 1, MINUTE_IN_SECONDS * 10 );
 
-	if ( ! hof_soon_send_to_bento( $email ) ) {
+	$name = hof_soon_clean_name( (string) $request->get_param( 'first_name' ) );
+	if ( ! hof_soon_send_to_bento( $email, $name ) ) {
 		// Never lose a lead: park it and retry from cron.
-		hof_soon_enqueue( $email );
+		hof_soon_enqueue( $email, $name );
 	}
 
 	// Same answer either way — the visitor did their part.
@@ -107,12 +109,14 @@ function hof_soon_bento_configured(): bool {
 }
 
 /**
- * Bento batch import API: POST /api/v1/batch/subscribers, Basic auth with the
- * publishable and secret key, site_uuid in the query string.
+ * One call to Bento's batch import API: POST /api/v1/batch/subscribers, Basic
+ * auth with the publishable and secret key, site_uuid in the query string.
+ *
+ * @return array{ok: bool, code: int, message: string}
  */
-function hof_soon_send_to_bento( string $email ): bool {
+function hof_soon_bento_request( string $email, string $first_name = '' ): array {
 	if ( ! hof_soon_bento_configured() ) {
-		return false;
+		return array( 'ok' => false, 'code' => 0, 'message' => 'The HOF_SOON_BENTO_* constants are not set in wp-config.php.' );
 	}
 
 	$tags = defined( 'HOF_SOON_BENTO_TAGS' ) ? (string) HOF_SOON_BENTO_TAGS : '';
@@ -125,18 +129,39 @@ function hof_soon_send_to_bento( string $email ): bool {
 				'Content-Type'  => 'application/json',
 				'Accept'        => 'application/json',
 			),
-			'body'    => wp_json_encode( hof_soon_bento_payload( $email, $tags ) ),
+			'body'    => wp_json_encode( hof_soon_bento_payload( $email, $tags, $first_name ) ),
 		)
 	);
 
-	return ! is_wp_error( $res ) && wp_remote_retrieve_response_code( $res ) < 300;
+	if ( is_wp_error( $res ) ) {
+		return array( 'ok' => false, 'code' => 0, 'message' => $res->get_error_message() );
+	}
+	$code = (int) wp_remote_retrieve_response_code( $res );
+	return array(
+		'ok'      => $code >= 200 && $code < 300,
+		'code'    => $code,
+		'message' => substr( wp_strip_all_tags( (string) wp_remote_retrieve_body( $res ) ), 0, 200 ),
+	);
+}
+
+/** Sends one subscriber. A failure is logged and kept for the admin notice, never shown to the visitor. */
+function hof_soon_send_to_bento( string $email, string $first_name = '' ): bool {
+	$r = hof_soon_bento_request( $email, $first_name );
+	if ( $r['ok'] ) {
+		delete_option( HOF_SOON_LAST_ERROR );
+		return true;
+	}
+	$line = sprintf( 'Bento said %s: %s', $r['code'] ?: 'no response', $r['message'] );
+	error_log( '[hof-coming-soon] ' . $line ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+	update_option( HOF_SOON_LAST_ERROR, $line, false );
+	return false;
 }
 
 /* -------------------------------------------------------------- retry queue */
 
-function hof_soon_enqueue( string $email ): void {
+function hof_soon_enqueue( string $email, string $first_name = '' ): void {
 	$queue = (array) get_option( HOF_SOON_QUEUE, array() );
-	$queue = hof_soon_queue_add( $queue, $email, 500 );
+	$queue = hof_soon_queue_add( $queue, $email, 500, $first_name );
 	update_option( HOF_SOON_QUEUE, $queue, false );
 	if ( ! wp_next_scheduled( HOF_SOON_CRON ) ) {
 		wp_schedule_event( time() + 300, 'hourly', HOF_SOON_CRON );
@@ -148,9 +173,10 @@ add_action(
 	static function (): void {
 		$queue = (array) get_option( HOF_SOON_QUEUE, array() );
 		$left  = array();
-		foreach ( $queue as $email ) {
-			if ( ! hof_soon_send_to_bento( (string) $email ) ) {
-				$left[] = $email;
+		foreach ( $queue as $item ) {
+			$entry = hof_soon_queue_entry( $item );
+			if ( ! hof_soon_send_to_bento( $entry['email'], $entry['first_name'] ) ) {
+				$left[] = $item;
 			}
 		}
 		update_option( HOF_SOON_QUEUE, $left, false );
@@ -177,6 +203,10 @@ add_action(
 			return;
 		}
 		$pending = count( (array) get_option( HOF_SOON_QUEUE, array() ) );
+		$error   = (string) get_option( HOF_SOON_LAST_ERROR, '' );
+		if ( '' !== $error ) {
+			printf( '<div class="notice notice-error"><p><strong>hooked on facets — coming soon:</strong> the last sign-up did not reach Bento. %s. Check the three <code>HOF_SOON_BENTO_*</code> keys, then run <code>wp hof-soon test you@example.com</code>.</p></div>', esc_html( $error ) );
+		}
 		if ( ! hof_soon_bento_configured() ) {
 			echo '<div class="notice notice-warning"><p><strong>hooked on facets — coming soon:</strong> add the three <code>HOF_SOON_BENTO_*</code> constants to wp-config.php, or sign-ups are held in a queue.</p></div>';
 		} elseif ( $pending ) {
@@ -184,3 +214,31 @@ add_action(
 		}
 	}
 );
+
+/* ------------------------------------------------------------------- WP-CLI */
+
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	/**
+	 * Sends one test subscriber to Bento and prints exactly what came back.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp hof-soon test you@example.com
+	 *
+	 * @param array<int, string> $args Positional args: the email to subscribe.
+	 */
+	WP_CLI::add_command(
+		'hof-soon test',
+		static function ( array $args ): void {
+			$email = hof_soon_clean_email( (string) ( $args[0] ?? '' ) );
+			if ( null === $email ) {
+				WP_CLI::error( 'Give a valid email: wp hof-soon test you@example.com' );
+			}
+			$r = hof_soon_bento_request( $email, 'Test' );
+			if ( $r['ok'] ) {
+				WP_CLI::success( sprintf( 'Bento accepted %s (HTTP %d). Look for it in your Bento people list.', $email, $r['code'] ) );
+			}
+			WP_CLI::error( sprintf( 'Bento did not accept it. HTTP %s: %s', $r['code'] ?: 'none', $r['message'] ) );
+		}
+	);
+}

@@ -35,10 +35,12 @@ h1{font-size:clamp(44px,7vw,76px);font-weight:500;letter-spacing:-.035em;line-he
 .signup{grid-column:span 4;grid-row:span 2;background:var(--purple);color:var(--purple-50);border-color:var(--purple-700);display:flex;flex-direction:column;justify-content:center}
 .signup h2{font-size:24px;font-weight:500;letter-spacing:-.02em;margin-bottom:8px;color:#fff}
 .signup p{font-size:14px;line-height:1.5;color:var(--purple-200);margin-bottom:20px}
-form{display:flex;flex-direction:column;gap:10px}
-label{position:absolute;left:-9999px}
-input[type=email]{font:inherit;font-size:15px;padding:13px 14px;border-radius:var(--r-md);border:1px solid var(--purple-400);background:#fff;color:var(--ink);width:100%}
-input[type=email]:focus{outline:2px solid var(--coral);outline-offset:2px}
+form{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+label{font-size:12px;font-weight:500;color:var(--purple-200);letter-spacing:.02em}
+label small{font-weight:400;opacity:.8}
+input[type=email],input[type=text].in{font:inherit;font-size:15px;padding:12px 14px;border-radius:var(--r-md);border:1px solid var(--purple-400);background:#fff;color:var(--ink);width:100%}
+input[type=email]:focus,input[type=text].in:focus{outline:2px solid var(--coral);outline-offset:2px}
 .hp{position:absolute;left:-9999px;height:0;overflow:hidden}
 button{font:inherit;font-size:15px;font-weight:500;padding:13px 18px;border:0;border-radius:var(--r-md);background:var(--coral);color:#fff;cursor:pointer}
 button:hover{filter:brightness(1.07)}button[disabled]{opacity:.6;cursor:wait}
@@ -73,8 +75,14 @@ button:hover{filter:brightness(1.07)}button[disabled]{opacity:.6;cursor:wait}
       <h2 id="join">Get hooked early</h2>
       <p>Join the beta. One email when it opens, nothing else.</p>
       <form id="hof-soon-form" method="post" action="<?php echo esc_url( $endpoint_url ); ?>" novalidate>
-        <label for="hof-email">Email address</label>
-        <input id="hof-email" type="email" name="email" placeholder="you@yourstore.com" autocomplete="email" required>
+        <div class="field">
+          <label for="hof-name">First name <small>(optional)</small></label>
+          <input id="hof-name" class="in" type="text" name="first_name" placeholder="Ada" autocomplete="given-name" maxlength="60">
+        </div>
+        <div class="field">
+          <label for="hof-email">Email</label>
+          <input id="hof-email" type="email" name="email" placeholder="you@yourstore.com" autocomplete="email" required>
+        </div>
         <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
         <button type="submit">Join the beta</button>
         <div class="msg" role="status" aria-live="polite"></div>
