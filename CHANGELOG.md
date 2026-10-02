@@ -49,6 +49,7 @@ major version. Each version links to its full GitHub release notes.
 
 ### Changed
 
+- **Front-end token defaults are the brand set.** A site that has never saved Design tokens now gets Hook purple (`#534AB7`) and the rest of the brand palette instead of the legacy blue (`#5b6cff`). The defaults are read from the same file as "Reset to brand", so the two can't drift. Sites that saved tokens are unaffected.
 - The Facets screen is a list that opens an editor, replacing the sidebar.
   Drag reorder is replaced by move up / down within a post type group.
 - **Admin restyled on the brand tokens.** Page, cards, buttons, pills and

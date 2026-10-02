@@ -48,7 +48,7 @@ final class SwatchTermFields implements Bootable {
         ?>
         <div class="form-field hof-swatch-field">
             <label for="hof-swatch-color"><?php esc_html_e( 'Swatch color', 'hooked-on-facets' ); ?></label>
-            <input type="text" id="hof-swatch-color" name="hof_swatch_color" value="" placeholder="#5b6cff" />
+            <input type="text" id="hof-swatch-color" name="hof_swatch_color" value="" placeholder="#534AB7" />
             <p><?php esc_html_e( 'Optional. CSS color used when no swatch image is set.', 'hooked-on-facets' ); ?></p>
         </div>
         <div class="form-field hof-swatch-field">
@@ -69,7 +69,7 @@ final class SwatchTermFields implements Bootable {
             </th>
             <td>
                 <input type="text" id="hof-swatch-color" name="hof_swatch_color"
-                       value="<?php echo esc_attr( $color ); ?>" placeholder="#5b6cff" />
+                       value="<?php echo esc_attr( $color ); ?>" placeholder="#534AB7" />
                 <p class="description">
                     <?php esc_html_e( 'Optional. CSS color used when no swatch image is set.', 'hooked-on-facets' ); ?>
                 </p>
