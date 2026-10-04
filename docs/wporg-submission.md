@@ -120,12 +120,14 @@ deploy workflow uploads them to SVN `assets/`.
 |---|---|---|---|
 | Icon | `icon-256x256.png`, `icon-128x128.png` | 256×256, 128×128 | in repo (brand mark on warm cream) |
 | Banner | `banner-1544x500.png`, `banner-772x250.png` | 1544×500, 772×250 | in repo (mark + "Filtering, finally fun.") |
-| Screenshots | `screenshot-1.png` … `screenshot-4.png` | any | **todo**: capture from a real install |
+| Screenshots | `screenshot-1.png` … `screenshot-4.png` | 2560×1500 (1280×800 at 2x) | in repo; captured from a seeded local install |
 
-The four screenshot captions are already written in `readme.txt` →
-`== Screenshots ==` (facet builder, dashboard, front-end facets, tokens editor).
-Capture them from the docker stack (`docker compose up -d`, admin/admin) at
-1280px wide, PNG, and drop them in `.wordpress-org/` in that order.
+The four screenshot captions live in `readme.txt` → `== Screenshots ==` and
+match the images in order (facet editor, dashboard, front-end facets, tokens
+editor). To refresh them: seed a local install with the `hof-site` repo's
+`hof-demo-content` plugin and `hof-demo-facets.php` fixtures, generate some
+filter traffic so the dashboard has data, and capture at 1280×800 with a 2x
+device scale factor.
 
 ## Keeping the editions in sync
 

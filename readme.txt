@@ -112,10 +112,10 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 
 == Screenshots ==
 
-1. The facet builder — define, configure, and preview facets without code.
-2. The performance dashboard — facet usage, zero-result filters, and latency percentiles.
-3. Facets filtering a WooCommerce shop archive on the front end.
-4. The design-tokens editor for theming facets with CSS custom properties.
+1. The facet editor — pick what a facet applies to, its source and its type, with a live preview against your own content.
+2. The dashboard — query latency percentiles, most-used facets and the filter combinations that find nothing.
+3. Facets filtering a WooCommerce catalog on the front end, with live counts and the query time.
+4. The design tokens editor — edit the `--hof-*` variables with a live preview of real facets.
 
 == Changelog ==
 
