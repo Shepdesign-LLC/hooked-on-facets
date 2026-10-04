@@ -5,7 +5,7 @@ Tags: facets, faceted search, filters, woocommerce, product filter
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,7 +119,7 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 
 == Changelog ==
 
-= 1.2.0-beta =
+= 1.2.0 =
 * Added: the facets list is grouped by post type (Everywhere, Products, custom
   post types, Posts) with indexed item counts, a Values column, a status pill
   and a "Found in your content" strip of suggested facets.
@@ -222,6 +222,11 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 * First public alpha.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+The admin is redesigned and the facet editor is rebuilt around sources. Sites
+that never saved Design tokens get the brand palette on the front end. No
+reindex needed.
 
 = 1.1.0 =
 The six signature facets (Ask, Visual DNA, swipe deck, wheel, matrix, saved

@@ -9,9 +9,9 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
-## [1.2.0-beta] - 2026-10-02
+## [1.2.0] - 2026-10-04
 
-The admin redesign, in beta. Every screen is restyled on the brand tokens and
+The admin redesign. Every screen is restyled on the brand tokens and
 the facet editor is rebuilt around the source a facet reads from.
 
 ### Added
@@ -289,8 +289,8 @@ Custom-field source line — ACF, Meta Box, and Pods.
 
 - First public alpha.
 
-[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.2.0-beta...HEAD
-[1.2.0-beta]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.0-beta
+[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.0
 [1.1.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.1.1
 [1.1.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.1.0
 [1.0.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.0.1
