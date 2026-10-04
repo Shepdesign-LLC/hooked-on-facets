@@ -44,6 +44,7 @@
 /BRAND.md               export-ignore
 /brand                  export-ignore
 /marketing              export-ignore
+/.wordpress-org         export-ignore
 
 # Linguist overrides — accurate language stats on GitHub
 *.svg linguist-vendored

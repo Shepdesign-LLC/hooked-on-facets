@@ -25,6 +25,6 @@ if ( ! class_exists( \HookedOnFacets\Plugin::class ) ) {
     return;
 }
 
-echo \HookedOnFacets\Plugin::instance()
+echo \HookedOnFacets\Plugin::instance() // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Renderer escapes internally.
     ->make( \HookedOnFacets\Facets\Renderer::class )
-    ->render( $name ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Renderer escapes internally.
+    ->render( $name );

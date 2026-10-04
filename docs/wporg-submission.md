@@ -1,75 +1,72 @@
 # WordPress.org Submission Guide
 
-How to get Hooked on Facets onto the WordPress.org plugin directory as the free
-edition, with the premium edition sold from hookedonfacets.com. Internal runbook.
+How to get Hooked on Facets onto the WordPress.org plugin directory. Internal
+runbook.
 
 ## Distribution model
 
-WordPress.org hosts **free** plugins only. The model is **freemium**:
+WordPress.org hosts **free** plugins only, and this repository **is** the free
+plugin. There is no edition switch and nothing to strip:
 
-- **Free edition → WordPress.org.** The full plugin, minus the licensed
-  self-updater and license-server calls. This is the discovery engine and the
-  "open source, actively developed" storefront. It updates through WordPress.org.
-- **Premium edition → hookedonfacets.com.** The same code plus `src/Licensing/`
-  (EDD-backed license activation + auto-updates from your store).
+- **Hooked on Facets (this repo) → WordPress.org.** Ten facet types at full
+  resolver speed, the builder, every source and page-builder bridge. It makes
+  no external request. It updates through WordPress.org.
+- **Hooked on Facets Pro → hookedonfacets.com.** A separate add-on plugin
+  (`hooked-on-facets-pro`) with the six signature facets, the AI settings
+  screen, the `/ask` and `/visual-dna` routes, and the EDD licensing and
+  updater. It never touches WordPress.org.
 
-The split is driven by the `HOF_EDITION` constant in `hooked-on-facets.php`
-(`premium` by default). The free build flips it to `free`, which:
+`bin/build-release.sh` self-verifies that the package carries no `src/Licensing`,
+`src/Ai` or `src/VisualDna` directory, so a Pro file can't ship by accident.
 
-- never boots the `Updater`, the license revalidation cron, or the license admin
-  notice (`src/Plugin.php` → `core_services()`),
-- passes `null` as the REST controller's license manager, so `/license` routes
-  are not registered,
-- hides the **License** tab in the admin SPA (`admin/src/App.jsx`),
-- and the build additionally **strips `src/Licensing/` and
-  `src/Admin/LicenseNotice.php`** from the ZIP entirely.
+## Build the ZIP
 
-Net result: the WordPress.org build makes **no external calls except** the
-opt-in Anthropic "ask" facet (disclosed in `readme.txt` → External services), and
-cannot self-update outside WordPress.org — both hard WordPress.org requirements.
-
-## Build the free ZIP
-
-From the repo root (Docker, matching the premium build):
+From the repo root:
 
 ```bash
-EDITION=free ./bin/build-release.sh
-# → dist/hooked-on-facets-free-1.0.0.zip
+./bin/build-release.sh
+# → dist/hooked-on-facets-<version>.zip
 ```
 
 The script exports the tracked tree (honoring `.gitattributes` `export-ignore`),
-applies the free-edition transforms, installs `--no-dev` Composer deps, builds the
-Vite assets, regenerates the `.pot`, strips dev files + source maps, zips, and
-self-verifies (including that `src/Licensing` is absent and `HOF_EDITION` is
-`free`). The premium build is the same command without `EDITION=free`.
+regenerates the `.pot`, installs `--no-dev` Composer deps, builds the Vite
+assets, strips dev files and source maps, zips, and self-verifies the package.
+It uses Docker when a daemon is running and falls back to the host's own
+`composer` and `npm` when it isn't (the committed `.pot` ships as-is when
+`wp-cli` is also missing). The `Release` GitHub Action runs the same script.
 
 ## Pre-submission checklist
 
-- [ ] `readme.txt` — `Stable tag` matches the plugin version; `Tested up to` is the
-      current WordPress release; `Contributors` is your **wordpress.org** username
-      (not a display name).
-- [ ] `readme.txt` **External services** section is accurate (the Anthropic "ask"
-      facet). Keep it current if any other external call is ever added.
-- [ ] Version is a real release (no `-alpha`). WordPress.org rejects alpha stable tags.
-- [ ] The free ZIP contains **no** `src/Licensing/` and no self-updater.
-- [ ] JS source ships (`admin/src/`, `public/src/`) and the repo link is in `readme.txt`.
+- [ ] **Version is a real release** (no `-alpha` / `-beta`). The plugin header,
+      `HOF_VERSION` and `readme.txt` → `Stable tag` all carry the same value.
+      WordPress.org serves the Stable tag, and Plugin Check fails on a mismatch.
+- [ ] `readme.txt` → `Tested up to` is the current WordPress release, and
+      `Contributors` is the **wordpress.org username** that will own the plugin.
+- [ ] `readme.txt` → the "Does this plugin contact any external service?" FAQ is
+      still true. Keep it current if any outbound call is ever added.
+- [ ] Run **Plugin Check** (the `plugin-check` plugin, or `wp plugin check
+      hooked-on-facets`) against the built ZIP on a clean install, and clear
+      every error. Warnings about direct database queries on the `wp_hof_index`
+      table are expected; the index is the product.
 - [ ] Plugin runs on a clean WordPress install with no PHP notices.
+- [ ] JS source ships (`admin/src/`, `public/src/`) and the repo link is in
+      `readme.txt`.
 - [ ] Text domain is `hooked-on-facets` throughout; `languages/hooked-on-facets.pot`
       is present.
+- [ ] Listing assets exist in `.wordpress-org/` (see below).
 
 ## Submit for review
 
-1. Create/sign in to a **wordpress.org** account (its username becomes the
-   `Contributors` slug and the plugin owner).
-2. Go to https://wordpress.org/plugins/developers/add/ and upload
-   `hooked-on-facets-free-1.0.0.zip`.
-3. A human reviewer checks it — typically a few days to a couple of weeks. They
-   look for GPL compliance, no self-updating, sanitized/escaped I/O, prefixed
-   globals, and an accurate External services disclosure. Respond to their email
-   thread; fixes are re-submitted in the same thread.
+1. Sign in to **wordpress.org** (the username becomes the `Contributors` slug
+   and the plugin owner).
+2. Go to https://wordpress.org/plugins/developers/add/ and upload the built ZIP.
+3. A human reviewer checks it, typically within a few days to a couple of
+   weeks. They look for GPL compliance, no self-updating, sanitized and escaped
+   I/O, prefixed globals, and an accurate external-services disclosure. Reply
+   in the email thread; fixes are re-submitted there.
 4. On approval you receive **SVN** access at
-   `https://plugins.svn.wordpress.org/hooked-on-facets/` and the public listing
-   is created.
+   `https://plugins.svn.wordpress.org/hooked-on-facets/` and the listing is
+   created.
 
 ## Publish via SVN (after approval)
 
@@ -77,49 +74,62 @@ WordPress.org distributes from SVN, not the ZIP. Layout:
 
 ```text
 hooked-on-facets/
-  trunk/            # current development version (the plugin files)
-  tags/1.0.0/       # a copy of trunk at each release (matches Stable tag)
+  trunk/            # current version (the plugin files)
+  tags/1.2.0/       # a copy of trunk at each release (matches Stable tag)
   assets/           # listing images — NOT shipped in the plugin
 ```
 
-Release flow:
+### Automated (the normal path)
+
+`.github/workflows/wporg-deploy.yml` does the SVN work:
+
+- **On a published GitHub Release** that is not a pre-release, it runs
+  `bin/build-release.sh`, unpacks the ZIP, checks that `Stable tag` equals the
+  version, and pushes the tree to `trunk/` and `tags/<version>/` with
+  [10up/action-wordpress-plugin-deploy](https://github.com/10up/action-wordpress-plugin-deploy).
+- **On a push to `main`** that touches `readme.txt` or `.wordpress-org/`, it
+  updates the listing's readme and images with
+  [10up/action-wordpress-plugin-asset-update](https://github.com/10up/action-wordpress-plugin-asset-update).
+
+Add two repository secrets once SVN access exists: `SVN_USERNAME` and
+`SVN_PASSWORD`. Until they exist both jobs no-op with a notice, so the
+workflow is safe on `main` today.
+
+So a release is: bump the version in `hooked-on-facets.php` (header +
+`HOF_VERSION`) and `readme.txt` (`Stable tag` + changelog), merge to `main`.
+The `Release` workflow builds the ZIP and publishes the GitHub release; the
+`Deploy to WordPress.org` workflow pushes that same package to SVN.
+
+### Manual (fallback)
 
 ```bash
 svn co https://plugins.svn.wordpress.org/hooked-on-facets/ svn-hof
-# Unzip the free build into trunk/ (replace contents), then:
+# Unzip the build into trunk/ (replace contents), then:
 cd svn-hof
 svn add --force trunk/*
-svn cp trunk tags/1.0.0
-svn ci -m "Release 1.0.0"
+svn cp trunk tags/1.2.0
+svn ci -m "Release 1.2.0"
 ```
 
-`Stable tag: 1.0.0` in `trunk/readme.txt` tells WordPress.org which tag to serve.
+## Listing assets (`.wordpress-org/`)
 
-## Listing assets (the `assets/` SVN dir — you design these)
+These drive the directory listing and are never shipped in the plugin. The
+deploy workflow uploads them to SVN `assets/`.
 
-These are separate from the plugin ZIP; they live in SVN `assets/` and drive the
-directory listing. All PNG or JPG.
-
-| Asset | File name | Size |
-|---|---|---|
-| Icon | `icon-256x256.png` (and `icon-128x128.png`) | 256×256, 128×128 |
-| Banner | `banner-1544x500.png` (and `banner-772x250.png`) | 1544×500, 772×250 |
-| Screenshots | `screenshot-1.png` … `screenshot-4.png` | any; match `readme.txt` order |
+| Asset | File | Size | Status |
+|---|---|---|---|
+| Icon | `icon-256x256.png`, `icon-128x128.png` | 256×256, 128×128 | in repo (brand mark on warm cream) |
+| Banner | `banner-1544x500.png`, `banner-772x250.png` | 1544×500, 772×250 | in repo (mark + "Filtering, finally fun.") |
+| Screenshots | `screenshot-1.png` … `screenshot-4.png` | any | **todo**: capture from a real install |
 
 The four screenshot captions are already written in `readme.txt` →
 `== Screenshots ==` (facet builder, dashboard, front-end facets, tokens editor).
-The brand mark (isometric hexagon + coral spark) is described in
-`src/Admin/MenuRegistrar.php::register_menu()` — reuse it for the icon.
+Capture them from the docker stack (`docker compose up -d`, admin/admin) at
+1280px wide, PNG, and drop them in `.wordpress-org/` in that order.
 
-## Keeping the two editions in sync
+## Keeping the editions in sync
 
-The free and premium editions build from the **same `main`**. Every release:
-
-1. Bump the version (the premium `Release` GitHub Action auto-publishes the
-   premium ZIP + GitHub release on a version change).
-2. Build the free ZIP: `EDITION=free ./bin/build-release.sh`.
-3. Push the free build to SVN `trunk/` + a new `tags/<version>/` and bump the
-   `Stable tag`.
-
-Because the split is a single constant, there is no separate free branch to
-maintain — one codebase, two builds.
+The free plugin and the Pro add-on are separate repositories. A Pro release
+never involves WordPress.org; a free release never involves the store. The
+only coupling is the Pro add-on's minimum core version, which lives in the Pro
+repo.

@@ -561,7 +561,7 @@ final class Renderer {
                         }
                     }
                     if ( $seo_links !== [] ) {
-                        echo '<ul class="hof-facet-seo-links">' . implode( '', $seo_links ) . '</ul>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                        echo '<ul class="hof-facet-seo-links">' . implode( '', $seo_links ) . '</ul>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- each item is built from esc_url() and esc_html() above. // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                     }
                     ?>
                 <?php endif; ?>
@@ -620,7 +620,7 @@ final class Renderer {
                 }
             }
             if ( $seo_links !== [] ) {
-                echo '<ul class="hof-facet-seo-links">' . implode( '', $seo_links ) . '</ul>';
+                echo '<ul class="hof-facet-seo-links">' . implode( '', $seo_links ) . '</ul>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- each item is built from esc_url() and esc_html() above.
             }
             ?>
         </div>
@@ -762,7 +762,7 @@ final class Renderer {
                         </summary>
                         <ul class="hof-hierarchy-children">
                             <?php foreach ( $kids as $child_slug ) {
-                                echo $render_row( (string) $child_slug, $depth + 1 );
+                                echo $render_row( (string) $child_slug, $depth + 1 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the closure escapes every value it prints.
                             } ?>
                         </ul>
                     </details>
@@ -799,7 +799,7 @@ final class Renderer {
                 <?php else : ?>
                     <ul class="hof-hierarchy-tree">
                         <?php foreach ( $roots as $root_slug ) {
-                            echo $render_row( (string) $root_slug, 0 );
+                            echo $render_row( (string) $root_slug, 0 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the closure escapes every value it prints.
                         } ?>
                     </ul>
                 <?php endif; ?>

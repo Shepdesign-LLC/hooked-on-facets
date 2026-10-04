@@ -63,13 +63,15 @@ final class AssetLoader implements Bootable {
         if ( $this->is_vite_dev() ) {
             $base = $this->vite_dev_url();
 
-            wp_enqueue_script( 'hof-vite-public-client', $base . '/@vite/client', [], null, true );
+            // Dev server only: Vite serves these with its own cache busting, so a
+            // version query string would only break module resolution.
+            wp_enqueue_script( 'hof-vite-public-client', $base . '/@vite/client', [], null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 
             wp_register_script(
                 'hof-public-main',
                 $base . '/' . self::ENTRY,
                 [ 'hof-vite-public-client' ],
-                null,
+                null, // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
                 true
             );
             wp_add_inline_script( 'hof-public-main', $inline, 'before' );

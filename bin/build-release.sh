@@ -9,6 +9,20 @@ cd "$REPO"
 SLUG="hooked-on-facets"
 UID_GID="$(id -u):$(id -g)"
 
+# --- 0. Toolchain: Docker when a daemon answers, else the host's own tools ---
+# CI runners and most workstations have Docker; a sandbox or a bare server
+# may not. Both paths produce the same package; the host path needs composer
+# and npm on PATH, and keeps the committed .pot when wp-cli is absent.
+if docker info >/dev/null 2>&1; then
+  TOOLCHAIN=docker
+else
+  TOOLCHAIN=host
+  for t in composer npm; do
+    command -v "$t" >/dev/null 2>&1 || { echo "ERROR: no Docker daemon and '$t' is not on PATH" >&2; exit 1; }
+  done
+  echo "==> No Docker daemon: building with host composer + npm"
+fi
+
 # --- 1. Resolve + verify version (single source of truth = plugin header) ---
 HEADER_VER="$(grep -E '^[[:space:]]*\*?[[:space:]]*Version:' "$SLUG.php" | head -1 | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]\r')"
 CONST_VER="$(grep -E "define\([[:space:]]*'HOF_VERSION'" "$SLUG.php" | sed -E "s/.*'HOF_VERSION'[^']*'([^']+)'.*/\1/")"
@@ -36,20 +50,33 @@ echo "==> Staged archive tree"
 #        WP-CLI placeholder headers (FULL NAME / YEAR-MO-DA / X-Generator). The
 #        committed languages/<slug>.pot is the canonical header source. ---
 POT="$STAGE/languages/$SLUG.pot"
-HEADER_LINES="$(grep -n '^$' "$POT" | head -1 | cut -d: -f1)"   # committed header incl. trailing blank
-head -n "$HEADER_LINES" "$POT" > "$STAGE/.pot-header"
-docker run --rm --user "$UID_GID" -v "$STAGE":/app -w /app wordpress:cli \
-  i18n make-pot . "languages/$SLUG.pot.fresh" --slug="$SLUG" --domain="$SLUG" \
-  --exclude=node_modules,tests,bin,assets
-FRESH_BODY_START="$(( $(grep -n '^$' "$STAGE/languages/$SLUG.pot.fresh" | head -1 | cut -d: -f1) + 1 ))"
-cat "$STAGE/.pot-header" > "$POT"
-tail -n +"$FRESH_BODY_START" "$STAGE/languages/$SLUG.pot.fresh" >> "$POT"
-rm -f "$STAGE/.pot-header" "$STAGE/languages/$SLUG.pot.fresh"
-echo "==> Regenerated .pot (committed header preserved)"
+if [ "$TOOLCHAIN" = docker ] || command -v wp >/dev/null 2>&1; then
+  HEADER_LINES="$(grep -n '^$' "$POT" | head -1 | cut -d: -f1)"   # committed header incl. trailing blank
+  head -n "$HEADER_LINES" "$POT" > "$STAGE/.pot-header"
+  if [ "$TOOLCHAIN" = docker ]; then
+    docker run --rm --user "$UID_GID" -v "$STAGE":/app -w /app wordpress:cli \
+      i18n make-pot . "languages/$SLUG.pot.fresh" --slug="$SLUG" --domain="$SLUG" \
+      --exclude=node_modules,tests,bin,assets
+  else
+    ( cd "$STAGE" && wp i18n make-pot . "languages/$SLUG.pot.fresh" --slug="$SLUG" --domain="$SLUG" \
+      --exclude=node_modules,tests,bin,assets )
+  fi
+  FRESH_BODY_START="$(( $(grep -n '^$' "$STAGE/languages/$SLUG.pot.fresh" | head -1 | cut -d: -f1) + 1 ))"
+  cat "$STAGE/.pot-header" > "$POT"
+  tail -n +"$FRESH_BODY_START" "$STAGE/languages/$SLUG.pot.fresh" >> "$POT"
+  rm -f "$STAGE/.pot-header" "$STAGE/languages/$SLUG.pot.fresh"
+  echo "==> Regenerated .pot (committed header preserved)"
+else
+  echo "==> wp-cli not on PATH: shipping the committed .pot as-is"
+fi
 
 # --- 5. Production composer deps (no dev) ---
-docker run --rm --user "$UID_GID" -e COMPOSER_HOME=/tmp -v "$STAGE":/app -w /app composer:2 \
-  install --no-dev --optimize-autoloader --no-interaction --no-progress
+if [ "$TOOLCHAIN" = docker ]; then
+  docker run --rm --user "$UID_GID" -e COMPOSER_HOME=/tmp -v "$STAGE":/app -w /app composer:2 \
+    install --no-dev --optimize-autoloader --no-interaction --no-progress
+else
+  ( cd "$STAGE" && composer install --no-dev --optimize-autoloader --no-interaction --no-progress )
+fi
 echo "==> Installed --no-dev vendor"
 
 # --- 6. Build front-end assets in an isolated container, copy dist into stage ---
@@ -58,11 +85,20 @@ echo "==> Installed --no-dev vendor"
 # copied output back to the invoking user — on native-Linux hosts (CI runners)
 # the bind mount otherwise leaves root-owned files the later steps can't touch,
 # which silently skipped the source-map strip and failed package verification.
-docker run --rm -v "$REPO":/src:ro -v "$STAGE":/out -w /tmp node:20-alpine sh -c '
-  tar -C /src --exclude=node_modules --exclude=.git --exclude=dist --exclude=vendor -cf - . | (mkdir -p /build && tar -C /build -xf -) &&
-  cd /build && rm -rf node_modules && npm ci && npm run build &&
-  mkdir -p /out/assets && cp -r /build/assets/dist /out/assets/dist &&
-  chown -R '"$UID_GID"' /out/assets'
+if [ "$TOOLCHAIN" = docker ]; then
+  docker run --rm -v "$REPO":/src:ro -v "$STAGE":/out -w /tmp node:20-alpine sh -c '
+    tar -C /src --exclude=node_modules --exclude=.git --exclude=dist --exclude=vendor -cf - . | (mkdir -p /build && tar -C /build -xf -) &&
+    cd /build && rm -rf node_modules && npm ci && npm run build &&
+    mkdir -p /out/assets && cp -r /build/assets/dist /out/assets/dist &&
+    chown -R '"$UID_GID"' /out/assets'
+else
+  # Same recipe on the host: a fresh copy of the tree, so the host's own
+  # node_modules (possibly another platform's bindings) never leak in.
+  BUILD="$WORK/build"; mkdir -p "$BUILD"
+  tar -C "$REPO" --exclude=node_modules --exclude=.git --exclude=dist --exclude=vendor -cf - . | tar -C "$BUILD" -xf -
+  ( cd "$BUILD" && npm ci --no-audit --no-fund && npm run build )
+  mkdir -p "$STAGE/assets" && cp -r "$BUILD/assets/dist" "$STAGE/assets/dist"
+fi
 echo "==> Built + copied assets/dist"
 
 # --- 7. Strip build-only files that had to be present for steps 5-6 ---
