@@ -64,7 +64,7 @@ final class MenuRegistrar implements Bootable {
             'manage_options',
             self::PAGE_SLUG,
             [ $this, 'render_page' ],
-            'data:image/svg+xml;base64,' . base64_encode( $icon_svg ),
+            'data:image/svg+xml;base64,' . base64_encode( $icon_svg ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- inline SVG menu icon, the WordPress-documented data URI form.
             58
         );
     }
@@ -147,13 +147,15 @@ final class MenuRegistrar implements Bootable {
     private function enqueue_dev( string $inline ): void {
         $base = $this->vite_dev_url();
 
-        wp_enqueue_script( 'hof-vite-client', $base . '/@vite/client', [], null, true );
+        // Dev server only: Vite serves these with its own cache busting, so a
+        // version query string would only break module resolution.
+        wp_enqueue_script( 'hof-vite-client', $base . '/@vite/client', [], null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 
         wp_register_script(
             'hof-admin-main',
             $base . '/' . self::ENTRY,
             [ 'hof-vite-client' ],
-            null,
+            null, // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
             true
         );
         wp_add_inline_script( 'hof-admin-main', $inline, 'before' );

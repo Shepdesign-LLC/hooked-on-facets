@@ -5,7 +5,7 @@ Tags: facets, faceted search, filters, woocommerce, product filter
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -108,7 +108,7 @@ block, or your page builder's binding (Elementor Query ID, Bricks CSS class, etc
 
 The admin and front-end JavaScript is built with Vite. The unminified source ships
 inside the plugin under `admin/src/` and `public/src/`, and the full build tooling
-lives in the public repository: https://github.com/Shepdesign/hooked-on-facets
+lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-facets
 
 == Screenshots ==
 
@@ -118,6 +118,29 @@ lives in the public repository: https://github.com/Shepdesign/hooked-on-facets
 4. The design-tokens editor for theming facets with CSS custom properties.
 
 == Changelog ==
+
+= 1.2.0 =
+* Added: the facets list is grouped by post type (Everywhere, Products, custom
+  post types, Posts) with indexed item counts, a Values column, a status pill
+  and a "Found in your content" strip of suggested facets.
+* Added: source-first facet editor — pick what a facet applies to, then its
+  source, then a type; types that don't fit are disabled with the reason, and
+  the preview runs the unsaved facet against your content.
+* Added: button style for checkbox and radio facets (`settings.style: "buttons"`),
+  styled from the `--hof-*` tokens. Every facet wrapper also carries
+  `hof-facet--<slug>`.
+* Added: Help drawer on every admin screen, with docs search and an "On this
+  screen" note.
+* Added: design tokens editor with a live preview, generated CSS, reset to
+  brand, and custom CSS scoped site-wide or to one facet.
+* Changed: the admin is restyled on the brand tokens, with a top bar and a left
+  rail; Geist Sans and Geist Mono ship with the admin bundle, so wp-admin makes
+  no request to a font CDN.
+* Changed: front-end token defaults are the brand palette. Sites that never
+  saved tokens change color on update; saved tokens are unaffected.
+* Fixed: on plain-permalink sites the facet editor listed no sources (a
+  malformed REST URL); on sites without WooCommerce it offered a `product`
+  post type that doesn't exist.
 
 = 1.1.1 =
 * Added: pretty faceted URLs (opt-in, SEO screen) — filtered shop and product
@@ -199,6 +222,11 @@ lives in the public repository: https://github.com/Shepdesign/hooked-on-facets
 * First public alpha.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+The admin is redesigned and the facet editor is rebuilt around sources. Sites
+that never saved Design tokens get the brand palette on the front end. No
+reindex needed.
 
 = 1.1.0 =
 The six signature facets (Ask, Visual DNA, swipe deck, wheel, matrix, saved

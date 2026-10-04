@@ -2,11 +2,12 @@
 /**
  * Plugin Name: hooked on facets — coming soon
  * Description: Serves one placeholder homepage with a Bento sign-up form on every front-end URL while the real site is built. Admins see the normal site. Deactivate to go live.
- * Version:     0.2.0
+ * Version:     0.2.1
  * Requires PHP: 8.0
  * License:     GPL-2.0-or-later
  *
- * Configure in wp-config.php (secrets stay out of the database):
+ * Credentials: the HOF_SOON_BENTO_* constants in wp-config.php, or, when they
+ * are absent, the Bento SDK plugin's saved settings (option bento_settings).
  *
  *   define( 'HOF_SOON_BENTO_SITE_UUID',       '...' );
  *   define( 'HOF_SOON_BENTO_PUBLISHABLE_KEY', '...' );
@@ -104,8 +105,24 @@ function hof_soon_subscribe( WP_REST_Request $request ): WP_REST_Response {
 
 /* -------------------------------------------------------------------- Bento */
 
+/**
+ * Bento credentials: wp-config constants, else the Bento SDK plugin's settings.
+ *
+ * @return array{site_uuid: string, publishable: string, secret: string, source: string}|null
+ */
+function hof_soon_bento_credentials(): ?array {
+	return hof_soon_bento_credentials_from(
+		array(
+			'site_uuid'   => defined( 'HOF_SOON_BENTO_SITE_UUID' ) ? HOF_SOON_BENTO_SITE_UUID : '',
+			'publishable' => defined( 'HOF_SOON_BENTO_PUBLISHABLE_KEY' ) ? HOF_SOON_BENTO_PUBLISHABLE_KEY : '',
+			'secret'      => defined( 'HOF_SOON_BENTO_SECRET_KEY' ) ? HOF_SOON_BENTO_SECRET_KEY : '',
+		),
+		(array) get_option( 'bento_settings', array() )
+	);
+}
+
 function hof_soon_bento_configured(): bool {
-	return defined( 'HOF_SOON_BENTO_SITE_UUID' ) && defined( 'HOF_SOON_BENTO_PUBLISHABLE_KEY' ) && defined( 'HOF_SOON_BENTO_SECRET_KEY' );
+	return null !== hof_soon_bento_credentials();
 }
 
 /**
@@ -115,17 +132,18 @@ function hof_soon_bento_configured(): bool {
  * @return array{ok: bool, code: int, message: string}
  */
 function hof_soon_bento_request( string $email, string $first_name = '' ): array {
-	if ( ! hof_soon_bento_configured() ) {
-		return array( 'ok' => false, 'code' => 0, 'message' => 'The HOF_SOON_BENTO_* constants are not set in wp-config.php.' );
+	$creds = hof_soon_bento_credentials();
+	if ( null === $creds ) {
+		return array( 'ok' => false, 'code' => 0, 'message' => 'No Bento credentials: set the HOF_SOON_BENTO_* constants in wp-config.php or configure the Bento SDK plugin.' );
 	}
 
 	$tags = defined( 'HOF_SOON_BENTO_TAGS' ) ? (string) HOF_SOON_BENTO_TAGS : '';
 	$res  = wp_remote_post(
-		add_query_arg( 'site_uuid', rawurlencode( HOF_SOON_BENTO_SITE_UUID ), 'https://app.bentonow.com/api/v1/batch/subscribers' ),
+		add_query_arg( 'site_uuid', rawurlencode( $creds['site_uuid'] ), 'https://app.bentonow.com/api/v1/batch/subscribers' ),
 		array(
 			'timeout' => 8,
 			'headers' => array(
-				'Authorization' => 'Basic ' . base64_encode( HOF_SOON_BENTO_PUBLISHABLE_KEY . ':' . HOF_SOON_BENTO_SECRET_KEY ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
+				'Authorization' => 'Basic ' . base64_encode( $creds['publishable'] . ':' . $creds['secret'] ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions
 				'Content-Type'  => 'application/json',
 				'Accept'        => 'application/json',
 			),
@@ -205,10 +223,10 @@ add_action(
 		$pending = count( (array) get_option( HOF_SOON_QUEUE, array() ) );
 		$error   = (string) get_option( HOF_SOON_LAST_ERROR, '' );
 		if ( '' !== $error ) {
-			printf( '<div class="notice notice-error"><p><strong>hooked on facets — coming soon:</strong> the last sign-up did not reach Bento. %s. Check the three <code>HOF_SOON_BENTO_*</code> keys, then run <code>wp hof-soon test you@example.com</code>.</p></div>', esc_html( $error ) );
+			printf( '<div class="notice notice-error"><p><strong>hooked on facets — coming soon:</strong> the last sign-up did not reach Bento. %s. Check the three <code>HOF_SOON_BENTO_*</code> keys (or the Bento SDK plugin settings), then run <code>wp hof-soon test you@example.com</code>.</p></div>', esc_html( $error ) );
 		}
 		if ( ! hof_soon_bento_configured() ) {
-			echo '<div class="notice notice-warning"><p><strong>hooked on facets — coming soon:</strong> add the three <code>HOF_SOON_BENTO_*</code> constants to wp-config.php, or sign-ups are held in a queue.</p></div>';
+			echo '<div class="notice notice-warning"><p><strong>hooked on facets — coming soon:</strong> add the three <code>HOF_SOON_BENTO_*</code> constants to wp-config.php or configure the Bento SDK plugin, or sign-ups are held in a queue.</p></div>';
 		} elseif ( $pending ) {
 			printf( '<div class="notice notice-warning"><p><strong>hooked on facets — coming soon:</strong> %d sign-up(s) are waiting to reach Bento and will retry hourly.</p></div>', (int) $pending );
 		}
@@ -233,6 +251,10 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			$email = hof_soon_clean_email( (string) ( $args[0] ?? '' ) );
 			if ( null === $email ) {
 				WP_CLI::error( 'Give a valid email: wp hof-soon test you@example.com' );
+			}
+			$creds = hof_soon_bento_credentials();
+			if ( null !== $creds ) {
+				WP_CLI::log( sprintf( 'Using Bento credentials from %s.', $creds['source'] ) );
 			}
 			$r = hof_soon_bento_request( $email, 'Test' );
 			if ( $r['ok'] ) {

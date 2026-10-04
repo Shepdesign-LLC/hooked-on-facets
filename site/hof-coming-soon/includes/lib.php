@@ -74,3 +74,40 @@ if ( ! function_exists( 'hof_soon_queue_add' ) ) {
 		return array_slice( array_values( $queue ), -$cap );
 	}
 }
+
+if ( ! function_exists( 'hof_soon_bento_credentials_from' ) ) {
+	/**
+	 * Resolve Bento credentials: the wp-config constants first, then the Bento
+	 * SDK plugin's saved settings (option `bento_settings`), so a site that
+	 * already runs Bento needs nothing in wp-config.php.
+	 *
+	 * @param array<string, mixed> $constants site_uuid / publishable / secret from wp-config (missing keys allowed).
+	 * @param array<string, mixed> $settings  The `bento_settings` option as the Bento SDK stores it.
+	 * @return array{site_uuid: string, publishable: string, secret: string, source: string}|null Null when neither source is complete.
+	 */
+	function hof_soon_bento_credentials_from( array $constants, array $settings ): ?array {
+		$pick = static function ( array $set, string $source ): ?array {
+			$set = array_map( static fn( $v ): string => trim( (string) $v ), $set );
+			if ( '' === $set['site_uuid'] || '' === $set['publishable'] || '' === $set['secret'] ) {
+				return null;
+			}
+			return $set + array( 'source' => $source );
+		};
+
+		return $pick(
+			array(
+				'site_uuid'   => $constants['site_uuid'] ?? '',
+				'publishable' => $constants['publishable'] ?? '',
+				'secret'      => $constants['secret'] ?? '',
+			),
+			'wp-config.php'
+		) ?? $pick(
+			array(
+				'site_uuid'   => $settings['bento_site_key'] ?? '',
+				'publishable' => $settings['bento_publishable_key'] ?? '',
+				'secret'      => $settings['bento_secret_key'] ?? '',
+			),
+			'Bento SDK plugin'
+		);
+	}
+}

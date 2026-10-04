@@ -1,0 +1,95 @@
+name: Deploy to WordPress.org
+
+# Pushes a published GitHub Release to the WordPress.org plugin directory
+# (SVN trunk + tags/<version>) and keeps the listing assets and readme in
+# sync. The package is the same bin/build-release.sh artifact the Release
+# workflow publishes, unpacked, so SVN never carries a tree that differs from
+# the GitHub release ZIP.
+#
+# Needs two repository secrets: SVN_USERNAME and SVN_PASSWORD (the
+# wordpress.org account that owns the plugin). Until they exist every job
+# here no-ops, so the workflow is safe to merge before the directory listing
+# is approved.
+#
+# Pre-releases (1.2.0-beta) never deploy: WordPress.org serves the Stable tag
+# and rejects pre-release versions in it.
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    paths:
+      - readme.txt
+      - '.wordpress-org/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SLUG: hooked-on-facets
+  HAS_SVN: ${{ secrets.SVN_USERNAME != '' && secrets.SVN_PASSWORD != '' }}
+
+jobs:
+  plugin:
+    name: Plugin · trunk + tag
+    if: github.event_name != 'push' && !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
+
+      - name: Read version from the plugin header
+        id: v
+        run: |
+          VERSION="$(grep -E '^[[:space:]]*\*?[[:space:]]*Version:' "$SLUG.php" | head -1 | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]\r')"
+          [ -n "$VERSION" ] || { echo "Could not read the Version header" >&2; exit 1; }
+          case "$VERSION" in *-*) echo "::notice::$VERSION is a pre-release; WordPress.org deploy skipped."; echo "skip=true" >> "$GITHUB_OUTPUT" ;; esac
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build release ZIP
+        if: steps.v.outputs.skip != 'true'
+        run: bash bin/build-release.sh
+
+      - name: Unpack the package and check the Stable tag
+        if: steps.v.outputs.skip != 'true'
+        run: |
+          rm -rf build && mkdir build
+          unzip -q "dist/$SLUG-${{ steps.v.outputs.version }}.zip" -d build
+          grep -Eq "^Stable tag:[[:space:]]*${{ steps.v.outputs.version }}[[:space:]]*$" "build/$SLUG/readme.txt" \
+            || { echo "readme.txt Stable tag does not match ${{ steps.v.outputs.version }}" >&2; exit 1; }
+
+      - name: Deploy to SVN
+        if: steps.v.outputs.skip != 'true' && env.HAS_SVN == 'true'
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          VERSION: ${{ steps.v.outputs.version }}
+          BUILD_DIR: build/${{ env.SLUG }}
+          ASSETS_DIR: .wordpress-org
+
+      - name: No SVN credentials
+        if: steps.v.outputs.skip != 'true' && env.HAS_SVN != 'true'
+        run: echo "::notice::SVN_USERNAME / SVN_PASSWORD are not set; built and verified the package but did not deploy."
+
+  assets:
+    name: Listing · readme + assets
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Update readme and assets in SVN
+        if: env.HAS_SVN == 'true'
+        uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          ASSETS_DIR: .wordpress-org
+
+      - name: No SVN credentials
+        if: env.HAS_SVN != 'true'
+        run: echo "::notice::SVN_USERNAME / SVN_PASSWORD are not set; nothing to update."
