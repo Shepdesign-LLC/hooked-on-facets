@@ -9,6 +9,8 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-04
+
 ### Fixed
 
 - **Free installs no longer crash when indexing.** Without HOF Pro, publishing
@@ -296,7 +298,8 @@ Custom-field source line — ACF, Meta Box, and Pods.
 
 - First public alpha.
 
-[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.1
 [1.2.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.0
 [1.1.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.1.1
 [1.1.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.1.0
