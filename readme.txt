@@ -5,7 +5,7 @@ Tags: facets, faceted search, filters, woocommerce, product filter
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,11 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 
 == Changelog ==
 
+= 1.2.1 =
+* Fixed: without HOF Pro, publishing or updating an indexed post, and every
+  background reindex, failed with a fatal "ColorExtractor not found" error.
+  The Visual DNA palette pass now runs only when Pro provides it.
+
 = 1.2.0 =
 * Added: the facets list is grouped by post type (Everywhere, Products, custom
   post types, Posts) with indexed item counts, a Values column, a status pill
@@ -222,6 +227,9 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 * First public alpha.
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Fixes a fatal error when indexing on sites without HOF Pro. Update recommended.
 
 = 1.2.0 =
 The admin is redesigned and the facet editor is rebuilt around sources. Sites
