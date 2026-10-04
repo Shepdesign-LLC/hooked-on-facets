@@ -9,6 +9,13 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Free installs no longer crash when indexing.** Without HOF Pro, publishing
+  or updating an indexed post, and every background reindex chunk, failed with
+  `Class "HookedOnFacets\VisualDna\ColorExtractor" not found`. The Visual DNA
+  palette pass now runs only when Pro provides its color extractor.
+
 ## [1.2.0] - 2026-10-04
 
 The admin redesign. Every screen is restyled on the brand tokens and

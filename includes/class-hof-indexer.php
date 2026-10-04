@@ -354,6 +354,11 @@ final class Indexer implements Bootable, \HookedOnFacets\Contracts\IndexJobs {
      * @return array<int, array<string, mixed>>
      */
     private function visual_dna_rows( int $object_id ): array {
+        // ColorExtractor ships in HOF Pro. Without Pro there is no Visual DNA
+        // facet to feed, so skip the palette pass instead of fataling.
+        if ( ! class_exists( \HookedOnFacets\VisualDna\ColorExtractor::class ) ) {
+            return [];
+        }
         static $extractor = null;
         if ( $extractor === null ) {
             $extractor = new \HookedOnFacets\VisualDna\ColorExtractor();
