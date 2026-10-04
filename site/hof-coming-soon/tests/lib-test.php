@@ -37,5 +37,12 @@ $eq( hof_soon_queue_add( array(), 'a@b.co', 500, 'Ryan' ), array( array( 'email'
 $eq( hof_soon_queue_add( array( array( 'email' => 'a@b.co', 'first_name' => 'R' ) ), 'a@b.co' ), array( array( 'email' => 'a@b.co', 'first_name' => 'R' ) ), 'queue dedupes name entries' );
 $eq( hof_soon_queue_entry( 'old@b.co' ), array( 'email' => 'old@b.co', 'first_name' => '' ), 'queue reads old string entries' );
 
+$sdk = array( 'bento_site_key' => ' uuid-1 ', 'bento_publishable_key' => 'pub', 'bento_secret_key' => 'sec' );
+$eq( hof_soon_bento_credentials_from( array(), array() ), null, 'creds none' );
+$eq( hof_soon_bento_credentials_from( array(), $sdk ), array( 'site_uuid' => 'uuid-1', 'publishable' => 'pub', 'secret' => 'sec', 'source' => 'Bento SDK plugin' ), 'creds fall back to Bento SDK settings, trimmed' );
+$eq( hof_soon_bento_credentials_from( array( 'site_uuid' => 'c', 'publishable' => 'cp', 'secret' => 'cs' ), $sdk )['source'], 'wp-config.php', 'creds prefer constants' );
+$eq( hof_soon_bento_credentials_from( array( 'site_uuid' => 'c', 'publishable' => '', 'secret' => 'cs' ), $sdk )['source'], 'Bento SDK plugin', 'creds skip incomplete constants' );
+$eq( hof_soon_bento_credentials_from( array(), array( 'bento_site_key' => 'x' ) ), null, 'creds reject incomplete SDK settings' );
+
 echo $fail ? "$fail failed\n" : "all passed\n";
 exit( $fail ? 1 : 0 );
