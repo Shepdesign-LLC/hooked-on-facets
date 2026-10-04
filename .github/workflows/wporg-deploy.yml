@@ -6,6 +6,11 @@ name: Deploy to WordPress.org
 # workflow publishes, unpacked, so SVN never carries a tree that differs from
 # the GitHub release ZIP.
 #
+# How it starts: the Release workflow dispatches this one on the new tag
+# (`gh workflow run wporg-deploy.yml --ref vX.Y.Z`), because a release made
+# with GITHUB_TOKEN never fires another workflow's `release` trigger. The
+# `release: published` trigger below still covers releases made by hand.
+#
 # Needs two repository secrets: SVN_USERNAME and SVN_PASSWORD (the
 # wordpress.org account that owns the plugin). Until they exist every job
 # here no-ops, so the workflow is safe to merge before the directory listing

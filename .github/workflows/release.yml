@@ -21,6 +21,7 @@ on:
 
 permissions:
   contents: write
+  actions: write # to hand the published release to the WordPress.org deploy
 
 jobs:
   release:
@@ -75,3 +76,14 @@ jobs:
             --target "${{ github.sha }}" \
             --title "Hooked on Facets $VERSION" \
             "${NOTES[@]}" $PRERELEASE
+
+      - name: Hand off to the WordPress.org deploy
+        if: steps.exists.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A release created with GITHUB_TOKEN never fires other workflows'
+          # `release` triggers; workflow_dispatch is exempt from that rule, so
+          # start the deploy explicitly on the new tag. It skips pre-releases
+          # and no-ops without SVN credentials.
+          gh workflow run wporg-deploy.yml --ref "v${{ steps.v.outputs.version }}"
