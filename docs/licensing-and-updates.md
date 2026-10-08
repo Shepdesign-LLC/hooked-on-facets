@@ -1,7 +1,7 @@
 # Licensing & Updates
 
 Hooked on Facets is GPL-2.0-or-later. The premium distribution adds a license key
-that unlocks **automatic updates** from the SHEPDESIGN store, backed by Easy
+that unlocks **automatic updates** from the Shepdesign, LLC store, backed by Easy
 Digital Downloads (EDD) Software Licensing.
 
 ## For site owners
@@ -34,7 +34,7 @@ Set in `wp-config.php`:
 | `HOF_LICENSE_ENFORCEMENT` | `soft` (default) or `strict`. |
 | `HOF_LICENSE_DEV_MODE` | `true` to treat any key as valid (local dev / CI). |
 
-## For the store operator (SHEPDESIGN)
+## For the store operator (Shepdesign, LLC)
 
 To make activation and updates work end to end:
 

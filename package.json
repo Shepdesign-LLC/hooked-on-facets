@@ -4,6 +4,7 @@
     "version": "1.2.1",
     "type": "module",
     "description": "Ultra-modern faceted search and filtering for WordPress + WooCommerce.",
+    "author": "Shepdesign, LLC",
     "scripts": {
         "dev": "vite",
         "build": "vite build",

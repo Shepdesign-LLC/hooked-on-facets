@@ -1,7 +1,7 @@
 # Hooked on Facets
 
 Ultra-modern faceted search and filtering for WordPress + WooCommerce — built by
-[SHEPDESIGN](https://shepdesign.com).
+[Shepdesign, LLC](https://shepdesign.com).
 
 The promise: **sub-50ms filter queries on 100k+ product catalogs**, paired with
 UI inventions legacy faceting plugins don't ship, and an admin where a non-PHP
@@ -52,4 +52,4 @@ JavaScript, and Markdown lint on every push.
 
 ## License
 
-[GPL-2.0-or-later](https://www.gnu.org/licenses/gpl-2.0.html). © SHEPDESIGN.
+[GPL-2.0-or-later](https://www.gnu.org/licenses/gpl-2.0.html). © Shepdesign, LLC.

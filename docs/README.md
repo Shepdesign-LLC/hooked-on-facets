@@ -1,7 +1,7 @@
 # Hooked on Facets — Documentation
 
 Ultra-modern faceted search and filtering for WordPress + WooCommerce, by
-[SHEPDESIGN](https://shepdesign.com). Sub-50ms filter queries on 100k+ product
+[Shepdesign, LLC](https://shepdesign.com). Sub-50ms filter queries on 100k+ product
 catalogs, with a no-code facet builder.
 
 These docs live in the repository (versioned alongside the code) rather than the

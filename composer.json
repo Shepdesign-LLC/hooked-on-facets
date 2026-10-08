@@ -3,6 +3,9 @@
     "description": "Ultra-modern faceted search and filtering for WordPress + WooCommerce.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
+    "authors": [
+        { "name": "Shepdesign, LLC", "homepage": "https://shepdesign.com" }
+    ],
     "require": {
         "php": ">=8.2"
     },
