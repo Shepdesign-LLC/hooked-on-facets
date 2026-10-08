@@ -5,7 +5,7 @@ Tags: facets, faceted search, filters, woocommerce, product filter
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -115,9 +115,25 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 1. The facet editor — pick what a facet applies to, its source and its type, with a live preview against your own content.
 2. The dashboard — query latency percentiles, most-used facets and the filter combinations that find nothing.
 3. Facets filtering a WooCommerce catalog on the front end, with live counts and the query time.
-4. The design tokens editor — edit the `--hof-*` variables with a live preview of real facets.
+4. The Styles screen — edit the `--hof-*` variables with a live preview of real facets.
 
 == Changelog ==
+
+= 1.3.0 =
+* Changed: the admin and the storefront facets are restyled. Warm neutrals
+  with purple only for actions and selection, sentence-case titles, 1px
+  borders, and no card around every storefront facet by default (set the
+  `--hof-facet-*` tokens to bring cards back).
+* Changed: plain-language names. Blueprint is now Playground, Design tokens
+  is now Styles, and the dashboard leads with the next step.
+* Added: Publish all in the Playground saves every changed facet at once;
+  edits are kept per facet while you switch between them.
+* Fixed: saving from the Playground no longer erases a facet's other
+  settings (match mode, button style, Visual DNA target).
+* Fixed: clicking an option's name toggles it, option rows stay on one line,
+  and every list input has an accessible name.
+* Fixed: swipe-deck, wheel and matrix inputs stay hidden on themes without a
+  `.screen-reader-text` rule.
 
 = 1.2.1 =
 * Fixed: without HOF Pro, publishing or updating an indexed post, and every
@@ -227,6 +243,11 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 * First public alpha.
 
 == Upgrade Notice ==
+
+= 1.3.0 =
+A cleaner look for the admin and the storefront facets, Publish all in the
+Playground, and a fix for Playground saves erasing facet settings. Sites with
+saved Styles keep their colors. No reindex needed.
 
 = 1.2.1 =
 Fixes a fatal error when indexing on sites without HOF Pro. Update recommended.
