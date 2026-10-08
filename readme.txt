@@ -5,7 +5,7 @@ Tags: facets, faceted search, filters, woocommerce, product filter
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -125,6 +125,15 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 4. The Styles screen — edit the `--hof-*` variables with a live preview of real facets.
 
 == Changelog ==
+
+= 1.4.0 =
+* Added: the Freemius SDK, for licensing and updates of Hooked on Facets Pro.
+  It stays off until configured; once on, it asks before sharing any data and
+  sends nothing unless the site owner opts in.
+* Changed: the License screen shows Pro's Freemius license (status, plan,
+  renewal date) and links to activate, renew or manage it.
+* Changed: uninstall cleanup runs through the plugin's own uninstall hook.
+  What it removes is unchanged.
 
 = 1.3.0 =
 * Changed: the admin and the storefront facets are restyled. Warm neutrals
@@ -250,6 +259,10 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 * First public alpha.
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+Prepares for Hooked on Facets Pro licensing through Freemius. Nothing is sent
+anywhere unless you opt in. Required by Pro 1.3.0. No reindex needed.
 
 = 1.3.0 =
 A cleaner look for the admin and the storefront facets, Publish all in the
