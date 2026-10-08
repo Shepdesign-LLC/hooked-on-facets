@@ -9,6 +9,13 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-08
+
+Groundwork for Hooked on Facets Pro's move to Freemius. The Freemius SDK ships
+with the plugin but stays off until it is given a product ID and public key,
+so on its own this release changes nothing a site owner or shopper sees except
+the License screen.
+
 ### Added
 
 - **Freemius.** The plugin bundles the Freemius SDK (2.13.4) in WordPress.org
@@ -376,7 +383,8 @@ Custom-field source line — ACF, Meta Box, and Pods.
 
 - First public alpha.
 
-[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.4.0
 [1.3.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.3.0
 [1.2.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.1
 [1.2.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.0
