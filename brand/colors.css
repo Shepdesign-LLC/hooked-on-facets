@@ -45,12 +45,17 @@
   --hof-color-border-subtle:  var(--hof-color-ink-100);
 
   /* ----- Radii ----- */
-  --hof-radius-sm: 6px;
-  --hof-radius-md: 8px;
-  --hof-radius-lg: 14px;
+  --hof-radius-sm: 8px;
+  --hof-radius-md: 12px;
+  --hof-radius-lg: 16px;
   --hof-radius-pill: 999px;
 
   /* ----- Borders ----- */
-  --hof-border-default: 0.5px solid var(--hof-color-border);
-  --hof-border-subtle:  0.5px solid var(--hof-color-border-subtle);
+  --hof-border-default: 1px solid var(--hof-color-border);
+  --hof-border-subtle:  1px solid var(--hof-color-border-subtle);
+
+  /* ----- Elevation (soft, warm-ink; see BRAND.md) ----- */
+  --hof-shadow-xs: 0 1px 2px rgb(28 27 25 / 0.06);
+  --hof-shadow-sm: 0 1px 2px rgb(28 27 25 / 0.04), 0 2px 8px rgb(28 27 25 / 0.04);
+  --hof-shadow-lg: 0 12px 40px rgb(28 27 25 / 0.12), 0 2px 6px rgb(28 27 25 / 0.05);
 }

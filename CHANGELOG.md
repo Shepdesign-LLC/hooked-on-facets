@@ -9,6 +9,44 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+### Changed
+
+- **The admin no longer looks like a blueprint.** The cool-lavender canvas,
+  indigo text and monospace, letter-spaced labels are gone. Surfaces and text
+  are warm neutrals with purple kept for actions and state; cards get a soft
+  lift, panels a 12px radius, controls 8px, and inputs a focus ring. Labels
+  are plain sans, sentence case; monospace is kept for real code only.
+- **Plain-language names.** Blueprint is now **Playground** (Deploy → Publish
+  all, Sync → Save to facet), Design tokens is now **Styles**, and the rail
+  groups read Build, Design and Setup. Screen ids, routes and help slugs are
+  unchanged.
+- **A dashboard that leads with the next step.** The hero says what happens
+  and puts New facet and Open playground right there. Latency percentiles with
+  no data are hidden, facets are marked Live or Draft in words, and "dead
+  facets" only appear once shoppers have used something (before, every new
+  facet was flagged).
+- **Storefront facets look native, not like a form.** No card around every
+  facet by default: facets stack as open sections divided by a hairline, with
+  sentence-case titles in the theme's own font instead of small letter-spaced
+  capitals. Neutrals are warm gray (the printed defaults were indigo text on
+  lavender), borders are 1px instead of 0.5px, text inputs share one soft
+  focus ring, and active-filter chips and button facets are neutral until
+  selected. Sites that want cards back set the `--hof-facet-*` tokens.
+- **Saved storefront colors no longer repaint the admin's neutrals.** Only the
+  accent tokens (primary, on-primary, danger) flow from Styles into the admin,
+  so a dark or loud storefront palette can't make the settings unreadable.
+
+### Fixed
+
+- **Clicking an option's name now toggles it.** Checkbox, radio and
+  hierarchy rows render the name beside the `<label>`, not inside it, so only
+  the box itself was clickable and the input had no accessible name. The
+  whole row is now the click target and each input carries `aria-label`.
+- **Option rows no longer break onto two lines.** The checkbox or radio sat
+  on its own line above its name and count.
+- **Swipe-deck, wheel and matrix inputs stay visually hidden on themes without a
+  `.screen-reader-text` rule.**
+
 ## [1.2.1] - 2026-10-04
 
 ### Fixed

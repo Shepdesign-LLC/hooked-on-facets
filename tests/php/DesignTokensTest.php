@@ -233,6 +233,23 @@ final class DesignTokensTest extends TestCase {
         self::assertSame( $brand['--hof-danger'], $defaults['--hof-accent'] );
     }
 
+    public function test_storefront_defaults_are_quiet_and_neutral(): void {
+        $defaults = DesignTokens::defaults();
+
+        // Sentence-case facet titles, not small letter-spaced capitals.
+        self::assertSame( 'none', $defaults['--hof-label-transform'] );
+        self::assertSame( 'normal', $defaults['--hof-label-letter-spacing'] );
+        // 0.5px hairlines vanish or blur on 1x screens.
+        self::assertSame( '1px', $defaults['--hof-input-border-w'] );
+
+        // Text and neutrals are warm gray: blue must not lead red/green by
+        // more than a hair, or the storefront reads cool-lavender again.
+        foreach ( [ '--hof-text', '--hof-muted', '--hof-bg', '--hof-border' ] as $name ) {
+            [ $r, $g, $b ] = sscanf( $defaults[ $name ], '#%02x%02x%02x' );
+            self::assertLessThanOrEqual( 2, $b - min( $r, $g ), "$name should be a warm neutral" );
+        }
+    }
+
     public function test_nothing_saved_reads_as_the_current_defaults(): void {
         $out = DesignTokens::get();
 
@@ -266,8 +283,11 @@ final class DesignTokensTest extends TestCase {
         self::assertSame( '.a{color:red}/style>script>', DesignTokens::public_css() );
     }
 
-    public function test_admin_only_follows_the_color_tokens(): void {
+    public function test_admin_only_follows_the_accent_tokens(): void {
         self::assertContains( '--hof-primary', DesignTokens::ADMIN_TOKENS );
+        self::assertContains( '--hof-danger', DesignTokens::ADMIN_TOKENS );
+        self::assertNotContains( '--hof-bg', DesignTokens::ADMIN_TOKENS );
+        self::assertNotContains( '--hof-text', DesignTokens::ADMIN_TOKENS );
         self::assertNotContains( '--hof-space', DesignTokens::ADMIN_TOKENS );
         self::assertNotContains( '--hof-radius-md', DesignTokens::ADMIN_TOKENS );
         self::assertNotContains( '--hof-font-body', DesignTokens::ADMIN_TOKENS );

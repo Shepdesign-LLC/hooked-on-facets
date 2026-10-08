@@ -33,19 +33,25 @@ const rail = () => host.querySelector('.hof-rail');
 const items = () => [...host.querySelectorAll('.hof-rail-item')];
 
 describe('the nine screens', () => {
-    it('are all defined, none merged or renamed', () => {
+    it('are all defined in plain language, none merged', () => {
         expect(VIEWS.map((v) => v.label)).toEqual([
-            'Dashboard', 'Facets', 'Query loops', 'Indexer', 'Blueprint', 'Design tokens', 'SEO', 'License', 'Settings',
+            'Dashboard', 'Facets', 'Query loops', 'Indexer', 'Playground', 'Styles', 'SEO', 'License', 'Settings',
         ]);
     });
 
-    it('sit in three groups: Main, Studio, System', () => {
-        expect(SECTION_ORDER).toEqual(['Main', 'Studio', 'System']);
+    it('keep their stable ids under the new labels', () => {
+        expect(VIEWS.map((v) => v.id)).toEqual([
+            'dashboard', 'facets', 'queryloops', 'indexer', 'blueprint', 'tokens', 'seo', 'license', 'settings',
+        ]);
+    });
+
+    it('sit in three groups: Build, Design, Setup', () => {
+        expect(SECTION_ORDER).toEqual(['Build', 'Design', 'Setup']);
         const bySection = (s) => VIEWS.filter((v) => v.section === s).map((v) => v.label);
 
-        expect(bySection('Main')).toEqual(['Dashboard', 'Facets', 'Query loops', 'Indexer']);
-        expect(bySection('Studio')).toEqual(['Blueprint', 'Design tokens']);
-        expect(bySection('System')).toEqual(['SEO', 'License', 'Settings']);
+        expect(bySection('Build')).toEqual(['Dashboard', 'Facets', 'Query loops', 'Indexer']);
+        expect(bySection('Design')).toEqual(['Playground', 'Styles']);
+        expect(bySection('Setup')).toEqual(['SEO', 'License', 'Settings']);
     });
 
     it('keeps License behind the Pro add-on, as before', () => {
@@ -60,7 +66,7 @@ describe('Shell rail', () => {
         mount();
         const groups = [...host.querySelectorAll('.hof-rail-group')];
 
-        expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Main', 'Studio', 'System']);
+        expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Build', 'Design', 'Setup']);
         expect(groups[0].querySelectorAll('.hof-rail-item')).toHaveLength(4);
         expect(groups[1].querySelectorAll('.hof-rail-item')).toHaveLength(2);
         expect(groups[2].querySelectorAll('.hof-rail-item')).toHaveLength(3);
@@ -78,12 +84,12 @@ describe('Shell rail', () => {
         mount({ view: 'blueprint' });
         const current = items().filter((b) => b.getAttribute('aria-current') === 'page');
 
-        expect(current.map((b) => b.textContent)).toEqual(['Blueprint']);
+        expect(current.map((b) => b.textContent)).toEqual(['Playground']);
     });
 
     it('navigates on click', () => {
         const onNavigate = mount();
-        const tokens = items().find((b) => b.textContent === 'Design tokens');
+        const tokens = items().find((b) => b.textContent === 'Styles');
 
         act(() => tokens.click());
 

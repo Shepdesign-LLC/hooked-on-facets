@@ -81,7 +81,7 @@ jobs:
           done
 
           cd wiki
-          git config user.name  "SHEPDESIGN"
+          git config user.name  "Shepdesign, LLC"
           git config user.email "support@hookedonfacets.com"
           git add -A
           if git diff --cached --quiet; then

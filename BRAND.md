@@ -2,7 +2,7 @@
 
 > The complete brand system for the Hooked on Facets WordPress plugin.
 > Reference this file when generating any UI, marketing site, plugin admin screens, or visual content.
-> Last updated: May 2026 · v1.0.0
+> Last updated: October 2026 · v1.1.0
 
 ---
 
@@ -156,20 +156,32 @@ Standalone files in this repo:
 
 | Token | Value | Use |
 |-------|-------|-----|
-| Small | 4–6px | Inputs, segmented control items |
-| Medium | 8px | Cards, buttons |
-| Large | 12–16px | Frames, hero cards |
+| Small | 6–8px | Inputs, buttons, segmented control items |
+| Medium | 12px | Cards, panels |
+| Large | 16px | Frames, hero cards |
 | Pill | 999px | Badges, tags, monospace pills |
 
 ### Borders
 
-- **Always 0.5px.** Never thicker. Wider strokes look heavy and dated.
+- **1px.** Never thicker. 0.5px strokes blur or vanish on standard (1x)
+  displays, so they read as broken, not refined.
 - Default border color: `#D3D1C7` (ink-200)
 - Subtle divider color: `#E6E3D9` (ink-100)
 
-### No shadows, no gradients
+### Soft elevation, no gradients
 
-Flat surfaces only. Depth comes from color tone contrast and 0.5px borders.
+Depth comes from color tone contrast first, then a soft lift. Shadows are
+allowed only from the elevation scale below: warm-ink based, low opacity,
+never colored, never decorative.
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `--hof-shadow-xs` | `0 1px 2px rgb(28 27 25 / 0.06)` | Buttons, inputs, the selected segment, the active nav item |
+| `--hof-shadow-sm` | `0 1px 2px rgb(28 27 25 / 0.04), 0 2px 8px rgb(28 27 25 / 0.04)` | Cards, panels, tables |
+| `--hof-shadow-lg` | `0 12px 40px rgb(28 27 25 / 0.12), 0 2px 6px rgb(28 27 25 / 0.05)` | Drawers, tooltips, the top card of a stack |
+
+No gradients. The one exception is functional: a scrim that keeps text legible
+over a photo.
 
 ### Spacing
 
@@ -205,7 +217,7 @@ Use multiples of 4px: 4, 8, 12, 16, 20, 24, 32, 40, 48.
 ### The builder badge row
 
 - Always lists: Bricks, Elementor, Breakdance, Oxygen, Gutenberg, WooCommerce
-- Small cream pills with 0.5px gray border
+- Small cream pills with 1px gray border
 - Preceded by monospace label: `AUTO-HOOKS:`
 
 ### The comparison table
@@ -240,8 +252,9 @@ Use multiples of 4px: 4, 8, 12, 16, 20, 24, 32, 40, 48.
 ## Don'ts
 
 - ❌ Never use blue. The competitors are blue. We are purple.
-- ❌ Never use 1px borders. 0.5px or none.
-- ❌ Never use shadows for depth. Use color contrast.
+- ❌ Never use borders thicker than 1px, or sub-pixel (0.5px) hairlines.
+- ❌ Never use hard, dark, colored or decorative shadows. Only the soft elevation tokens.
+- ❌ Never use gradients (functional photo scrims aside).
 - ❌ Never use ALL CAPS in source — use sentence case + `text-transform: uppercase`.
 - ❌ Never use generic "Lorem ipsum." Use real-feeling product copy.
 - ❌ Never use stock icons or detailed illustrations. Tabler outline icons only.

@@ -24,8 +24,9 @@ body.toplevel_page_hooked-on-facets .wrap {
     color: var(--hof-text);
     font-family: var(--hof-font-sans);
     font-size: 14px;
-    line-height: 1.45;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     min-height: calc(100vh - 32px);
 }
 
@@ -37,8 +38,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 #hof-admin-root code {
     padding: 1px 5px;
-    border-radius: 4px;
+    border-radius: 5px;
     background: var(--hof-tint);
+    color: var(--hof-text);
     font-family: var(--hof-font-mono);
     font-size: 0.92em;
 }
@@ -54,6 +56,10 @@ body.toplevel_page_hooked-on-facets .wrap {
     outline-offset: 2px;
 }
 
+#hof-admin-root ::selection {
+    background: var(--hof-primary-tint);
+}
+
 @media (prefers-reduced-motion: reduce) {
     #hof-admin-root * {
         transition: none !important;
@@ -64,27 +70,31 @@ body.toplevel_page_hooked-on-facets .wrap {
 /* ── App frame: top bar + rail ────────────────────────────────────────── */
 
 .hof {
-    padding: 20px 24px 48px;
+    max-width: 1360px;
+    padding: 20px 32px 64px;
 }
 
 .hof-topbar {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 14px;
-    margin-bottom: 18px;
+    gap: 10px;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--hof-border);
 }
 
 .hof-mark {
     flex: none;
     display: block;
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
 }
 
 .hof-wordmark {
+    font-size: 15px;
     font-weight: 600;
-    letter-spacing: -0.2px;
+    letter-spacing: -0.01em;
 }
 
 .hof-topbar-right {
@@ -97,51 +107,53 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-shell {
     display: grid;
-    grid-template-columns: 172px minmax(0, 1fr);
-    gap: 24px;
+    grid-template-columns: 196px minmax(0, 1fr);
+    gap: 40px;
     align-items: start;
 }
 
 .hof-rail {
     position: sticky;
-    top: 44px; /* clears the 32px WordPress admin bar */
+    top: 52px; /* clears the 32px WordPress admin bar */
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 20px;
 }
 
 .hof-rail-group {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
 }
 
 .hof-rail-label {
-    padding: 0 10px 5px;
-    font-size: 10.5px;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
+    padding: 0 10px 6px;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--hof-faint);
 }
 
+/* Active item is a raised white pill; the icon carries the brand colour. */
 .hof-rail-item {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 10px;
     padding: 7px 10px;
     border: 0;
-    border-left: 2px solid transparent;
-    border-radius: 0 var(--hof-radius-sm) var(--hof-radius-sm) 0;
+    border-radius: var(--hof-radius-sm);
     background: none;
     color: var(--hof-muted);
     font: inherit;
-    font-size: 13.5px;
+    font-size: 14px;
     text-align: left;
     cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
 }
 
 .hof-rail-item svg {
     flex: none;
+    color: var(--hof-faint);
+    transition: color 120ms ease;
 }
 
 .hof-rail-item:hover {
@@ -150,18 +162,22 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-rail-item[aria-current="page"] {
-    border-left-color: var(--hof-primary);
-    background: var(--hof-tint);
-    color: var(--hof-primary);
+    background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-xs);
+    color: var(--hof-text);
     font-weight: 500;
 }
 
+.hof-rail-item[aria-current="page"] svg {
+    color: var(--hof-primary);
+}
+
 .hof-rail-foot {
-    margin-top: 6px;
-    padding: 10px;
+    margin-top: 4px;
+    padding: 12px 10px 0;
     border-top: 1px solid var(--hof-border);
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: var(--hof-faint);
 }
 
@@ -199,15 +215,8 @@ body.toplevel_page_hooked-on-facets .wrap {
     }
 
     .hof-rail-item {
-        padding: 6px 9px;
-        border-bottom: 2px solid transparent;
-        border-left: 0;
-        border-radius: var(--hof-radius-sm) var(--hof-radius-sm) 0 0;
+        padding: 6px 10px;
         white-space: nowrap;
-    }
-
-    .hof-rail-item[aria-current="page"] {
-        border-bottom-color: var(--hof-primary);
     }
 
     .hof-rail-foot {
@@ -258,11 +267,12 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-chip {
     display: inline-block;
-    padding: 2px 7px;
-    border-radius: 5px;
+    padding: 2px 9px;
+    border-radius: var(--hof-radius-pill);
     background: var(--hof-tint);
-    color: var(--hof-text);
+    color: var(--hof-muted);
     font-size: 12px;
+    font-weight: 500;
     white-space: nowrap;
 }
 
@@ -271,22 +281,28 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 7px 12px;
+    min-height: 36px;
+    padding: 8px 14px;
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-sm);
     background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-xs);
     color: var(--hof-text);
     font: inherit;
+    font-size: 14px;
     font-weight: 500;
     line-height: 1.2;
     text-decoration: none;
+    white-space: nowrap;
     cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
 .hof-btn:hover:not(:disabled) {
-    border-color: var(--hof-primary);
-    color: var(--hof-primary);
+    background: var(--hof-bg);
+    color: var(--hof-text);
 }
 
 .hof-btn:disabled {
@@ -309,6 +325,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-btn-ghost {
     border-color: transparent;
     background: transparent;
+    box-shadow: none;
     color: var(--hof-muted);
 }
 
@@ -332,6 +349,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 /* The Help button is the only coral button in the admin: an outline, not a fill. */
 .hof-btn-help {
+    min-height: 32px;
+    padding: 6px 12px;
     border-color: var(--hof-danger);
     color: var(--hof-danger);
 }
@@ -351,16 +370,17 @@ body.toplevel_page_hooked-on-facets .wrap {
     /* Wrap action row onto its own line when title + buttons can't fit
        side by side, instead of squishing the button labels. */
     flex-wrap: wrap;
-    gap: var(--hof-space);
-    margin-bottom: 14px;
+    gap: 12px 16px;
+    margin-bottom: 24px;
 }
 
 .hof-view-title {
     margin: 0;
-    font-size: 22px;
-    font-weight: 500;
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.2;
     color: var(--hof-text);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
 }
 
 .hof-view-actions {
@@ -382,9 +402,10 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-lede {
-    margin: 4px 0 0;
-    max-width: 72ch;
-    font-size: 0.875rem;
+    margin: 6px 0 0;
+    max-width: 68ch;
+    font-size: 15px;
+    line-height: 1.55;
     color: var(--hof-muted);
 }
 
@@ -415,10 +436,12 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 2px 8px;
-    border: 1px solid var(--hof-border);
+    padding: 3px 10px;
+    border: 1px solid transparent;
     border-radius: var(--hof-radius-pill);
+    background: var(--hof-tint);
     font-size: 12px;
+    font-weight: 500;
     color: var(--hof-muted);
     white-space: nowrap;
 }
@@ -432,8 +455,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-pill-good {
+    background: var(--hof-good-tint);
     color: var(--hof-good);
-    border-color: color-mix(in srgb, var(--hof-good) 40%, var(--hof-border));
 }
 
 .hof-pill-good i {
@@ -442,8 +465,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-pill-busy {
+    background: var(--hof-danger-tint);
     color: var(--hof-danger);
-    border-color: color-mix(in srgb, var(--hof-danger) 40%, var(--hof-border));
 }
 
 .hof-pill-busy i {
@@ -457,13 +480,13 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 16px;
-    padding: 12px 14px;
+    padding: 12px 16px;
     background: var(--hof-surface);
     border: 1px solid var(--hof-border);
-    border-left: 3px solid var(--hof-danger);
-    border-radius: var(--hof-radius-sm);
+    border-radius: var(--hof-radius-md);
+    box-shadow: var(--hof-shadow-sm);
 }
 
 .hof-suggest-label {
@@ -477,18 +500,25 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-suggest-items button {
-    padding: 5px 9px;
+    padding: 5px 12px;
     border: 0;
-    border-radius: var(--hof-radius-sm);
-    background: var(--hof-tint);
-    color: var(--hof-text);
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-primary-tint);
+    color: var(--hof-primary);
     font: inherit;
     font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
+    transition: background-color 120ms ease;
+}
+
+.hof-suggest-items button:hover {
+    background: var(--hof-color-purple-200);
 }
 
 .hof-suggest-items button span {
-    color: var(--hof-muted);
+    font-weight: 400;
+    opacity: 0.75;
 }
 
 /* ── Facets table (grouped by post type) ──────────────────────────────── */
@@ -498,26 +528,27 @@ body.toplevel_page_hooked-on-facets .wrap {
     background: var(--hof-surface);
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
+    box-shadow: var(--hof-shadow-sm);
 }
 
 .hof-table {
     width: 100%;
     min-width: 640px;
     border-collapse: collapse;
-    font-size: 13.5px;
+    font-size: 14px;
 }
 
 .hof-table th {
-    padding: 10px 14px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--hof-border);
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 500;
     text-align: left;
-    color: var(--hof-muted);
+    color: var(--hof-faint);
 }
 
 .hof-table td {
-    padding: 10px 14px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--hof-border);
     vertical-align: middle;
 }
@@ -537,9 +568,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-table-group td {
-    padding: 7px 14px;
+    padding: 8px 16px;
     background: var(--hof-bg);
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--hof-muted);
 }
 
@@ -556,8 +587,12 @@ body.toplevel_page_hooked-on-facets .wrap {
     cursor: pointer;
 }
 
+.hof-table-row td {
+    transition: background-color 120ms ease;
+}
+
 .hof-table-row:hover td {
-    background: var(--hof-tint);
+    background: var(--hof-bg);
 }
 
 .hof-table-row.is-invalid .hof-row-name {
@@ -584,6 +619,11 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-row-slug {
     font-size: 12px;
     color: var(--hof-faint);
+}
+
+/* Slugs are code, but a quiet one: smaller than the name, never louder. */
+.hof-row-slug.hof-mono {
+    font-size: 11.5px;
 }
 
 .hof-row-invalid {
@@ -637,13 +677,17 @@ body.toplevel_page_hooked-on-facets .wrap {
     width: 100%;
     padding: 2px 0;
     border: 0;
-    border-bottom: 1px dashed var(--hof-border);
+    border-bottom: 1px solid transparent;
     background: transparent;
     font: inherit;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 600;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.02em;
     color: var(--hof-text);
+}
+
+#hof-admin-root .hof-ed-name:hover {
+    border-bottom-color: var(--hof-border);
 }
 
 #hof-admin-root .hof-ed-name:focus {
@@ -669,10 +713,11 @@ body.toplevel_page_hooked-on-facets .wrap {
     background: var(--hof-surface);
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
+    box-shadow: var(--hof-shadow-sm);
 }
 
 .hof-step {
-    padding: 16px;
+    padding: 20px;
     border-bottom: 1px solid var(--hof-border);
 }
 
@@ -704,27 +749,37 @@ body.toplevel_page_hooked-on-facets .wrap {
     color: var(--hof-primary);
 }
 
+/* Segmented control: a recessed track with the chosen option raised. */
 .hof-seg {
     display: inline-flex;
     flex-wrap: wrap;
-    overflow: hidden;
-    border: 1px solid var(--hof-border);
+    gap: 2px;
+    padding: 3px;
     border-radius: var(--hof-radius-sm);
+    background: var(--hof-tint);
 }
 
 .hof-seg button {
-    padding: 5px 10px;
+    padding: 5px 12px;
     border: 0;
-    background: var(--hof-surface);
-    color: var(--hof-text);
+    border-radius: calc(var(--hof-radius-sm) - 2px);
+    background: transparent;
+    color: var(--hof-muted);
     font: inherit;
     font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+}
+
+.hof-seg button:hover {
+    color: var(--hof-text);
 }
 
 .hof-seg button[aria-pressed="true"] {
-    background: var(--hof-primary);
-    color: var(--hof-on-primary);
+    background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-xs);
+    color: var(--hof-text);
 }
 
 .hof-row {
@@ -774,14 +829,14 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-types {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
+    gap: 8px;
 }
 
 .hof-type {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    padding: 8px 10px;
+    gap: 2px;
+    padding: 10px 12px;
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-sm);
     background: var(--hof-surface);
@@ -789,6 +844,11 @@ body.toplevel_page_hooked-on-facets .wrap {
     font: inherit;
     text-align: left;
     cursor: pointer;
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.hof-type:hover:not(:disabled) {
+    border-color: var(--hof-faint);
 }
 
 .hof-type b {
@@ -804,7 +864,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-type[aria-pressed="true"] {
     border-color: var(--hof-primary);
-    background: color-mix(in srgb, var(--hof-primary) 10%, var(--hof-surface));
+    background: var(--hof-primary-tint);
 }
 
 .hof-type:disabled {
@@ -815,9 +875,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-tag {
     align-self: flex-start;
     margin-top: 3px;
-    padding: 1px 6px;
-    border-radius: 4px;
-    background: var(--hof-tint);
+    padding: 1px 7px;
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-primary-tint);
     color: var(--hof-primary);
     font-size: 10.5px;
     font-weight: 500;
@@ -874,9 +934,10 @@ body.toplevel_page_hooked-on-facets .wrap {
     left: 50%;
     z-index: 20;
     width: 250px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     border-radius: var(--hof-radius-sm);
     background: var(--hof-text);
+    box-shadow: var(--hof-shadow-lg);
     color: var(--hof-bg);
     font-size: 12px;
     font-weight: 400;
@@ -912,7 +973,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 /* ── Live preview ─────────────────────────────────────────────────────── */
 
 .hof-preview-panel {
-    padding: 16px;
+    padding: 20px;
 }
 
 .hof-lp-head {
@@ -930,8 +991,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-lp-stats {
-    font-size: 12px;
-    color: var(--hof-muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--hof-faint);
 }
 
 .hof-lp-head .hof-pill {
@@ -1089,9 +1151,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-empty-state {
-    padding: 24px;
-    border: 1px dashed var(--hof-border);
+    padding: 28px;
     border-radius: var(--hof-radius-sm);
+    background: var(--hof-bg);
     text-align: center;
     color: var(--hof-muted);
 }
@@ -1183,7 +1245,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
-    padding: 12px 14px;
+    padding: 14px 16px;
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-sm);
     background: var(--hof-surface);
@@ -1206,6 +1268,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-btn-sm {
+    min-height: 30px;
     padding: 4px 10px;
     font-size: 13px;
 }
@@ -1216,10 +1279,10 @@ body.toplevel_page_hooked-on-facets .wrap {
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 14px;
-    padding: 12px 14px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
     border: 1px solid var(--hof-color-coral-200);
-    border-radius: var(--hof-radius-sm);
+    border-radius: var(--hof-radius-md);
     background: var(--hof-danger-tint);
 }
 
@@ -1242,20 +1305,24 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-tabs {
     display: flex;
-    gap: 2px;
-    margin-bottom: 14px;
+    gap: 4px;
+    margin-bottom: 20px;
     border-bottom: 1px solid var(--hof-border);
 }
 
 .hof-tabs button {
     margin-bottom: -1px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     border: 0;
     border-bottom: 2px solid transparent;
     background: none;
     color: var(--hof-muted);
     font: inherit;
     cursor: pointer;
+}
+
+.hof-tabs button:hover {
+    color: var(--hof-text);
 }
 
 .hof-tabs button[aria-selected="true"] {
@@ -1265,7 +1332,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-settings-list {
-    padding: 4px 16px;
+    padding: 4px 20px;
     margin-bottom: 14px;
 }
 
@@ -1274,7 +1341,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 11px 0;
+    padding: 14px 0;
     border-bottom: 1px solid var(--hof-border);
 }
 
@@ -1327,12 +1394,12 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-field-label {
     font-weight: 500;
-    font-size: 0.875rem;
+    font-size: 14px;
 }
 
 .hof-field-help {
     color: var(--hof-muted);
-    font-size: 0.75rem;
+    font-size: 13px;
 }
 
 .hof-field-warn {
@@ -1363,27 +1430,26 @@ body.toplevel_page_hooked-on-facets .wrap {
     background: var(--hof-surface);
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-sm);
-    padding: 9px 14px;
+    padding: 8px 12px;
     color: var(--hof-text);
     font: inherit;
-    font-size: 0.9375rem;
-    line-height: 1.35;
+    font-size: 14px;
+    line-height: 1.4;
     width: 100%;
     max-width: none;
-    min-height: 0;
-    box-shadow: none;
-    transition: border-color 140ms ease, outline-color 140ms ease;
+    min-height: 38px;
+    box-shadow: var(--hof-shadow-xs);
+    transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
 #hof-admin-root .hof-input:hover:not(:focus) {
-    border-color: var(--hof-border);
+    border-color: var(--hof-faint);
 }
 
 #hof-admin-root .hof-input:focus {
-    outline: 2px solid var(--hof-primary);
-    outline-offset: 2px;
-    border-color: transparent;
-    box-shadow: none;
+    outline: none;
+    border-color: var(--hof-primary);
+    box-shadow: var(--hof-focus-ring);
 }
 
 #hof-admin-root select.hof-input {
@@ -1481,11 +1547,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-preview-range-bounds {
     display: flex;
     justify-content: space-between;
-    font-family: var(--hof-font-mono);
-    font-size: 10px;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
     color: var(--hof-faint);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
 }
 
 .hof-preview-swatches {
@@ -1539,7 +1603,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 /* Top card gets a coral border + a coral content block — pulls focus on the
-   canvas the same way the blueprint sandbox's editing card does. */
+   canvas the same way the playground's editing card does. */
 .hof-preview-swiper-card:not(.hof-preview-swiper-card-back) {
     border-color: var(--hof-danger);
     z-index: 2;
@@ -1556,11 +1620,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-preview-swiper-card-meta {
     display: block;
-    font-family: var(--hof-font-mono);
-    font-size: 9px;
+    font-size: 11px;
     color: var(--hof-faint);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
     margin: 0;
 }
 
@@ -1734,7 +1795,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-tk-grid {
     display: grid;
     grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
-    gap: 14px;
+    gap: 16px;
     margin-top: 8px;
     align-items: start;
 }
@@ -1747,26 +1808,26 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-tk-list,
 .hof-tk-pad {
-    padding: 16px;
+    padding: 20px;
 }
 
 .hof-tk-side {
     display: grid;
-    gap: 14px;
+    gap: 16px;
     min-width: 0;
 }
 
 .hof-tk-sec {
-    margin: 0 0 8px;
-    font-size: 0.75rem;
+    margin: 0 0 10px;
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--hof-muted);
+    color: var(--hof-text);
 }
 
 .hof-tk-list section + section {
-    margin-top: 14px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hof-border);
 }
 
 .hof-tk-row {
@@ -1779,11 +1840,14 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-tk-row label {
     display: grid;
-    font-size: 0.8125rem;
+    gap: 1px;
+    font-size: 14px;
+    font-weight: 500;
 }
 
-.hof-tk-row label code {
-    font-size: 0.6875rem;
+#hof-admin-root .hof-tk-row label code {
+    font-size: 11.5px;
+    font-weight: 400;
     color: var(--hof-faint);
     background: none;
     padding: 0;
@@ -1796,11 +1860,12 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-tk-swatch {
     grid-column: 2;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     padding: 0;
+    overflow: hidden;
     border: 1px solid var(--hof-border);
-    border-radius: var(--hof-radius-sm);
+    border-radius: var(--hof-radius-pill);
     background: none;
     cursor: pointer;
 }
@@ -1837,96 +1902,126 @@ body.toplevel_page_hooked-on-facets .wrap {
 /* ── Dashboard view ───────────────────────────────────────────────────── */
 
 .hof-dash-hero {
-    background: var(--hof-tint);
-    border-radius: var(--hof-radius-md);
-    padding: 18px 20px;
-    margin-bottom: 14px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px 32px;
+    padding: 28px;
+    margin-bottom: 16px;
+    background: var(--hof-surface);
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-lg);
+    box-shadow: var(--hof-shadow-sm);
+}
+
+.hof-dash-hero-text {
+    min-width: 0;
+    flex: 1 1 380px;
 }
 
 .hof-dash-headline {
-    font-size: 22px;
-    font-weight: 500;
-    color: var(--hof-primary-deep);
-    margin: 10px 0 6px;
-    letter-spacing: -0.02em;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--hof-text);
+    margin: 12px 0 8px;
+    letter-spacing: -0.025em;
     line-height: 1.2;
 }
 
 .hof-dash-sub {
-    font-size: 13px;
-    color: var(--hof-primary);
+    font-size: 15px;
+    color: var(--hof-muted);
     margin: 0;
-    line-height: 1.5;
-    max-width: 480px;
+    line-height: 1.55;
+    max-width: 520px;
 }
 
 .hof-dash-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
 }
 
 .hof-stat {
     background: var(--hof-surface);
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
-    padding: 14px;
+    box-shadow: var(--hof-shadow-sm);
+    padding: 18px 20px;
 }
 
 .hof-stat .hof-eyebrow {
-    display: block;
-    margin-bottom: 10px;
+    display: flex;
+    margin-bottom: 8px;
+    font-size: 13px;
     color: var(--hof-muted);
 }
 
 .hof-stat-value {
-    font-size: 24px;
-    font-weight: 500;
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1.15;
     color: var(--hof-text);
     margin: 0;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
 }
 
 .hof-stat-unit {
-    font-size: 13px;
-    color: var(--hof-muted);
-    margin-left: 2px;
-    font-weight: 400;
+    font-size: 14px;
+    color: var(--hof-faint);
+    margin-left: 3px;
+    font-weight: 500;
+    letter-spacing: 0;
 }
 
 .hof-dash-section-label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 11.5px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--hof-faint);
+    display: flex;
+    margin: 0 0 12px;
+    line-height: 1.3;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--hof-text);
 }
 
+.hof-dash-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.hof-dash-section-head .hof-dash-section-label {
+    margin: 0;
+}
+
+/* One card, rows divided by hairlines — reads as a list, not a stack of boxes. */
 .hof-dash-facets {
     list-style: none;
-    margin: 0 0 18px;
+    margin: 0 0 32px;
     padding: 0;
+    overflow: hidden;
+    background: var(--hof-surface);
+    border: 1px solid var(--hof-border);
+    border-radius: var(--hof-radius-md);
+    box-shadow: var(--hof-shadow-sm);
 }
 
 .hof-dash-facet {
     display: grid;
-    grid-template-columns: 22px minmax(0, 1fr) auto auto;
-    gap: 12px;
+    grid-template-columns: 32px minmax(0, 1fr) auto auto;
+    gap: 14px;
     align-items: center;
-    padding: 11px 14px;
-    background: var(--hof-surface);
-    border: 1px solid var(--hof-border);
-    border-radius: var(--hof-radius-md);
-    margin-bottom: 6px;
-    transition: border-color 140ms ease;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--hof-border);
 }
 
-.hof-dash-facet:hover {
-    border-color: var(--hof-border);
+.hof-dash-facet:last-child {
+    border-bottom: 0;
 }
 
 .hof-dash-facet[data-hof-draft] {
@@ -1934,10 +2029,17 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-dash-facet-icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--hof-radius-sm);
+    background: var(--hof-primary-tint);
     color: var(--hof-primary);
 }
 
 .hof-dash-facet[data-hof-draft] .hof-dash-facet-icon {
+    background: var(--hof-tint);
     color: var(--hof-faint);
 }
 
@@ -1953,22 +2055,24 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-dash-facet-source {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--hof-faint);
-    margin: 2px 0 0;
-    font-family: var(--hof-font-mono);
+    margin: 1px 0 0;
 }
 
 .hof-dash-empty {
     color: var(--hof-muted);
-    font-size: 13px;
-    margin: 0 0 18px;
+    font-size: 14px;
+    margin: 0 0 32px;
+    padding: 20px;
+    border-radius: var(--hof-radius-md);
+    background: var(--hof-tint);
 }
 
 .hof-dash-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
-    margin-top: 18px;
 }
 
 /* ── Analytics ────────────────────────────────────────────────────────── */
@@ -1977,20 +2081,23 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
-    margin-bottom: 18px;
+    margin-bottom: 32px;
 }
 
 .hof-analytics-card {
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
-    padding: 16px;
+    box-shadow: var(--hof-shadow-sm);
+    padding: 20px;
     background: var(--hof-surface);
 }
 
 .hof-analytics-title {
-    font-size: 13px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
     font-weight: 600;
-    margin: 0 0 12px;
+    margin: 0 0 14px;
     color: var(--hof-text);
 }
 
@@ -2014,7 +2121,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     grid-template-columns: minmax(60px, 1fr) 2fr auto;
     align-items: center;
     gap: 10px;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .hof-analytics-bar-label {
@@ -2034,7 +2141,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: block;
     height: 100%;
     border-radius: var(--hof-radius-pill);
-    background: var(--hof-primary-light);
+    background: var(--hof-primary);
     min-width: 2px;
 }
 
@@ -2068,20 +2175,20 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-analytics-dead {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--hof-muted);
-    background: color-mix(in oklab, var(--hof-danger) 8%, var(--hof-surface));
-    border: 1px solid color-mix(in oklab, var(--hof-danger) 30%, var(--hof-border));
+    background: var(--hof-danger-tint);
     border-radius: var(--hof-radius-md);
-    padding: 10px 12px;
-    margin: 0 0 18px;
+    padding: 12px 16px;
+    margin: -16px 0 32px;
 }
 
-/* ── Blueprint sandbox ────────────────────────────────────────────────── */
+/* ── Playground (internally "bp", the screen's original name) ──────────── */
 
 .hof-bp {
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
+    box-shadow: var(--hof-shadow-sm);
     overflow: hidden;
     background: var(--hof-surface);
 }
@@ -2089,8 +2196,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-bar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 10px;
-    padding: 11px 14px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--hof-border);
     background: var(--hof-surface);
     color: var(--hof-muted);
@@ -2116,7 +2224,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-crumb {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--hof-muted);
 }
 
@@ -2136,37 +2244,67 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 10px;
+    min-height: 34px;
+    padding: 6px 12px;
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-sm);
     background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-xs);
     color: var(--hof-text);
     font: inherit;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
+    transition: background-color 120ms ease;
 }
 
 .hof-bp-chip-icon {
-    padding: 6px 8px;
+    padding: 6px 9px;
 }
 
 .hof-bp-chip:hover,
-.hof-bp-deploy:hover {
-    border-color: var(--hof-primary);
-    color: var(--hof-primary);
+.hof-bp-deploy:hover:not(:disabled) {
+    background: var(--hof-bg);
+}
+
+.hof-bp-deploy:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.hof-bp-count {
+    min-width: 18px;
+    padding: 0 5px;
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 18px;
+    text-align: center;
 }
 
 .hof-bp-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 240px;
+    grid-template-columns: minmax(0, 1fr) 280px;
+}
+
+@media (max-width: 1000px) {
+    .hof-bp-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hof-bp-inspector {
+        border-top: 1px solid var(--hof-border);
+        border-left: 0;
+    }
 }
 
 /* Canvas (left) ───────────────────────────────── */
 
 .hof-bp-canvas {
     background: var(--hof-bg);
-    padding: 22px 18px;
+    padding: 24px;
     min-height: 460px;
     display: flex;
     flex-direction: column;
@@ -2176,12 +2314,12 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-family: var(--hof-font-mono);
-    font-size: 10px;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--hof-muted);
-    letter-spacing: 0.1em;
     background: var(--hof-surface);
-    padding: 5px 11px;
+    box-shadow: var(--hof-shadow-xs);
+    padding: 5px 12px;
     border-radius: var(--hof-radius-pill);
     border: 1px solid var(--hof-border);
     align-self: flex-start;
@@ -2197,12 +2335,13 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-action {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    border: 1px solid var(--hof-faint);
-    background: transparent;
-    color: var(--hof-faint);
+    border: 1px solid var(--hof-border);
+    background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-sm);
+    color: var(--hof-muted);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2253,29 +2392,29 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-deck-back {
     top: 0;
     left: 0;
-    background: var(--hof-faint);
+    background: var(--hof-surface);
+    border: 1px solid var(--hof-border);
 }
 
 .hof-bp-deck-top {
     top: 0;
     left: 0;
     background: var(--hof-surface);
-    border: 1px solid var(--hof-danger);
+    border: 1px solid var(--hof-border);
+    box-shadow: var(--hof-shadow-lg);
     padding: 12px;
 }
 
 .hof-bp-badge {
     position: absolute;
-    top: -9px;
-    right: -6px;
+    top: -10px;
+    right: -8px;
     background: var(--hof-danger);
-    color: var(--hof-danger-tint);
-    padding: 3px 9px;
+    color: var(--hof-on-primary);
+    padding: 2px 9px;
     border-radius: var(--hof-radius-pill);
-    font-size: 9px;
-    font-family: var(--hof-font-mono);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 600;
 }
 
 .hof-bp-card-visual {
@@ -2287,11 +2426,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-card-meta {
-    font-family: var(--hof-font-mono);
-    font-size: 9px;
+    font-size: 11px;
     color: var(--hof-faint);
     margin: 0;
-    letter-spacing: 0.1em;
 }
 
 .hof-bp-card-title {
@@ -2308,9 +2445,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-bp-response-label {
     color: var(--hof-muted);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     display: block;
-    letter-spacing: 0.12em;
+    font-size: 13px;
 }
 
 .hof-bp-response-bars {
@@ -2326,23 +2463,21 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-response-bar-muted {
-    background: var(--hof-border);
-    opacity: 0.3;
+    background: var(--hof-tint);
 }
 
 /* Inspector (right) ───────────────────────────── */
 
 .hof-bp-inspector {
     background: var(--hof-surface);
-    padding: 20px 16px;
+    padding: 24px 20px;
     border-left: 1px solid var(--hof-border);
     display: flex;
     flex-direction: column;
 }
 
 .hof-bp-inspector .hof-eyebrow {
-    margin-bottom: 4px;
-    letter-spacing: 0.14em;
+    margin-bottom: 8px;
 }
 
 .hof-bp-inspector-title {
@@ -2364,11 +2499,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-field-label {
-    font-family: var(--hof-font-mono);
-    font-size: 10px;
-    color: var(--hof-faint);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--hof-text);
     margin: 0 0 8px;
 }
 
@@ -2378,24 +2511,24 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
-    gap: 3px;
+    gap: 2px;
     padding: 3px;
-    background: var(--hof-color-warm-cream);
+    background: var(--hof-tint);
     border-radius: var(--hof-radius-sm);
-    border: 1px solid var(--hof-border);
 }
 
 .hof-bp-segmented-item {
     font-size: 11px;
     text-align: center;
     padding: 6px 4px;
-    border-radius: 4px;
+    border-radius: calc(var(--hof-radius-sm) - 2px);
     color: var(--hof-muted);
     background: transparent;
     border: 0;
     cursor: pointer;
     font: inherit;
-    font-size: 11px;
+    font-size: 13px;
+    font-weight: 500;
     transition: background 140ms ease, color 140ms ease;
 }
 
@@ -2405,8 +2538,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-bp-segmented-item.is-active {
     background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-xs);
     color: var(--hof-text);
-    font-weight: 500;
 }
 
 /* Slider */
@@ -2422,7 +2555,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     -webkit-appearance: none;
     appearance: none;
     height: 4px;
-    background: var(--hof-bg);
+    background: var(--hof-tint);
     border-radius: var(--hof-radius-pill);
     outline: none;
     padding: 0;
@@ -2448,8 +2581,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-slider-value {
-    font-family: var(--hof-font-mono);
-    font-size: 11px;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--hof-text);
     font-variant-numeric: tabular-nums;
     min-width: 12px;
@@ -2468,7 +2601,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--hof-muted);
     cursor: pointer;
     transition: color 140ms ease;
@@ -2483,8 +2616,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-radio-dot {
-    width: 11px;
-    height: 11px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: transparent;
     border: 1px solid var(--hof-border);
@@ -2498,9 +2631,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-inspector-cta {
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid var(--hof-bg);
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--hof-border);
 }
 
 .hof-bp-sync {
@@ -2525,7 +2658,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-indexer-blurb {
     margin: 0;
     color: var(--hof-muted);
-    font-size: 13.5px;
+    font-size: 15px;
     line-height: 1.6;
     max-width: 720px;
 }
@@ -2616,7 +2749,7 @@ body.toplevel_page_hooked-on-facets .wrap {
     padding: 0;
 }
 
-/* ── Blueprint sandbox — facet picker, grid variant, toast ────────────── */
+/* ── Playground — facet picker, grid variant, toast ───────────────────── */
 
 .hof-bp-facet-picker {
     display: flex;
@@ -2631,10 +2764,9 @@ body.toplevel_page_hooked-on-facets .wrap {
     border: 1px solid var(--hof-border);
     color: var(--hof-muted);
     border-radius: var(--hof-radius-pill, 999px);
-    padding: 4px 10px;
-    font-size: 11px;
-    font-family: var(--hof-font-mono);
-    letter-spacing: 0.04em;
+    padding: 4px 11px;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
     transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
@@ -2644,10 +2776,21 @@ body.toplevel_page_hooked-on-facets .wrap {
     border-color: var(--hof-faint);
 }
 
+.hof-bp-facet-chip.has-draft::after {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-left: 6px;
+    border-radius: 50%;
+    background: var(--hof-danger);
+    vertical-align: middle;
+}
+
 .hof-bp-facet-chip.is-active {
     background: var(--hof-primary);
     border-color: var(--hof-primary);
-    color: var(--hof-tint);
+    color: var(--hof-on-primary);
 }
 
 /* Grid variant — 2×3 mini-card matrix to preview the non-deck layout. */
@@ -2679,7 +2822,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-grid-card .hof-bp-card-meta {
-    font-size: 8.5px;
+    font-size: 10px;
 }
 
 .hof-bp-toast {
@@ -2736,11 +2879,11 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-ai-settings-icon {
     display: inline-grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: var(--hof-radius-sm);
-    background: var(--hof-primary);
-    color: var(--hof-on-primary);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--hof-radius-md);
+    background: var(--hof-primary-tint);
+    color: var(--hof-primary);
     flex-shrink: 0;
 }
 
@@ -2767,16 +2910,15 @@ body.toplevel_page_hooked-on-facets .wrap {
     background: var(--hof-surface);
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-md);
-    padding: 18px 20px;
+    box-shadow: var(--hof-shadow-sm);
+    padding: 20px 24px;
 }
 
 .hof-ai-settings-section-title {
-    margin: 0 0 12px;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--hof-muted);
+    margin: 0 0 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--hof-text);
 }
 
 .hof-ai-settings-row {
@@ -2871,16 +3013,17 @@ body.toplevel_page_hooked-on-facets .wrap {
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-sm);
     background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-xs);
     color: var(--hof-text);
     font-family: var(--hof-font-mono);
     font-size: 0.875rem;
-    transition: border-color 160ms ease;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
 .hof-ai-settings-input:focus {
-    outline: 2px solid var(--hof-primary);
-    outline-offset: 1px;
+    outline: none;
     border-color: var(--hof-primary);
+    box-shadow: var(--hof-focus-ring);
 }
 
 .hof-ai-settings-input:disabled {
@@ -2894,6 +3037,7 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-ai-settings-btn {
+    min-height: 36px;
     padding: 8px 14px;
     border-radius: var(--hof-radius-sm);
     border: 1px solid transparent;
@@ -3005,9 +3149,8 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-preview-ask-heard-label {
-    font-size: 0.6875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-size: 0.75rem;
+    font-weight: 500;
     color: var(--hof-faint);
     margin-right: 2px;
 }
@@ -3133,9 +3276,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 /* ── Pro pill ─────────────────────────────────────────────────────────── */
 
 .hof-pill-pro {
-    border-color: color-mix(in srgb, var(--hof-primary) 40%, var(--hof-border));
+    background: var(--hof-primary-tint);
     color: var(--hof-primary);
-    font-weight: 500;
+    font-weight: 600;
 }
 
 /* ── Help drawer ──────────────────────────────────────────────────────── */
@@ -3166,10 +3309,11 @@ body.toplevel_page_hooked-on-facets .wrap {
     bottom: 0;
     z-index: 99991;
     width: min(380px, 100%);
-    padding: 20px;
+    padding: 24px;
     overflow-y: auto;
     border-left: 1px solid var(--hof-border);
     background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-lg);
     color: var(--hof-text);
     transform: translateX(100%);
     visibility: hidden;
@@ -3191,8 +3335,9 @@ body.toplevel_page_hooked-on-facets .wrap {
 
 .hof-drawer-head h2 {
     margin: 0;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
 .hof-drawer-head .hof-btn {
@@ -3200,12 +3345,11 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-drawer-ctx {
-    margin: 12px 0 14px;
-    padding: 12px;
-    border-left: 3px solid var(--hof-danger);
-    border-radius: var(--hof-radius-sm);
-    background: var(--hof-tint);
-    font-size: 13px;
+    margin: 12px 0 16px;
+    padding: 14px 16px;
+    border-radius: var(--hof-radius-md);
+    background: var(--hof-primary-tint);
+    font-size: 14px;
 }
 
 .hof-drawer-ctx b {
@@ -3215,21 +3359,19 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-drawer-h {
-    margin: 16px 0 6px;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-    color: var(--hof-faint);
+    margin: 20px 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hof-text);
 }
 
 .hof-drawer-doc {
     display: flex;
     justify-content: space-between;
     gap: 8px;
-    padding: 8px 0;
+    padding: 10px 0;
     border-bottom: 1px solid var(--hof-border);
-    font-size: 13.5px;
+    font-size: 14px;
     color: var(--hof-text);
     text-decoration: none;
 }
@@ -3251,10 +3393,10 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-drawer-ask {
-    margin-top: 18px;
-    padding: 12px;
-    border: 1px solid var(--hof-border);
-    border-radius: var(--hof-radius-sm);
+    margin-top: 20px;
+    padding: 14px 16px;
+    border-radius: var(--hof-radius-md);
+    background: var(--hof-bg);
     font-size: 13px;
     color: var(--hof-muted);
 }

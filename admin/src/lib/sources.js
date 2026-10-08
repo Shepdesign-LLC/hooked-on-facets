@@ -28,7 +28,7 @@ export const TYPES = [
     { value: 'date_range',     label: 'Date range',          hint: 'Between two dates',       needs: 'Needs a date' },
     { value: 'hierarchy',      label: 'Hierarchy',           hint: 'Nested, expandable',      needs: 'Needs a nested taxonomy' },
     { value: 'swatch',         label: 'Fluid swatches',      hint: 'Real color circles',      needs: 'Needs a color attribute' },
-    { value: 'swiper',         label: 'Swipe deck',          hint: 'Tune it in Blueprint',    needs: 'Needs a visual source', pro: true },
+    { value: 'swiper',         label: 'Swipe deck',          hint: 'Tune it in the Playground',    needs: 'Needs a visual source', pro: true },
     { value: 'spin_the_wheel', label: 'Spin the wheel',      hint: 'Gamified single pick',    needs: 'Needs a list of values', pro: true },
     { value: 'matrix',         label: 'Intersection matrix', hint: 'Stack values, match all', needs: 'Needs a list of values', pro: true },
     { value: 'ask',            label: 'Ask',                 hint: 'Set up in Settings → Ask', pro: true, view: true },

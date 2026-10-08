@@ -72,9 +72,9 @@ describe('Dashboard', () => {
     };
     const props = { facets: [], productsIndexed: 1596, telemetry, onCreateFacet: vi.fn(), onOpenBlueprint: vi.fn() };
 
-    it('explains Avg query time', async () => {
+    it('explains Filter speed', async () => {
         await mount(createElement(Dashboard, props));
-        const stat = [...host.querySelectorAll('.hof-stat')].find((s) => s.textContent.startsWith('Avg query time'));
+        const stat = [...host.querySelectorAll('.hof-stat')].find((s) => s.textContent.startsWith('Filter speed'));
 
         expect(stat.querySelector('.hof-tip').dataset.tip).toContain('Under 50 ms means a filter change feels instant.');
     });
@@ -90,6 +90,45 @@ describe('Dashboard', () => {
         await mount(createElement(Dashboard, props));
 
         for (const t of host.querySelectorAll('.hof-tip')) expect(t.getAttribute('tabindex')).toBe('0');
+    });
+
+    it('leads with the next step, not engine jargon', async () => {
+        await mount(createElement(Dashboard, { ...props, telemetry: {} }));
+
+        expect(host.querySelector('.hof-dash-headline').textContent).toBe('Add a facet and it shows up on your store.');
+        expect(host.querySelector('.hof-dash-hero .hof-btn-primary').textContent).toBe('New facet');
+        expect(host.textContent).not.toMatch(/Auto-Hook Engine/);
+    });
+
+    it('hides latency percentiles it has no numbers for', async () => {
+        await mount(createElement(Dashboard, { ...props, telemetry: { resolver: { p95_ms: 12.5 } } }));
+        const labels = [...host.querySelectorAll('.hof-stat .hof-eyebrow')].map((e) => e.textContent);
+
+        expect(labels).toContain('Slow (p95)');
+        expect(labels).not.toContain('Typical (p50)');
+        expect(labels).not.toContain('Slowest (p99)');
+    });
+
+    it('flags unused facets only once shoppers have used something', async () => {
+        const facets = [{ name: 'brand', label: 'Brand', source: 'tax/brand', display: 'checkbox' }];
+        await mount(createElement(Dashboard, { ...props, facets, telemetry: {} }));
+        expect(host.querySelector('.hof-analytics-dead')).toBeNull();
+
+        await act(async () => root.unmount());
+        host.remove();
+        await mount(createElement(Dashboard, { ...props, facets }));
+        expect(host.querySelector('.hof-analytics-dead').textContent).toContain('1 facet not used yet: Brand');
+    });
+
+    it('marks each facet Live or Draft in words, not just a dot', async () => {
+        const facets = [
+            { name: 'brand', label: 'Brand', source: 'tax/brand', display: 'checkbox' },
+            { name: 'wip', label: 'Wip', source: '', display: 'checkbox' },
+        ];
+        await mount(createElement(Dashboard, { ...props, facets }));
+        const pills = [...host.querySelectorAll('.hof-dash-facet .hof-pill')].map((p) => p.textContent);
+
+        expect(pills).toEqual(['Live', 'Draft']);
     });
 
     it('sets numbers in tabular figures', () => {
@@ -280,26 +319,105 @@ describe('Indexer', () => {
 describe('Blueprint', () => {
     const props = { facets: [{ name: 'color', label: 'Color', display: 'swiper', kind: 'taxonomy', source: 'pa_color', settings: {} }], onBack: vi.fn(), onSaveSettings: vi.fn() };
 
-    it('calls the button Deploy blueprint', async () => {
+    const two = [
+        { name: 'color', label: 'Color', display: 'swiper', kind: 'taxonomy', source: 'pa_color', settings: { match: 'all' } },
+        { name: 'size', label: 'Size', display: 'swiper', kind: 'taxonomy', source: 'pa_size', settings: { cardSize: 'Small' } },
+    ];
+    const deploy = () => host.querySelector('.hof-bp-deploy');
+    const chip = (label) => [...host.querySelectorAll('.hof-bp-facet-chip')].find((c) => c.textContent.startsWith(label));
+    const segment = (label) => [...host.querySelectorAll('.hof-bp-segmented-item')].find((b) => b.textContent === label);
+    const click = async (el) => { await act(async () => el.click()); };
+
+    it('calls the button Publish all, disabled until something changed', async () => {
         await mount(createElement(Blueprint, props));
 
-        expect(host.querySelector('.hof-bp-deploy').textContent).toBe('Deploy blueprint');
+        expect(deploy().textContent).toBe('Publish all');
+        expect(deploy().disabled).toBe(true);
     });
 
-    it('explains Sync versus Deploy in a tooltip beside it', async () => {
+    it('explains Save versus Publish in a tooltip beside it', async () => {
         await mount(createElement(Blueprint, props));
         const tip = host.querySelector('.hof-bp-bar-actions .hof-tip').dataset.tip;
 
-        expect(tip).toContain('Sync writes one facet');
-        expect(tip).toContain('Deploy writes every facet in this blueprint to the Shop archive template');
+        expect(tip).toContain("Save to facet writes the facet you're editing");
+        expect(tip).toContain("Publish all saves every facet you've changed here in one go");
+        expect(tip).not.toMatch(/template/);
         expect(host.querySelector('.hof-bp-bar-actions .hof-tip').getAttribute('tabindex')).toBe('0');
     });
 
     it('says the same in one sentence under the title', async () => {
         await mount(createElement(Blueprint, props));
 
-        expect(host.querySelector('.hof-view-title').textContent).toBe('Blueprint');
-        expect(host.querySelector('.hof-lede').textContent).toContain('Sync saves one facet; Deploy saves the whole blueprint to the template.');
+        expect(host.querySelector('.hof-view-title').textContent).toBe('Playground');
+        expect(host.querySelector('.hof-lede').textContent).toContain('Save one facet, or publish every change at once.');
+    });
+
+    it('keeps edits per facet when switching, and marks the changed ones', async () => {
+        await mount(createElement(Blueprint, { ...props, facets: two }));
+
+        await click(segment('Grid'));          // Color: Card -> Grid
+        await click(chip('Size'));
+        expect(segment('Small').classList.contains('is-active')).toBe(true); // Size's own saved value
+
+        await click(chip('Color'));
+        expect(segment('Grid').classList.contains('is-active')).toBe(true);  // Color's draft survived
+        expect(chip('Color').classList.contains('has-draft')).toBe(true);
+        expect(chip('Size').classList.contains('has-draft')).toBe(false);
+    });
+
+    it('publishes every changed facet in one save, then clears the drafts', async () => {
+        const onSaveSettings = vi.fn(async () => []);
+        await mount(createElement(Blueprint, { ...props, facets: two, onSaveSettings }));
+
+        await click(segment('Grid'));          // Color
+        await click(chip('Size'));
+        await click(segment('Large'));         // Size: Small -> Large
+        expect(deploy().disabled).toBe(false);
+        expect(deploy().getAttribute('aria-label')).toBe('Publish all (2 changed facets)');
+
+        await click(deploy());
+
+        expect(onSaveSettings).toHaveBeenCalledTimes(1);
+        expect(onSaveSettings).toHaveBeenCalledWith({
+            color: { variant: 'Grid', cardSize: 'Medium', deckDepth: 3, animation: 'Spring' },
+            size:  { variant: 'Card', cardSize: 'Large', deckDepth: 3, animation: 'Spring' },
+        });
+        expect(host.querySelector('.hof-bp-toast').textContent).toContain('Published 2 facets.');
+        expect(host.querySelectorAll('.hof-bp-facet-chip.has-draft')).toHaveLength(0);
+    });
+
+    it('does not count an edit put back to the saved value as a change', async () => {
+        await mount(createElement(Blueprint, { ...props, facets: two }));
+
+        await click(segment('Grid'));
+        await click(segment('Card'));
+
+        expect(deploy().disabled).toBe(true);
+    });
+
+    it('keeps the drafts and says so when publishing fails', async () => {
+        const onSaveSettings = vi.fn(async () => { throw new Error('500 nope'); });
+        await mount(createElement(Blueprint, { ...props, facets: two, onSaveSettings }));
+
+        await click(segment('Grid'));
+        await click(deploy());
+
+        expect(host.querySelector('.hof-bp-toast-err').textContent).toContain('500 nope');
+        expect(chip('Color').classList.contains('has-draft')).toBe(true);
+        expect(deploy().disabled).toBe(false);
+    });
+
+    it('Save to facet saves only the facet being edited', async () => {
+        const onSaveSettings = vi.fn(async () => []);
+        await mount(createElement(Blueprint, { ...props, facets: two, onSaveSettings }));
+
+        await click(segment('Grid'));          // Color
+        await click(chip('Size'));
+        await click(segment('Large'));         // Size
+        await click(host.querySelector('.hof-bp-sync'));
+
+        expect(onSaveSettings).toHaveBeenCalledWith({ size: { variant: 'Card', cardSize: 'Large', deckDepth: 3, animation: 'Spring' } });
+        expect(chip('Color').classList.contains('has-draft')).toBe(true);
     });
 
     it('keeps the Sync behavior', async () => {

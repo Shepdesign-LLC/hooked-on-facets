@@ -5,8 +5,10 @@
 
    Palette mirrors BRAND.md (brand kit repo). Semantic names (--hof-primary,
    --hof-bg, --hof-text …) alias onto the brand --hof-color-* tokens or carry
-   the admin's cool-lavender neutrals. Component CSS reads only the semantic
-   names; nothing outside this file spells a color.
+   the admin's warm neutrals. Purple is the accent, not the canvas: surfaces
+   and text stay neutral so the brand colour marks what matters. Component CSS
+   reads only the semantic names; nothing outside this file spells a color,
+   radius or shadow.
 
    Geist Sans and Geist Mono ship with the admin bundle (see main.jsx), so
    wp-admin makes no request to a font CDN. */
@@ -32,13 +34,13 @@ body.toplevel_page_hooked-on-facets,
 
     --hof-color-signal-green: #2E7D5B;
 
-    /* Cool-lavender neutrals for the admin surface. */
-    --hof-color-page:  #F5F4FB;
-    --hof-color-tint:  #EEECF8;
-    --hof-color-line:  #DDDAEE;
-    --hof-color-ink:   #221D52;
-    --hof-color-muted: #625D85;
-    --hof-color-faint: #8F8BB0;
+    /* Warm neutrals for the admin surface (the brand's warm-gray family). */
+    --hof-color-page:  #F7F7F5;
+    --hof-color-tint:  #F0EFEC;
+    --hof-color-line:  #E6E4DF;
+    --hof-color-ink:   #1C1B19;
+    --hof-color-muted: #62615C;
+    --hof-color-faint: #8C8B85;
 
     --hof-color-ink-900: #1A1A19;
     --hof-color-ink-700: #5F5E5A;
@@ -52,16 +54,25 @@ body.toplevel_page_hooked-on-facets,
     --hof-font-sans: 'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
     --hof-font-mono: 'Geist Mono Variable', 'Geist Mono', 'SF Mono', Menlo, Consolas, monospace;
 
-    /* Radii: 8px on panels, 6px on controls */
-    --hof-radius-sm:   6px;
-    --hof-radius-md:   8px;
-    --hof-radius-lg:   14px;
+    /* Radii: 12px on panels, 8px on controls */
+    --hof-radius-sm:   8px;
+    --hof-radius-md:   12px;
+    --hof-radius-lg:   16px;
     --hof-radius-pill: 999px;
+
+    /* Elevation: a soft lift that separates cards from the page without
+       heavy borders. Warm-ink based so it never reads blue or gray. */
+    --hof-shadow-xs: 0 1px 2px rgb(28 27 25 / 0.06);
+    --hof-shadow-sm: 0 1px 2px rgb(28 27 25 / 0.04), 0 2px 8px rgb(28 27 25 / 0.04);
+    --hof-shadow-lg: 0 12px 40px rgb(28 27 25 / 0.12), 0 2px 6px rgb(28 27 25 / 0.05);
 
     /* Semantic tokens — what component CSS reads. */
     --hof-primary:       var(--hof-color-hook-purple);
     --hof-primary-deep:  var(--hof-color-purple-700);
     --hof-primary-light: var(--hof-color-purple-400);
+    --hof-primary-tint:  color-mix(in srgb, var(--hof-primary) 9%, var(--hof-surface));
+    --hof-ring:          color-mix(in srgb, var(--hof-primary) 28%, transparent);
+    --hof-focus-ring:    0 0 0 3px var(--hof-ring);
     --hof-on-primary:    #FFFFFF;
     --hof-surface:       #FFFFFF;
     --hof-bg:            var(--hof-color-page);
@@ -73,6 +84,7 @@ body.toplevel_page_hooked-on-facets,
     --hof-danger:        var(--hof-color-facet-coral);
     --hof-danger-tint:   var(--hof-color-coral-50);
     --hof-good:          var(--hof-color-signal-green);
+    --hof-good-tint:     color-mix(in srgb, var(--hof-good) 10%, var(--hof-surface));
     --hof-scrim:         color-mix(in srgb, var(--hof-color-ink) 35%, transparent);
     --hof-radius-ui:     var(--hof-radius-sm);
     --hof-space:         8px;

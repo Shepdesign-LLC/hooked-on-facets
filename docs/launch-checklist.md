@@ -13,7 +13,7 @@ Internal runway for taking Hooked on Facets to a paid product. Status reflects t
       revalidation, soft enforcement, dev-mode bypass, plugin updater.
 - [x] Tests + CI gating (PHP / JS / Markdown). Versions consistent at 1.0.0.
 - [x] `readme.txt`, translation template (`languages/hooked-on-facets.pot`), docs.
-- [x] Authorship/brand consolidated under SHEPDESIGN.
+- [x] Authorship/brand consolidated under Shepdesign, LLC.
 
 ## 🟧 Must-do before charging money
 
@@ -56,4 +56,4 @@ Internal runway for taking Hooked on Facets to a paid product. Status reflects t
 6. **Sources** — WooCommerce, ACF, Meta Box, Pods.
 7. **Pricing** — tiers (e.g. single-site / 5-site / unlimited; annual).
 8. **FAQ** — MySQL 8.0.31 requirement, AI key, GPL, support.
-9. **Docs + support links.** Footer: © SHEPDESIGN, legal links.
+9. **Docs + support links.** Footer: © Shepdesign, LLC, legal links.

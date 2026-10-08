@@ -107,7 +107,7 @@ export default function LivePreview({ facet, postType }) {
         <div className="hof-lp">
             <div className="hof-lp-head">
                 <h2>Preview</h2>
-                <span className="hof-mono hof-lp-stats">
+                <span className="hof-lp-stats">
                     {data ? `${nf.format(data.total)} ${noun} · ${facet.source} · ${data.ms} ms` : 'Running…'}
                 </span>
                 <span className={`hof-pill ${loading ? 'hof-pill-busy' : 'hof-pill-good'}`}>

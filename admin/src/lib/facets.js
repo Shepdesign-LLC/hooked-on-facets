@@ -180,3 +180,19 @@ export function pickSuggestions(suggestions, facets, stats, limit = 3) {
     }
     return out;
 }
+
+/**
+ * Merge per-facet settings patches (keyed by facet name) into a facet list.
+ * Merges, never replaces: a caller that owns only some keys (the Playground
+ * owns the deck knobs) must not wipe the rest — match mode, button style,
+ * a Visual DNA target.
+ *
+ * @param {object[]} facets
+ * @param {Record<string, object>} patches
+ * @returns {object[]}
+ */
+export function mergeSettings(facets, patches) {
+    return facets.map((f) =>
+        patches[f.name] ? { ...f, settings: { ...(f.settings || {}), ...patches[f.name] } } : f
+    );
+}

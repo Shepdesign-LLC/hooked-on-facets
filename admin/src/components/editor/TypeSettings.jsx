@@ -13,7 +13,7 @@ export const COLOR_TARGETS = new Set(['checkbox', 'radio', 'dropdown', 'swatch',
 
 const STYLE_TIP =
     'List is the classic checkbox or radio column. Buttons renders each value as a tappable button, styled from your ' +
-    'Design tokens so it matches the site. Same filtering either way.';
+    'Styles so it matches the site. Same filtering either way.';
 
 const EMPTY_TIP =
     'On: a value with zero matches still renders, dimmed and not clickable, so shoppers see the full set. ' +
@@ -185,7 +185,7 @@ export function BehaviorFields({ facet, settings, update, issues, colorTargetFac
 
             {d === 'swiper' && (
                 <p className="hof-field-help">
-                    Variant, card size, deck depth and animation are tuned in Blueprint against live
+                    Variant, card size, deck depth and animation are tuned in the Playground against live
                     products, then synced back here.
                 </p>
             )}
@@ -243,8 +243,8 @@ export function DisplayFields({ facet, settings, update, onOpenTokens }) {
                             <p className="hof-note hof-btn-note">
                                 Colors, radius and font come from{' '}
                                 {onOpenTokens
-                                    ? <button type="button" className="hof-link" onClick={onOpenTokens}>Design tokens</button>
-                                    : 'Design tokens'}
+                                    ? <button type="button" className="hof-link" onClick={onOpenTokens}>Styles</button>
+                                    : 'Styles'}
                                 . Override per facet with the <code>hof-facet--{facet.name || 'slug'}</code> class.
                             </p>
                         </>

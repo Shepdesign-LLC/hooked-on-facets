@@ -82,7 +82,7 @@ export default function FacetsList({
                                     <tr className="hof-table-group">
                                         <td colSpan={6}>
                                             <span className="hof-table-group-name">{group.label}</span>
-                                            <span className="hof-mono hof-table-group-meta">
+                                            <span className="hof-table-group-meta">
                                                 {' '}· {group.slug || 'no post type'}
                                                 {group.items !== null && ` · ${nf.format(group.items)} items`}
                                             </span>

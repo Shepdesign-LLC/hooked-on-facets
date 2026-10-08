@@ -8,7 +8,7 @@
  * Requires PHP:      8.2
  * WC requires at least: 8.0
  * WC tested up to:   11.1
- * Author:            SHEPDESIGN
+ * Author:            Shepdesign, LLC
  * Author URI:        https://shepdesign.com
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html

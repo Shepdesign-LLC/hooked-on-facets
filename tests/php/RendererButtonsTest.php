@@ -124,6 +124,17 @@ final class RendererButtonsTest extends TestCase {
 
     // ── list vs buttons ──────────────────────────────────────────────────
 
+    public function test_list_inputs_carry_their_option_name_for_assistive_tech(): void {
+        // The name is a sibling of the <label> (it may be a crawlable link), so
+        // without aria-label the input would be announced as an unnamed control.
+        foreach ( [ 'checkbox', 'radio' ] as $display ) {
+            $html = $this->render( $display );
+
+            self::assertMatchesRegularExpression( '/<input type="' . $display . '"[^>]*value="nike"[^>]*aria-label="Nike"/', $html, $display );
+            self::assertMatchesRegularExpression( '/<input type="' . $display . '"[^>]*value="adidas"[^>]*aria-label="Adidas"/', $html, $display );
+        }
+    }
+
     public function test_list_style_is_the_default_and_renders_inputs(): void {
         $html = $this->render( 'checkbox' );
 

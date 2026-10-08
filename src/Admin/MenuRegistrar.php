@@ -298,20 +298,20 @@ final class MenuRegistrar implements Bootable {
          *
          * @param array<string, string> $tokens
          */
-        // The colors saved under Design tokens flow into the admin too; layout
-        // and font tokens stay the admin's own so its density doesn't shift.
+        // The accent colors saved under Design tokens flow into the admin too;
+        // neutrals, layout and font tokens stay the admin's own.
         $saved = array_intersect_key( DesignTokens::saved_overrides(), array_flip( DesignTokens::ADMIN_TOKENS ) );
 
         return apply_filters( 'hof_admin_css_tokens', $saved + [
             '--hof-primary'    => '#534AB7',
             '--hof-on-primary' => '#FFFFFF',
             '--hof-surface'    => '#FFFFFF',
-            '--hof-bg'         => '#F5F4FB',
-            '--hof-border'     => '#DDDAEE',
-            '--hof-text'       => '#221D52',
-            '--hof-muted'      => '#625D85',
+            '--hof-bg'         => '#F7F7F5',
+            '--hof-border'     => '#E6E4DF',
+            '--hof-text'       => '#1C1B19',
+            '--hof-muted'      => '#62615C',
             '--hof-danger'     => '#D85A30',
-            '--hof-radius-ui'  => '6px',
+            '--hof-radius-ui'  => '8px',
             '--hof-space'      => '8px',
             '--hof-font'       => "'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif",
         ] );

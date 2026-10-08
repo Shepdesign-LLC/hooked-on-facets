@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 // The admin's look comes from tokens. tokens.css is the only file that spells
-// a color, radius or font; everything else reads a --hof-* name. These guard
-// that contract so a stray hex, gradient or shadow can't creep back in.
+// a color, radius, shadow or font; everything else reads a --hof-* name. These
+// guard that contract so a stray hex, gradient or ad-hoc shadow can't creep in.
 
 const dir = resolve(dirname(fileURLToPath(import.meta.url)), '../../admin/src');
 const read = (p) => readFileSync(resolve(dir, p), 'utf8');
@@ -33,8 +33,9 @@ describe('admin.css reads tokens, not literals', () => {
         expect(admin.match(/-gradient\(/g) || []).toEqual([]);
     });
 
-    it('uses no shadows (box-shadow may only be reset with none)', () => {
-        const bad = decls.filter((d) => /^(box|text)-shadow\s*:/.test(d.decl) && !/:\s*none$/.test(d.decl));
+    it('takes every shadow from an elevation token (or resets it with none)', () => {
+        const ok = /^box-shadow\s*:\s*(none|var\(--hof-(shadow-(xs|sm|lg)|focus-ring)\))$/;
+        const bad = decls.filter((d) => /^(box|text)-shadow\s*:/.test(d.decl) && !ok.test(d.decl));
         expect(bad.map((d) => `${d.selector} { ${d.decl} }`)).toEqual([]);
         expect(admin).not.toMatch(/drop-shadow\(/);
     });
@@ -75,13 +76,27 @@ describe('brand tokens', () => {
         expect(value('--hof-color-hook-purple')).toBe('#534AB7');
         expect(value('--hof-color-facet-coral')).toBe('#D85A30');
         expect(value('--hof-bg')).toBe('var(--hof-color-page)');
-        expect(value('--hof-color-page')).toBe('#F5F4FB');
+        expect(value('--hof-color-page')).toBe('#F7F7F5');
         expect(value('--hof-surface')).toBe('#FFFFFF');
     });
 
-    it('sizes panels at 8px and controls at 6px', () => {
-        expect(value('--hof-radius-md')).toBe('8px');
-        expect(value('--hof-radius-sm')).toBe('6px');
+    it('keeps the neutrals neutral: purple is the accent, not the canvas', () => {
+        // The old cool-lavender neutrals read as a blueprint; ink and page are warm gray now.
+        for (const name of ['--hof-color-page', '--hof-color-tint', '--hof-color-line', '--hof-color-ink', '--hof-color-muted']) {
+            const [r, g, b] = value(name).match(/[0-9A-F]{2}/gi).map((h) => parseInt(h, 16));
+            expect(b - Math.min(r, g), name).toBeLessThanOrEqual(2);
+        }
+    });
+
+    it('sizes panels at 12px and controls at 8px', () => {
+        expect(value('--hof-radius-md')).toBe('12px');
+        expect(value('--hof-radius-sm')).toBe('8px');
+    });
+
+    it('defines the elevation scale in tokens.css', () => {
+        for (const name of ['--hof-shadow-xs', '--hof-shadow-sm', '--hof-shadow-lg', '--hof-focus-ring']) {
+            expect(value(name), name).toBeTruthy();
+        }
     });
 
     it('points the semantic names at the brand tokens', () => {
@@ -101,13 +116,19 @@ describe('page and panel surfaces', () => {
         expect(rule('#hof-admin-root')).toContain('background: var(--hof-bg)');
     });
 
-    it('draws cards as --hof-surface with a 1px --hof-border and an 8px radius', () => {
+    it('draws cards as --hof-surface with a 1px --hof-border, the panel radius and a soft lift', () => {
         for (const sel of ['.hof-panel', '.hof-stat', '.hof-table-wrap']) {
             const body = rule(sel);
             expect(body, sel).toContain('background: var(--hof-surface)');
             expect(body, sel).toContain('border: 1px solid var(--hof-border)');
             expect(body, sel).toContain('border-radius: var(--hof-radius-md)');
+            expect(body, sel).toContain('box-shadow: var(--hof-shadow-sm)');
         }
+    });
+
+    it('keeps UI labels in the sans face: no uppercase, letter-spaced eyebrows', () => {
+        const shouty = decls.filter((d) => /^text-transform\s*:\s*uppercase$/.test(d.decl));
+        expect(shouty.map((d) => d.selector)).toEqual([]);
     });
 
     it('draws controls with a 6px radius', () => {
@@ -148,9 +169,9 @@ describe('buttons and pills', () => {
 });
 
 describe('the rail', () => {
-    it('marks the active item with a 2px left rule', () => {
-        expect(admin).toMatch(/\.hof-rail-item\[aria-current="page"\] \{[^}]*border-left-color: var\(--hof-primary\)/);
-        expect(admin).toMatch(/\.hof-rail-item \{[^}]*border-left: 2px solid transparent/);
+    it('marks the active item as a raised pill with a brand-colored icon', () => {
+        expect(admin).toMatch(/\.hof-rail-item\[aria-current="page"\] \{[^}]*background: var\(--hof-surface\)[^}]*box-shadow: var\(--hof-shadow-xs\)/);
+        expect(admin).toMatch(/\.hof-rail-item\[aria-current="page"\] svg \{[^}]*color: var\(--hof-primary\)/);
     });
 
     it('becomes a horizontal scroll strip on narrow screens', () => {

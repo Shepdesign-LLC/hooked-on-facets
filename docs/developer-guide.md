@@ -50,7 +50,7 @@ HOF honors the standard WordPress debug constants. Set `WP_DEBUG` (and `SCRIPT_D
 
 ## design tokens
 
-HOF's CSS uses CSS custom properties exclusively. Want to retheme everything? Override the variables on `:root` or scope to your container, edit them in the **Design tokens** admin screen, or filter them in PHP via `hof_public_css_tokens`.
+HOF's CSS uses CSS custom properties exclusively. Want to retheme everything? Override the variables on `:root` or scope to your container, edit them in the **Styles** admin screen, or filter them in PHP via `hof_public_css_tokens`.
 
 ```css
 :root {
