@@ -291,6 +291,10 @@ final class Renderer {
      * @param array<string, mixed>            $counts
      */
     private function render_checkbox( array $facet, array $selected_values, array $counts ): string {
+        // The option name is a sibling of the <label> (it may be a crawlable
+        // <a>, which can't nest inside one), so each input carries its name
+        // in aria-label; the stylesheet stretches the label over the row so
+        // a click on the name still toggles it. Radio and hierarchy match.
         if ( self::uses_buttons( $facet ) ) {
             return $this->render_buttons( $facet, $selected_values, $counts, 'checkbox' );
         }
@@ -320,6 +324,7 @@ final class Renderer {
                                     <input type="checkbox"
                                            name="hof[<?php echo esc_attr( $name ); ?>][]"
                                            value="<?php echo esc_attr( $value ); ?>"
+                                           aria-label="<?php echo esc_attr( $bucket['display'] ); ?>"
                                            <?php checked( $checked ); ?>>
                                 </label>
                                 <?php $link = $this->pretty_link( $facet, $value ); ?>
@@ -387,6 +392,7 @@ final class Renderer {
                                     <input type="radio"
                                            name="hof[<?php echo esc_attr( $name ); ?>]"
                                            value="<?php echo esc_attr( $value ); ?>"
+                                           aria-label="<?php echo esc_attr( $bucket['display'] ); ?>"
                                            <?php checked( $is_active ); ?>>
                                 </label>
                                 <?php $link = $this->pretty_link( $facet, $value ); ?>
@@ -750,6 +756,7 @@ final class Renderer {
                                 <input type="checkbox"
                                        name="hof[<?php echo esc_attr( $name ); ?>][]"
                                        value="<?php echo esc_attr( $value ); ?>"
+                                       aria-label="<?php echo esc_attr( $display ); ?>"
                                        <?php checked( $checked ); ?>>
                             </label>
                             <?php $link = $this->pretty_link( $facet, $value ); ?>
@@ -773,6 +780,7 @@ final class Renderer {
                         <input type="checkbox"
                                name="hof[<?php echo esc_attr( $name ); ?>][]"
                                value="<?php echo esc_attr( $value ); ?>"
+                               aria-label="<?php echo esc_attr( $display ); ?>"
                                <?php checked( $checked ); ?>>
                     </label>
                     <?php $link = $this->pretty_link( $facet, $value ); ?>

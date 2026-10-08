@@ -93,12 +93,12 @@ final class DesignTokens {
             '--hof-font-size-xs'      => '0.8125rem',
             '--hof-font-size-eyebrow' => '0.6875rem',
 
-            // Eyebrow label
-            '--hof-label-color'          => 'var(--hof-muted)',
-            '--hof-label-font-size'      => 'var(--hof-font-size-eyebrow)',
+            // Facet title: sentence case, the theme's own weight scale.
+            '--hof-label-color'          => 'var(--hof-text)',
+            '--hof-label-font-size'      => 'var(--hof-font-size-body)',
             '--hof-label-font-weight'    => '600',
-            '--hof-label-letter-spacing' => '0.08em',
-            '--hof-label-transform'      => 'uppercase',
+            '--hof-label-letter-spacing' => 'normal',
+            '--hof-label-transform'      => 'none',
 
             // Count badge
             '--hof-count-color'       => 'var(--hof-muted)',
@@ -108,7 +108,7 @@ final class DesignTokens {
             // Input chrome (range, search, date, dropdown, ask, visual-dna)
             '--hof-input-bg'       => 'var(--hof-surface)',
             '--hof-input-border'   => 'var(--hof-border)',
-            '--hof-input-border-w' => '0.5px',
+            '--hof-input-border-w' => '1px',
         ];
     }
 

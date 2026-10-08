@@ -162,3 +162,36 @@ describe('facets.css respects the hidden attribute', () => {
         expect(getComputedStyle(el).display).toBe(display);
     });
 });
+
+describe('storefront defaults', () => {
+    const tokenBlock = facetsCss.match(/\.hof-facet,\s*\.hof-results\s*\{([\s\S]*?)\n\}/)[1];
+    const token = (name) => tokenBlock.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim();
+
+    it('titles facets in sentence case, not letter-spaced capitals', () => {
+        expect(token('--hof-label-transform')).toBe('none');
+        expect(token('--hof-label-letter-spacing')).toBe('normal');
+    });
+
+    it('draws no card around each facet unless a site opts in', () => {
+        expect(token('--hof-facet-bg')).toBe('transparent');
+        expect(token('--hof-facet-border-w')).toBe('0');
+        expect(facetsCss).toMatch(/\.hof-facet \{[^}]*border: var\(--hof-facet-border-w\) solid var\(--hof-border\)/);
+    });
+
+    it('makes the whole option row the click target', () => {
+        // The name sits outside the <label>, so the label's ::after has to
+        // cover the row or clicking the name does nothing.
+        expect(facetsCss).toMatch(/\.hof-facet-option > label::after \{[^}]*position: absolute;[^}]*inset: 0;/);
+        expect(facetsCss).toMatch(/\.hof-facet-option \{[^}]*position: relative;/);
+        // A crawlable name link stays above that layer.
+        expect(facetsCss).toMatch(/\.hof-facet-option \.hof-facet-link \{[^}]*z-index: 1;/);
+    });
+
+    it('hides every renderer input marked screen-reader-text, without relying on the theme', () => {
+        expect(facetsCss).toMatch(/\.hof-facet \.screen-reader-text \{[^}]*clip: rect\(0 0 0 0\)/);
+    });
+
+    it('uses no sub-pixel hairlines', () => {
+        expect(facetsCss).not.toMatch(/\b0\.5px\b/);
+    });
+});
