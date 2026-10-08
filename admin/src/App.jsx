@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { getIndexerStats, getSuggestions, reindex, saveFacets } from './api.js';
-import { pickSuggestions } from './lib/facets.js';
+import { mergeSettings, pickSuggestions } from './lib/facets.js';
 import { countInvalid } from './validation.js';
 import FacetsList from './components/FacetsList.jsx';
 import Shell from './components/Shell.jsx';
@@ -300,16 +300,17 @@ export default function App({ bootstrap }) {
         }
     };
 
-    // Sync from the Blueprint sandbox: PUT a settings patch onto one facet
-    // without going through the dirty-flag flow that the Facets editor uses.
-    const saveFacetSettings = async (facetName, settings) => {
-        const next = facets.map((f) =>
-            f.name === facetName ? { ...f, settings: { ...settings } } : f
-        );
+    // Save from the Playground: merge each facet's knobs into its settings
+    // and PUT them in one request (Save to facet sends one, Publish all sends
+    // every changed facet). Merge, never replace — the playground only owns
+    // the deck knobs, and replacing wiped a facet's match mode, button style
+    // or Visual DNA target.
+    const saveFacetSettings = async (patches) => {
+        const next = mergeSettings(facets, patches);
         const result = await saveFacets(next);
         const canonical = Array.isArray(result.facets) ? result.facets : next;
         setFacets(canonical);
-        return canonical.find((f) => f.name === facetName) || null;
+        return canonical;
     };
 
     const helpButtonRef = useRef(null);

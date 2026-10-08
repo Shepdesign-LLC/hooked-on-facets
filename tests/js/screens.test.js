@@ -319,18 +319,29 @@ describe('Indexer', () => {
 describe('Blueprint', () => {
     const props = { facets: [{ name: 'color', label: 'Color', display: 'swiper', kind: 'taxonomy', source: 'pa_color', settings: {} }], onBack: vi.fn(), onSaveSettings: vi.fn() };
 
-    it('calls the button Publish all', async () => {
+    const two = [
+        { name: 'color', label: 'Color', display: 'swiper', kind: 'taxonomy', source: 'pa_color', settings: { match: 'all' } },
+        { name: 'size', label: 'Size', display: 'swiper', kind: 'taxonomy', source: 'pa_size', settings: { cardSize: 'Small' } },
+    ];
+    const deploy = () => host.querySelector('.hof-bp-deploy');
+    const chip = (label) => [...host.querySelectorAll('.hof-bp-facet-chip')].find((c) => c.textContent.startsWith(label));
+    const segment = (label) => [...host.querySelectorAll('.hof-bp-segmented-item')].find((b) => b.textContent === label);
+    const click = async (el) => { await act(async () => el.click()); };
+
+    it('calls the button Publish all, disabled until something changed', async () => {
         await mount(createElement(Blueprint, props));
 
-        expect(host.querySelector('.hof-bp-deploy').textContent).toBe('Publish all');
+        expect(deploy().textContent).toBe('Publish all');
+        expect(deploy().disabled).toBe(true);
     });
 
     it('explains Save versus Publish in a tooltip beside it', async () => {
         await mount(createElement(Blueprint, props));
         const tip = host.querySelector('.hof-bp-bar-actions .hof-tip').dataset.tip;
 
-        expect(tip).toContain("Save to facet writes this facet's look back to that one facet");
-        expect(tip).toContain('Publish all writes every facet in the playground to the Shop archive template');
+        expect(tip).toContain("Save to facet writes the facet you're editing");
+        expect(tip).toContain("Publish all saves every facet you've changed here in one go");
+        expect(tip).not.toMatch(/template/);
         expect(host.querySelector('.hof-bp-bar-actions .hof-tip').getAttribute('tabindex')).toBe('0');
     });
 
@@ -338,7 +349,75 @@ describe('Blueprint', () => {
         await mount(createElement(Blueprint, props));
 
         expect(host.querySelector('.hof-view-title').textContent).toBe('Playground');
-        expect(host.querySelector('.hof-lede').textContent).toContain('Save one facet, or publish them all to the template.');
+        expect(host.querySelector('.hof-lede').textContent).toContain('Save one facet, or publish every change at once.');
+    });
+
+    it('keeps edits per facet when switching, and marks the changed ones', async () => {
+        await mount(createElement(Blueprint, { ...props, facets: two }));
+
+        await click(segment('Grid'));          // Color: Card -> Grid
+        await click(chip('Size'));
+        expect(segment('Small').classList.contains('is-active')).toBe(true); // Size's own saved value
+
+        await click(chip('Color'));
+        expect(segment('Grid').classList.contains('is-active')).toBe(true);  // Color's draft survived
+        expect(chip('Color').classList.contains('has-draft')).toBe(true);
+        expect(chip('Size').classList.contains('has-draft')).toBe(false);
+    });
+
+    it('publishes every changed facet in one save, then clears the drafts', async () => {
+        const onSaveSettings = vi.fn(async () => []);
+        await mount(createElement(Blueprint, { ...props, facets: two, onSaveSettings }));
+
+        await click(segment('Grid'));          // Color
+        await click(chip('Size'));
+        await click(segment('Large'));         // Size: Small -> Large
+        expect(deploy().disabled).toBe(false);
+        expect(deploy().getAttribute('aria-label')).toBe('Publish all (2 changed facets)');
+
+        await click(deploy());
+
+        expect(onSaveSettings).toHaveBeenCalledTimes(1);
+        expect(onSaveSettings).toHaveBeenCalledWith({
+            color: { variant: 'Grid', cardSize: 'Medium', deckDepth: 3, animation: 'Spring' },
+            size:  { variant: 'Card', cardSize: 'Large', deckDepth: 3, animation: 'Spring' },
+        });
+        expect(host.querySelector('.hof-bp-toast').textContent).toContain('Published 2 facets.');
+        expect(host.querySelectorAll('.hof-bp-facet-chip.has-draft')).toHaveLength(0);
+    });
+
+    it('does not count an edit put back to the saved value as a change', async () => {
+        await mount(createElement(Blueprint, { ...props, facets: two }));
+
+        await click(segment('Grid'));
+        await click(segment('Card'));
+
+        expect(deploy().disabled).toBe(true);
+    });
+
+    it('keeps the drafts and says so when publishing fails', async () => {
+        const onSaveSettings = vi.fn(async () => { throw new Error('500 nope'); });
+        await mount(createElement(Blueprint, { ...props, facets: two, onSaveSettings }));
+
+        await click(segment('Grid'));
+        await click(deploy());
+
+        expect(host.querySelector('.hof-bp-toast-err').textContent).toContain('500 nope');
+        expect(chip('Color').classList.contains('has-draft')).toBe(true);
+        expect(deploy().disabled).toBe(false);
+    });
+
+    it('Save to facet saves only the facet being edited', async () => {
+        const onSaveSettings = vi.fn(async () => []);
+        await mount(createElement(Blueprint, { ...props, facets: two, onSaveSettings }));
+
+        await click(segment('Grid'));          // Color
+        await click(chip('Size'));
+        await click(segment('Large'));         // Size
+        await click(host.querySelector('.hof-bp-sync'));
+
+        expect(onSaveSettings).toHaveBeenCalledWith({ size: { variant: 'Card', cardSize: 'Large', deckDepth: 3, animation: 'Spring' } });
+        expect(chip('Color').classList.contains('has-draft')).toBe(true);
     });
 
     it('keeps the Sync behavior', async () => {

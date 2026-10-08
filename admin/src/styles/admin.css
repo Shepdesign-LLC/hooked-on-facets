@@ -2263,8 +2263,25 @@ body.toplevel_page_hooked-on-facets .wrap {
 }
 
 .hof-bp-chip:hover,
-.hof-bp-deploy:hover {
+.hof-bp-deploy:hover:not(:disabled) {
     background: var(--hof-bg);
+}
+
+.hof-bp-deploy:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.hof-bp-count {
+    min-width: 18px;
+    padding: 0 5px;
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 18px;
+    text-align: center;
 }
 
 .hof-bp-grid {
@@ -2757,6 +2774,17 @@ body.toplevel_page_hooked-on-facets .wrap {
 .hof-bp-facet-chip:hover {
     color: var(--hof-text);
     border-color: var(--hof-faint);
+}
+
+.hof-bp-facet-chip.has-draft::after {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-left: 6px;
+    border-radius: 50%;
+    background: var(--hof-danger);
+    vertical-align: middle;
 }
 
 .hof-bp-facet-chip.is-active {

@@ -15,9 +15,9 @@ import { applyFilter } from '../api.js';
 import Tip from './ui/Tip.jsx';
 
 const DEPLOY_TIP =
-    "Two ways to save. Save to facet writes this facet's look back to that one facet. Publish all writes every facet " +
-    'in the playground to the Shop archive template at once, so the whole page goes live together. Until you do one ' +
-    'of those, nothing on the site changes.';
+    "Two ways to save. Save to facet writes the facet you're editing. Publish all saves every facet you've changed " +
+    'here in one go, so they go live together. Switching facets keeps your changes; until you save or publish, ' +
+    'nothing on the site changes.';
 
 const VARIANTS    = ['Card', 'Grid', 'Swipe'];
 const CARD_SIZES  = ['Small', 'Medium', 'Large'];
@@ -47,6 +47,24 @@ const CARD_DIM = {
     Large:  { w: 196, h: 230 },
 };
 
+// The playground's knobs as stored on a facet, with defaults filled in.
+const knobsOf = (facet) => {
+    const s = facet?.settings || {};
+    return {
+        variant:   s.variant   ?? DEFAULTS.variant,
+        cardSize:  s.cardSize  ?? DEFAULTS.cardSize,
+        deckDepth: typeof s.deckDepth === 'number' ? s.deckDepth : DEFAULTS.deckDepth,
+        animation: s.animation ?? DEFAULTS.animation,
+    };
+};
+
+const sameKnobs = (a, b) => Object.keys(DEFAULTS).every((k) => a[k] === b[k]);
+
+/**
+ * @param {{ facets: object[], onBack: () => void,
+ *           onSaveSettings: (patches: Record<string, object>) => Promise<unknown> }} props
+ *   onSaveSettings merges each facet's knobs into its settings in one save.
+ */
 export default function Blueprint({ facets, onBack, onSaveSettings }) {
     const editable = useMemo(
         () => facets.filter((f) => f.name && f.source),
@@ -58,27 +76,16 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
     );
     const editing = editable.find((f) => f.name === selectedName) || null;
 
-    // Local sandbox state — hydrated from the selected facet's saved settings
-    // each time the selection changes. Lets the user explore without affecting
-    // the facet until they click Sync.
-    const [variant,   setVariant]   = useState(DEFAULTS.variant);
-    const [cardSize,  setCardSize]  = useState(DEFAULTS.cardSize);
-    const [deckDepth, setDeckDepth] = useState(DEFAULTS.deckDepth);
-    const [animation, setAnimation] = useState(DEFAULTS.animation);
+    // Unsaved edits, per facet name. Switching facets keeps them, so Publish
+    // all can save every changed facet at once; nothing touches the site
+    // until Save to facet or Publish all.
+    const [drafts, setDrafts] = useState({});
 
     const [resultCount, setResultCount] = useState(null);
-    const [syncing, setSyncing]         = useState(false);
+    const [busy,    setBusy]            = useState(null); // 'save' | 'publish' | null
     const [toast,   setToast]           = useState(null); // { type, message }
 
-    // Hydrate from facet on selection change.
-    useEffect(() => {
-        const s = editing?.settings || {};
-        setVariant(s.variant   ?? DEFAULTS.variant);
-        setCardSize(s.cardSize ?? DEFAULTS.cardSize);
-        setDeckDepth(typeof s.deckDepth === 'number' ? s.deckDepth : DEFAULTS.deckDepth);
-        setAnimation(s.animation ?? DEFAULTS.animation);
-        setToast(null);
-    }, [editing?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => { setToast(null); }, [selectedName]);
 
     // Pull the real total from the resolver — empty filters = full catalog.
     useEffect(() => {
@@ -89,27 +96,45 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
         return () => { cancelled = true; };
     }, []);
 
-    const saved = editing?.settings || {};
-    const dirty = (
-        variant   !== (saved.variant   ?? DEFAULTS.variant)   ||
-        cardSize  !== (saved.cardSize  ?? DEFAULTS.cardSize)  ||
-        deckDepth !== (saved.deckDepth ?? DEFAULTS.deckDepth) ||
-        animation !== (saved.animation ?? DEFAULTS.animation)
-    );
+    const knobs = drafts[selectedName] || knobsOf(editing);
+    const { variant, cardSize, deckDepth, animation } = knobs;
 
-    const sync = async () => {
-        if (!editing) return;
-        setSyncing(true);
+    // A draft that has been set back to the saved values isn't a change.
+    const changed = editable.filter((f) => drafts[f.name] && !sameKnobs(drafts[f.name], knobsOf(f)));
+    const isChanged = (name) => changed.some((f) => f.name === name);
+    const dirty = isChanged(selectedName);
+
+    const setKnob = (key) => (value) => {
+        if (!selectedName) return;
+        setDrafts((d) => ({ ...d, [selectedName]: { ...knobs, [key]: value } }));
+    };
+
+    const save = async (targets, kind) => {
+        if (targets.length === 0) return;
+        setBusy(kind);
         setToast(null);
         try {
-            await onSaveSettings(editing.name, { variant, cardSize, deckDepth, animation });
-            setToast({ type: 'ok', message: `Saved to "${editing.label || editing.name}".` });
+            await onSaveSettings(Object.fromEntries(targets.map((f) => [f.name, drafts[f.name]])));
+            setDrafts((d) => {
+                const next = { ...d };
+                for (const f of targets) delete next[f.name];
+                return next;
+            });
+            setToast({
+                type: 'ok',
+                message: kind === 'publish'
+                    ? `Published ${targets.length} facet${targets.length === 1 ? '' : 's'}.`
+                    : `Saved to "${targets[0].label || targets[0].name}".`,
+            });
         } catch (e) {
-            setToast({ type: 'err', message: e?.message || 'Save failed.' });
+            setToast({ type: 'err', message: e?.message || (kind === 'publish' ? 'Publish failed.' : 'Save failed.') });
         } finally {
-            setSyncing(false);
+            setBusy(null);
         }
     };
+
+    const saveOne    = () => save(changed.filter((f) => f.name === selectedName), 'save');
+    const publishAll = () => save(changed, 'publish');
 
     const dim = CARD_DIM[cardSize] || CARD_DIM.Medium;
     const stageStyle = {
@@ -123,8 +148,8 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                 <div className="hof-view-heading">
                     <h2 className="hof-view-title">Playground</h2>
                     <p className="hof-lede">
-                        Try how a facet looks and moves against your real products. Save one facet, or publish them
-                        all to the template. Until then nothing on the site changes.
+                        Try how a facet looks and moves against your real products. Save one facet, or publish
+                        every change at once. Until then nothing on the site changes.
                     </p>
                 </div>
             </div>
@@ -144,9 +169,20 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                         <button type="button" className="hof-bp-chip hof-bp-chip-icon" aria-label="Toggle preview">
                             <IconEye size={13} stroke={1.75} aria-hidden="true" />
                         </button>
-                        <button type="button" className="hof-bp-deploy">
+                        <button
+                            type="button"
+                            className="hof-bp-deploy"
+                            onClick={publishAll}
+                            disabled={changed.length === 0 || busy !== null}
+                            aria-label={changed.length > 0
+                                ? `Publish all (${changed.length} changed facet${changed.length === 1 ? '' : 's'})`
+                                : 'Publish all (nothing to publish)'}
+                        >
                             <IconCloudUpload size={13} stroke={1.75} aria-hidden="true" />
-                            <span>Publish all</span>
+                            <span>{busy === 'publish' ? 'Publishing…' : 'Publish all'}</span>
+                            {changed.length > 0 && busy !== 'publish' && (
+                                <span className="hof-bp-count" aria-hidden="true">{changed.length}</span>
+                            )}
                         </button>
                         <Tip text={DEPLOY_TIP} align="left" />
                     </div>
@@ -192,10 +228,11 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                                         type="button"
                                         role="tab"
                                         aria-selected={f.name === selectedName}
-                                        className={`hof-bp-facet-chip ${f.name === selectedName ? 'is-active' : ''}`}
+                                        className={`hof-bp-facet-chip ${f.name === selectedName ? 'is-active' : ''} ${isChanged(f.name) ? 'has-draft' : ''}`}
                                         onClick={() => setSelectedName(f.name)}
                                     >
                                         {f.label || f.name}
+                                        {isChanged(f.name) && <span className="hof-sr-only"> (unsaved changes)</span>}
                                     </button>
                                 ))}
                             </div>
@@ -207,11 +244,11 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                         </p>
 
                         <Field label="Variant">
-                            <Segmented options={VARIANTS} value={variant} onChange={setVariant} />
+                            <Segmented options={VARIANTS} value={variant} onChange={setKnob('variant')} />
                         </Field>
 
                         <Field label="Card size">
-                            <Segmented options={CARD_SIZES} value={cardSize} onChange={setCardSize} />
+                            <Segmented options={CARD_SIZES} value={cardSize} onChange={setKnob('cardSize')} />
                         </Field>
 
                         <Field label="Deck depth">
@@ -221,7 +258,7 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                                     min="1"
                                     max="10"
                                     value={deckDepth}
-                                    onChange={(e) => setDeckDepth(Number(e.target.value))}
+                                    onChange={(e) => setKnob('deckDepth')(Number(e.target.value))}
                                     className="hof-bp-slider-input"
                                     aria-label="Deck depth"
                                 />
@@ -237,7 +274,7 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                                             type="radio"
                                             name="hof-bp-animation"
                                             checked={animation === a}
-                                            onChange={() => setAnimation(a)}
+                                            onChange={() => setKnob('animation')(a)}
                                         />
                                         <span className="hof-bp-radio-dot" aria-hidden="true"></span>
                                         <span>{a}</span>
@@ -260,13 +297,13 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                             <button
                                 type="button"
                                 className="hof-btn hof-btn-primary hof-bp-sync"
-                                onClick={sync}
-                                disabled={!editing || !dirty || syncing}
+                                onClick={saveOne}
+                                disabled={!editing || !dirty || busy !== null}
                             >
-                                {dirty || syncing
+                                {dirty || busy === 'save'
                                     ? <IconArrowUpRight size={14} stroke={1.75} aria-hidden="true" />
                                     : <IconCheck size={14} stroke={1.75} aria-hidden="true" />}
-                                <span>{syncing ? 'Saving…' : dirty ? 'Save to facet' : 'Saved'}</span>
+                                <span>{busy === 'save' ? 'Saving…' : dirty ? 'Save to facet' : 'Saved'}</span>
                             </button>
                         </div>
                     </aside>

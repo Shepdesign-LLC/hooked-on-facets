@@ -4,6 +4,7 @@ import {
     orderPostTypes,
     facetValues,
     groupFacets,
+    mergeSettings,
     pickSuggestions,
     postTypeOf,
     sourceLabel,
@@ -172,3 +173,26 @@ describe('orderPostTypes', () => {
         expect(input[0].slug).toBe('post');
     });
 });
+
+describe('mergeSettings', () => {
+    const facets = [
+        { name: 'brand', display: 'checkbox', settings: { match: 'all', style: 'buttons' } },
+        { name: 'dna', display: 'visual_dna', settings: { target_facet: 'color' } },
+        { name: 'deck', display: 'swiper' },
+    ];
+
+    it('merges knobs into existing settings instead of replacing them', () => {
+        const out = mergeSettings(facets, { brand: { variant: 'Grid' }, deck: { cardSize: 'Large' } });
+
+        expect(out[0].settings).toEqual({ match: 'all', style: 'buttons', variant: 'Grid' });
+        expect(out[2].settings).toEqual({ cardSize: 'Large' });
+    });
+
+    it('leaves facets without a patch untouched, by reference', () => {
+        const out = mergeSettings(facets, { brand: { variant: 'Grid' } });
+
+        expect(out[1]).toBe(facets[1]);
+        expect(out[1].settings.target_facet).toBe('color');
+    });
+});
+
