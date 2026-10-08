@@ -530,7 +530,7 @@ export default function App({ bootstrap }) {
                 )}
 
                 {view === 'license' && (
-                    <LicenseSettings bootstrap={bootstrap} />
+                    <LicenseSettings />
                 )}
 
                 {view === 'settings' && (

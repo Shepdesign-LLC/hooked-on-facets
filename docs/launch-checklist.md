@@ -9,19 +9,20 @@ Internal runway for taking Hooked on Facets to a paid product. Status reflects t
 - [x] Performance gates met (~54ms p95 ids / ~63ms full / ~19s reindex on 100k).
 - [x] Sources: WooCommerce, ACF, Meta Box, Pods. Builders: Gutenberg, Elementor,
       Bricks, Breakdance, Divi.
-- [x] EDD licensing scaffold (`src/Licensing/`): activate/deactivate, daily
-      revalidation, soft enforcement, dev-mode bypass, plugin updater.
+- [x] Freemius integration: the free plugin bundles the SDK (WordPress.org
+      compliant, opt-in only); Pro is a Freemius add-on for licensing and updates.
 - [x] Tests + CI gating (PHP / JS / Markdown). Versions consistent at 1.0.0.
 - [x] `readme.txt`, translation template (`languages/hooked-on-facets.pot`), docs.
 - [x] Authorship/brand consolidated under Shepdesign, LLC.
 
 ## 🟧 Must-do before charging money
 
-- [ ] **Stand up the store.** EDD + EDD Software Licensing on `hookedonfacets.com`.
-- [ ] **Create the EDD Download** for HOF; record its item ID.
-- [ ] **Wire `HOF_LICENSE_ITEM_ID`** into the shipped build (it currently defaults
-      to `0` → activation can't succeed until set).
-- [ ] **Upload the release ZIP** to the Download so the updater can serve updates.
+- [ ] **Set up Freemius.** The free plugin product, the Pro add-on (parent: the
+      free plugin) and Pro's plans.
+- [ ] **Set the Freemius IDs and public keys** (`HOF_FS_*`, `HOF_PRO_FS_*`); until
+      they are set, neither plugin loads the SDK. See
+      [Licensing & Updates](licensing-and-updates.md).
+- [ ] **Upload each Pro release ZIP** to the add-on in Freemius.
 - [ ] **Build `hookedonfacets.com`** — landing page, feature/benefit sections,
       pricing, checkout, account/license area, docs, support contact.
 - [ ] **Tag & publish `v1.0.0`** (GitHub release + store), matching this changelog.

@@ -9,6 +9,27 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+### Added
+
+- **Freemius.** The plugin bundles the Freemius SDK (2.13.4) in WordPress.org
+  compliant mode: on activation it asks whether to share diagnostic data, and
+  nothing is sent unless the site owner opts in. Freemius adds Account and
+  Add-Ons screens under the plugin menu, and Hooked on Facets Pro registers with
+  it as an add-on for licensing and updates. Inert until the product ID and
+  public key are set (`HOF_FS_PRODUCT_ID`, `HOF_FS_PUBLIC_KEY`).
+
+### Changed
+
+- **The License screen reports Pro's Freemius license** (active, trial, expired
+  or not activated, with plan and renewal date) and links to activate, renew or
+  manage it in Freemius. The key field is gone: Freemius handles activation.
+- **Uninstall cleanup moved** from `uninstall.php` to `hof_uninstall()`, which
+  runs on Freemius' `after_uninstall` (a root `uninstall.php` would have stopped
+  Freemius' uninstall hook). What it removes, and the opt-in that gates it, are
+  unchanged.
+- **The readme discloses Freemius** under "Does this plugin contact any
+  external service?".
+
 ## [1.3.0] - 2026-10-08
 
 The blueprint look is gone. The admin and the storefront facets are restyled

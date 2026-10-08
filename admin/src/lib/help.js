@@ -18,7 +18,7 @@ export const HELP_CONTEXT = {
     blueprint: 'Try the visual facets against real products. Nothing changes on the site until you save or publish.',
     tokens: 'CSS variables every HOF surface reads. Change one, restyle everything.',
     seo: 'Canonical, noindex and title rules for filtered URLs. Defaults are safe for almost every store.',
-    license: 'Your plan, sites and key. Beta program opt-in lives here too.',
+    license: 'Your Pro license status, with links to activate, renew or manage it in Freemius.',
     settings: 'Ask provider and key, sources, and which post types get indexed.',
 };
 

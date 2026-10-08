@@ -51,4 +51,5 @@
 brand/* linguist-vendored
 marketing/* linguist-documentation
 docs/* linguist-documentation
+freemius/** linguist-vendored
 /site                  export-ignore

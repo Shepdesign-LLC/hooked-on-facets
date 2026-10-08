@@ -3,7 +3,8 @@
  * Deactivator — runs on plugin deactivation.
  *
  * Preserves the wp_hof_index table and configured options so deactivate +
- * reactivate is non-destructive. Schema removal belongs in uninstall.php.
+ * reactivate is non-destructive. Schema removal belongs in hof_uninstall()
+ * (includes/uninstall.php).
  *
  * @package HookedOnFacets
  */
