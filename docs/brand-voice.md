@@ -62,4 +62,4 @@ For visual identity (colors, type, logo) see [`BRAND.md`](https://github.com/She
 - **Hook purple** `#534AB7`
 - **Facet coral** `#D85A30`
 - Typography: **Geist Sans** / **Geist Mono**
-- No blue. No shadows. No gradients.
+- No blue. No gradients. Shadows only from the soft elevation tokens.
