@@ -120,9 +120,13 @@ for bad in tests bin .github docker-compose.yml package.json package-lock.json p
            node_modules README.md CHANGELOG.md .git .gitattributes; do
   if [ -e "$VERIFY/$SLUG/$bad" ]; then echo "VERIFY FAIL: dev file shipped: $bad" >&2; fail=1; fi
 done
-for need in hooked-on-facets.php uninstall.php readme.txt vendor src includes public admin integrations languages assets/dist; do
+for need in hooked-on-facets.php readme.txt vendor src includes public admin integrations languages assets/dist \
+            includes/uninstall.php includes/freemius.php freemius/start.php; do
   if [ ! -e "$VERIFY/$SLUG/$need" ]; then echo "VERIFY FAIL: missing runtime: $need" >&2; fail=1; fi
 done
+# A root uninstall.php would make WordPress skip Freemius' uninstall hook (and
+# with it hof_uninstall on after_uninstall). See includes/uninstall.php.
+if [ -e "$VERIFY/$SLUG/uninstall.php" ]; then echo "VERIFY FAIL: root uninstall.php shipped" >&2; fail=1; fi
 if [ -d "$VERIFY/$SLUG/vendor/phpunit" ] || [ -d "$VERIFY/$SLUG/vendor/brain" ]; then
   echo "VERIFY FAIL: dev dependency shipped in vendor/" >&2; fail=1
 fi

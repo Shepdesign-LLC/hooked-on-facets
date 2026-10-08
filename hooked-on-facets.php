@@ -102,13 +102,32 @@ require_once $hof_autoload;
 
 /*
 |--------------------------------------------------------------------------
+| Freemius
+|--------------------------------------------------------------------------
+| Opt-in insights, the Account/Add-ons screens, and the parent HOF Pro
+| registers under. A no-op until the product ID and public key are set
+| (includes/freemius.php). Loaded at plugin-file time, as the SDK expects,
+| so add-ons can attach on `hof_fs_loaded`.
+*/
+require_once HOF_PLUGIN_DIR . 'includes/uninstall.php';
+require_once HOF_PLUGIN_DIR . 'includes/freemius.php';
+
+/*
+|--------------------------------------------------------------------------
 | Lifecycle hooks
 |--------------------------------------------------------------------------
 | Activator installs the schema (network-aware on multisite). Deactivator
-| preserves data (only flushes rewrites + scheduled events). Uninstall lives
-| in uninstall.php — opt-in, per-site on multisite.
+| preserves data (only flushes rewrites + scheduled events). Uninstall is
+| hof_uninstall() (includes/uninstall.php) — opt-in, per-site on multisite.
+| Freemius runs it on after_uninstall; without Freemius it is registered as
+| the uninstall hook here, so it never overrides the SDK's own.
 */
 register_activation_hook( __FILE__, [ \HookedOnFacets\Activator::class, 'activate' ] );
+register_activation_hook( __FILE__, static function (): void {
+    if ( ! hof_fs_is_configured() ) {
+        register_uninstall_hook( HOF_PLUGIN_FILE, 'hof_uninstall' );
+    }
+} );
 register_deactivation_hook( __FILE__, [ \HookedOnFacets\Deactivator::class, 'deactivate' ] );
 
 // Multisite: seed the index table on any site added to the network while HOF

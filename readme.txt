@@ -90,9 +90,16 @@ MySQL 8.0.31 and has been in MariaDB since 10.3.
 
 = Does this plugin contact any external service? =
 
-No. The free plugin makes no external requests at all. (The AI "ask" facet, which
-calls the Anthropic API with your own key, is part of the separate Hooked on Facets
-Pro add-on and is disclosed there.)
+Only if you opt in. Hooked on Facets uses [Freemius](https://freemius.com) for
+opt-in usage insights and to offer the Pro add-on. On activation you're asked
+whether to share non-sensitive diagnostic data (site URL, WordPress and PHP
+versions, plugin events); skip it and nothing is sent. Opening the Add-Ons screen
+loads the add-on list from Freemius. See the
+[Freemius privacy policy](https://freemius.com/privacy/).
+
+Filtering itself never leaves your server. (The AI "ask" facet, which calls the
+Anthropic API with your own key, is part of the separate Hooked on Facets Pro
+add-on and is disclosed there.)
 
 = Does it work without WooCommerce? =
 

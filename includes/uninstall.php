@@ -21,18 +21,21 @@
  * never set hof_uninstall_remove_data keeps its data even if a sibling opted
  * in. The HOF_DELETE_DATA constant, if set, opts in network-wide.
  *
- * Runs in isolation — no plugin classes are autoloaded here, so this file
- * intentionally uses only WP core APIs and raw $wpdb. Hook / option names are
- * literals here on purpose (the Indexer class isn't loaded); keep them in sync
- * with HookedOnFacets\Indexer.
+ * How it runs: there is deliberately no root uninstall.php — WordPress
+ * prefers that file over any uninstall hook, which would stop Freemius from
+ * reporting the uninstall. With Freemius configured, hof_uninstall() runs on
+ * its `after_uninstall` action (includes/freemius.php); without it, the
+ * activation hook registers it as the plugin's uninstall hook.
+ *
+ * Uses only WP core APIs and raw $wpdb. Hook / option names are literals on
+ * purpose; keep them in sync with HookedOnFacets\Indexer.
  *
  * @package HookedOnFacets
  */
 
 declare(strict_types=1);
 
-// Hard exit if not invoked by the WordPress uninstall flow.
-defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Whether the current site has opted into full data removal.
@@ -71,12 +74,17 @@ function hof_uninstall_cleanup_current_site(): void {
     wp_clear_scheduled_hook( 'hof_background_reindex' );
 }
 
-if ( is_multisite() ) {
-    foreach ( get_sites( [ 'number' => 0, 'fields' => 'ids' ] ) as $hof_site_id ) {
-        switch_to_blog( (int) $hof_site_id );
+/**
+ * Uninstall entry point: clean up every site that opted in.
+ */
+function hof_uninstall(): void {
+    if ( is_multisite() ) {
+        foreach ( get_sites( [ 'number' => 0, 'fields' => 'ids' ] ) as $hof_site_id ) {
+            switch_to_blog( (int) $hof_site_id );
+            hof_uninstall_cleanup_current_site();
+            restore_current_blog();
+        }
+    } else {
         hof_uninstall_cleanup_current_site();
-        restore_current_blog();
     }
-} else {
-    hof_uninstall_cleanup_current_site();
 }

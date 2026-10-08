@@ -95,3 +95,7 @@ export const saveTokens = ({ tokens, custom_css, scope, facet }) =>
         method: 'PUT',
         body: JSON.stringify({ tokens, custom_css, scope, facet }),
     });
+
+// The Pro add-on's Freemius license state: { configured, status, plan,
+// expires, urls: { account, upgrade } }. Freemius itself does activation.
+export const getLicense = () => request('license');

@@ -10,11 +10,12 @@ plugin. There is no edition switch and nothing to strip:
 
 - **Hooked on Facets (this repo) → WordPress.org.** Ten facet types at full
   resolver speed, the builder, every source and page-builder bridge. It makes
-  no external request. It updates through WordPress.org.
-- **Hooked on Facets Pro → hookedonfacets.com.** A separate add-on plugin
+  no external request unless the site owner opts in to Freemius (disclosed in
+  the readme FAQ). It updates through WordPress.org.
+- **Hooked on Facets Pro → Freemius.** A separate add-on plugin
   (`hooked-on-facets-pro`) with the six signature facets, the AI settings
-  screen, the `/ask` and `/visual-dna` routes, and the EDD licensing and
-  updater. It never touches WordPress.org.
+  screen and the `/ask` and `/visual-dna` routes, licensed and updated through
+  Freemius as an add-on of the free plugin. It never touches WordPress.org.
 
 `bin/build-release.sh` self-verifies that the package carries no `src/Licensing`,
 `src/Ai` or `src/VisualDna` directory, so a Pro file can't ship by accident.

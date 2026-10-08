@@ -1,97 +1,57 @@
 import { useEffect, useState } from 'react';
-import { IconKey, IconCheck, IconAlertTriangle, IconExternalLink } from '@tabler/icons-react';
+import { IconAlertTriangle, IconCheck, IconKey } from '@tabler/icons-react';
+import { getLicense } from '../api.js';
 
-// Per-status presentation rules. `tone` drives the row color band.
-const STATUS_PRESENTATION = {
-    valid:           { tone: 'ok',    icon: 'check',  label: 'Active' },
-    expired:         { tone: 'warn',  icon: 'warn',   label: 'Expired' },
-    invalid:         { tone: 'error', icon: 'warn',   label: 'Invalid key' },
-    missing:         { tone: 'error', icon: 'warn',   label: 'Key not found at store' },
-    site_inactive:   { tone: 'warn',  icon: 'warn',   label: 'Site not activated' },
-    item_name_mismatch: { tone: 'error', icon: 'warn', label: 'Key issued for a different product' },
-    transport_error: { tone: 'warn',  icon: 'warn',   label: 'Couldn\'t reach the license store' },
-    not_set:         { tone: 'warn',  icon: 'warn',   label: 'No key configured' },
-    unknown:         { tone: 'warn',  icon: 'warn',   label: 'Unknown' },
-    unavailable:     { tone: 'error', icon: 'warn',   label: 'License manager unavailable' },
+// Pro is licensed through Freemius: activation, renewal and seat moves happen
+// on Freemius' Account screen, and updates arrive through WordPress' own
+// Updates screen. This screen only reports the state and links there.
+const STATUS = {
+    active:        { tone: 'ok',   label: 'Active' },
+    trial:         { tone: 'ok',   label: 'Trial' },
+    expired:       { tone: 'warn', label: 'Expired' },
+    not_activated: { tone: 'warn', label: 'Not activated' },
+    unconfigured:  { tone: 'warn', label: 'Licensing isn\'t set up' },
 };
 
-export default function LicenseSettings({ bootstrap }) {
-    const [loading, setLoading] = useState(true);
-    const [state, setState]     = useState({ configured: false, status: 'not_set' });
-    const [keyInput, setKeyInput] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [error, setError]     = useState('');
-    const [success, setSuccess] = useState('');
+const DETAIL = {
+    active:        'Pro is licensed on this site. Updates arrive on the WordPress Updates screen.',
+    trial:         'You\'re on a trial. Upgrade before it ends to keep updates coming.',
+    expired:       'Your license has expired. Pro keeps working, but updates stop until you renew.',
+    not_activated: 'Activate your license to get automatic updates for Pro.',
+    unconfigured:  'This build isn\'t connected to Freemius yet, so Pro runs without license checks or automatic updates.',
+};
 
-    const restUrl = bootstrap?.restUrl || '';
-    const nonce   = bootstrap?.nonce || '';
+// Primary and secondary actions per status: [label, url key(s)]. With several
+// keys the first URL Pro sends wins: an unregistered add-on gets Freemius'
+// license-key form (activate), a registered one its account page.
+const ACTIONS = {
+    active:        [['Manage license', 'account']],
+    trial:         [['Upgrade', 'upgrade'], ['Manage license', 'account']],
+    expired:       [['Renew', 'upgrade'], ['Manage license', 'account']],
+    not_activated: [['Activate license', ['activate', 'account']], ['Buy a license', 'upgrade']],
+    unconfigured:  [],
+};
+
+const formatDate = (iso) => {
+    const d = new Date(`${iso}T00:00:00`);
+    return Number.isNaN(d.getTime())
+        ? iso
+        : d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+};
+
+export default function LicenseSettings() {
+    const [state, setState] = useState(null);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch(`${restUrl}license`, { headers: { 'X-WP-Nonce': nonce } });
-                const data = await res.json();
-                setState(data);
-            } catch {
-                setError('Could not load license state.');
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, [restUrl, nonce]);
+        let live = true;
+        getLicense()
+            .then((data) => { if (live) setState(data); })
+            .catch(() => { if (live) setError('Could not load the license state.'); });
+        return () => { live = false; };
+    }, []);
 
-    const activate = async () => {
-        const key = keyInput.trim();
-        if (key === '') {
-            setError('Enter a license key.');
-            return;
-        }
-        setSubmitting(true);
-        setError(''); setSuccess('');
-        try {
-            const res = await fetch(`${restUrl}license/activate`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': nonce,
-                },
-                body: JSON.stringify({ key }),
-            });
-            const data = await res.json();
-            setState(data.state || state);
-            if (res.ok && data.ok) {
-                setKeyInput('');
-                setSuccess('License activated.');
-            } else {
-                const present = STATUS_PRESENTATION[data.status] || STATUS_PRESENTATION.unknown;
-                setError(data.error || `Activation failed — ${present.label}.`);
-            }
-        } catch (e) {
-            setError(e?.message || 'Activation failed.');
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const deactivate = async () => {
-        setSubmitting(true);
-        setError(''); setSuccess('');
-        try {
-            const res = await fetch(`${restUrl}license/deactivate`, {
-                method: 'POST',
-                headers: { 'X-WP-Nonce': nonce },
-            });
-            const data = await res.json();
-            setState(data.state || state);
-            setSuccess('License cleared.');
-        } catch (e) {
-            setError(e?.message || 'Deactivation failed.');
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    if (loading) {
+    if (!state && !error) {
         return (
             <div className="hof-ai-settings">
                 <h2 className="hof-ai-settings-title">License</h2>
@@ -100,8 +60,21 @@ export default function LicenseSettings({ bootstrap }) {
         );
     }
 
-    const present = STATUS_PRESENTATION[state.status] || STATUS_PRESENTATION.unknown;
-    const StatusIcon = present.icon === 'check' ? IconCheck : IconAlertTriangle;
+    const status  = STATUS[state?.status] ? state.status : 'unconfigured';
+    const present = STATUS[status];
+    const urls    = state?.urls || {};
+    const actions = ACTIONS[status]
+        .map(([label, keys]) => [label, [].concat(keys).map((k) => urls[k]).find(Boolean)])
+        .filter(([, href]) => href);
+    const StatusIcon = present.tone === 'ok' ? IconCheck : IconAlertTriangle;
+
+    let meta = null;
+    if (state?.plan || state?.expires || status === 'active') {
+        const when = state?.expires
+            ? `${status === 'expired' ? 'Expired' : status === 'trial' ? 'Trial ends' : 'Renews'} ${formatDate(state.expires)}`
+            : status === 'active' ? 'Lifetime license' : null;
+        meta = [state?.plan && `${state.plan} plan`, when].filter(Boolean).join(' · ');
+    }
 
     return (
         <div className="hof-ai-settings" id="license">
@@ -110,9 +83,8 @@ export default function LicenseSettings({ bootstrap }) {
                 <div>
                     <h2 className="hof-ai-settings-title">License</h2>
                     <p className="hof-ai-settings-sub">
-                        Activate this site against your hooked on facets license. Activation
-                        enables automatic plugin updates and unlocks any features that ship
-                        gated to licensed installs.
+                        Hooked on Facets Pro is licensed through Freemius. Activate, renew or move your
+                        license from your account; updates arrive through the normal WordPress Updates screen.
                     </p>
                 </div>
             </header>
@@ -120,88 +92,36 @@ export default function LicenseSettings({ bootstrap }) {
             <section className="hof-ai-settings-section">
                 <h3 className="hof-ai-settings-section-title">Current status</h3>
 
-                <div className={`hof-ai-settings-row hof-ai-settings-row--${present.tone}`}>
-                    <span className="hof-ai-settings-row-icon">
-                        <StatusIcon size={16} stroke={2} />
-                    </span>
-                    <div>
-                        <p className="hof-ai-settings-row-line">
-                            <strong>{present.label}</strong>
-                            {state.configured && state.fingerprint && (
-                                <>{' '}— key <code>{state.fingerprint}</code></>
-                            )}
-                        </p>
-                        {state.configured && (
-                            <p className="hof-ai-settings-row-sub">
-                                {state.expires_human && <>Renewal: {state.expires_human} · </>}
-                                {state.site_count != null && state.license_limit != null && (
-                                    <>{state.site_count} of {state.license_limit === 0 ? '∞' : state.license_limit} sites in use · </>
-                                )}
-                                Enforcement: <code>{state.enforcement}</code>
-                                {state.store_url && (
-                                    <> · Store: <a href={state.store_url} target="_blank" rel="noopener">{state.store_url}</a></>
-                                )}
-                            </p>
-                        )}
-                    </div>
-                </div>
+                {error ? (
+                    <p className="hof-ai-settings-msg hof-ai-settings-msg--error" role="alert">{error}</p>
+                ) : (
+                    <>
+                        <div className={`hof-ai-settings-row hof-ai-settings-row--${present.tone}`} data-status={status}>
+                            <span className="hof-ai-settings-row-icon">
+                                <StatusIcon size={16} stroke={2} aria-hidden="true" />
+                            </span>
+                            <div>
+                                <p className="hof-ai-settings-row-line"><strong>{present.label}</strong></p>
+                                {meta && <p className="hof-ai-settings-row-sub hof-license-meta">{meta}</p>}
+                                <p className="hof-ai-settings-row-sub">{DETAIL[status]}</p>
+                            </div>
+                        </div>
 
-                <div className="hof-ai-settings-input-row">
-                    <label className="hof-ai-settings-label" htmlFor="hof-license-key">
-                        {state.configured ? 'Replace with a different key' : 'Paste your license key'}
-                    </label>
-                    <div className="hof-ai-settings-input-wrap">
-                        <span className="hof-ai-settings-input-icon"><IconKey size={16} stroke={1.75} /></span>
-                        <input
-                            id="hof-license-key"
-                            type="text"
-                            autoComplete="off"
-                            spellCheck="false"
-                            className="hof-ai-settings-input"
-                            placeholder="hof_xxxxxxxxxxxxxxxxxxxxxxxx"
-                            value={keyInput}
-                            onChange={(e) => setKeyInput(e.target.value)}
-                            disabled={submitting}
-                        />
-                    </div>
-                    <div className="hof-ai-settings-actions">
-                        <button
-                            type="button"
-                            className="hof-ai-settings-btn hof-ai-settings-btn--primary"
-                            disabled={submitting || keyInput.trim() === ''}
-                            onClick={activate}
-                        >
-                            {submitting ? 'Working…' : 'Activate'}
-                        </button>
-                        {state.configured && (
-                            <button
-                                type="button"
-                                className="hof-ai-settings-btn hof-ai-settings-btn--ghost"
-                                disabled={submitting}
-                                onClick={deactivate}
-                            >
-                                Deactivate
-                            </button>
+                        {actions.length > 0 && (
+                            <div className="hof-ai-settings-actions">
+                                {actions.map(([label, href], i) => (
+                                    <a
+                                        key={label}
+                                        href={href}
+                                        className={`hof-btn ${i === 0 ? 'hof-btn-primary' : ''}`}
+                                    >
+                                        {label}
+                                    </a>
+                                ))}
+                            </div>
                         )}
-                    </div>
-                    {error   && <p className="hof-ai-settings-msg hof-ai-settings-msg--error">{error}</p>}
-                    {success && <p className="hof-ai-settings-msg hof-ai-settings-msg--ok">{success}</p>}
-                </div>
-            </section>
-
-            <section className="hof-ai-settings-section">
-                <h3 className="hof-ai-settings-section-title">How licensing works</h3>
-                <ul className="hof-ai-settings-list">
-                    <li>One license = one or more sites, depending on your plan. The store reports the seat limit when you activate.</li>
-                    <li>An active license enables auto-updates via WordPress's standard plugin updater — new releases download with the key embedded in the URL.</li>
-                    <li>During the pre-alpha period, enforcement is <strong>soft</strong>: the plugin works without a license. Future releases may gate features to active licenses.</li>
-                    <li>
-                        Need a key? Visit{' '}
-                        <a href={state.store_url || 'https://hookedonfacets.com'} target="_blank" rel="noopener">
-                            {state.store_url || 'hookedonfacets.com'}{' '}<IconExternalLink size={12} stroke={1.75} />
-                        </a>.
-                    </li>
-                </ul>
+                    </>
+                )}
             </section>
         </div>
     );
