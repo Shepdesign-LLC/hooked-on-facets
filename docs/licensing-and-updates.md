@@ -56,6 +56,9 @@ Public values only. **Never commit or ship a Freemius secret key.**
 - The SDK lives in `freemius/` in the free plugin (Freemius' own layout), not in
   `vendor/`: its Composer package autoloads `start.php`, which would boot the SDK
   on every request. Pro uses the free plugin's copy.
+- When you update the SDK, delete `freemius/composer.json`. It only lists the
+  SDK's own dev tooling (PHPCS, WPCS, PHPStan), which we never install. Its old
+  ranges trip Dependabot alerts, and the release build refuses to ship it.
 - There is no root `uninstall.php`: it would stop Freemius' uninstall hook from
   running. Data cleanup is `hof_uninstall()`, run on Freemius' `after_uninstall`.
 

@@ -124,6 +124,9 @@ for need in hooked-on-facets.php readme.txt vendor src includes public admin int
             includes/uninstall.php includes/freemius.php freemius/start.php; do
   if [ ! -e "$VERIFY/$SLUG/$need" ]; then echo "VERIFY FAIL: missing runtime: $need" >&2; fail=1; fi
 done
+# The vendored SDK's own dev manifest — never installed, and its stale ranges
+# trip Dependabot. Delete it when updating the SDK. See docs/licensing-and-updates.md.
+if [ -e "$VERIFY/$SLUG/freemius/composer.json" ]; then echo "VERIFY FAIL: freemius/composer.json shipped" >&2; fail=1; fi
 # A root uninstall.php would make WordPress skip Freemius' uninstall hook (and
 # with it hof_uninstall on after_uninstall). See includes/uninstall.php.
 if [ -e "$VERIFY/$SLUG/uninstall.php" ]; then echo "VERIFY FAIL: root uninstall.php shipped" >&2; fail=1; fi
