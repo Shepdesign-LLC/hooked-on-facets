@@ -9,6 +9,19 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-08
+
+The blueprint look is gone. The admin and the storefront facets are restyled
+as a modern, quiet UI, the screens use plain names, and the Playground's
+Publish all button works.
+
+### Added
+
+- **Publish all in the Playground.** Edits are kept per facet, so switching
+  facets no longer discards them, and changed facets are marked on their chip.
+  Publish all saves every changed facet in one request; Save to facet saves
+  the one you're editing. A failed publish keeps your changes.
+
 ### Changed
 
 - **The admin no longer looks like a blueprint.** The cool-lavender canvas,
@@ -35,9 +48,15 @@ major version. Each version links to its full GitHub release notes.
 - **Saved storefront colors no longer repaint the admin's neutrals.** Only the
   accent tokens (primary, on-primary, danger) flow from Styles into the admin,
   so a dark or loud storefront palette can't make the settings unreadable.
+- **Attributed to Shepdesign, LLC.** Plugin header, readme, docs, translation
+  template and package metadata. BRAND.md now allows the soft elevation
+  shadows and 1px borders the redesign uses.
 
 ### Fixed
 
+- **Saving from the Playground no longer wipes a facet's other settings.** It
+  replaced the facet's whole settings with the four card-deck options, erasing
+  its match mode, button style or Visual DNA target. Saves now merge.
 - **Clicking an option's name now toggles it.** Checkbox, radio and
   hierarchy rows render the name beside the `<label>`, not inside it, so only
   the box itself was clickable and the input had no accessible name. The
@@ -336,7 +355,8 @@ Custom-field source line — ACF, Meta Box, and Pods.
 
 - First public alpha.
 
-[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.3.0
 [1.2.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.1
 [1.2.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.0
 [1.1.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.1.1
