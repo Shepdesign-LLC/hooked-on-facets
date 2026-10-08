@@ -108,9 +108,9 @@ describe('Design tokens screen', () => {
 
     it('keeps Save disabled until something changes', async () => {
         await mount();
-        expect(byText('button', 'Save tokens').disabled).toBe(true);
+        expect(byText('button', 'Save styles').disabled).toBe(true);
         await type($('#hof-tk-hof-primary'), '#123456');
-        expect(byText('button', 'Save tokens').disabled).toBe(false);
+        expect(byText('button', 'Save styles').disabled).toBe(false);
     });
 
     it('shows the generated CSS and updates it as a token changes', async () => {
@@ -162,7 +162,7 @@ describe('Design tokens screen', () => {
         await click(byText('button', 'Reset to brand'));
         expect($('#hof-tk-hof-primary').value).toBe('#534AB7');
         expect(saveTokens).not.toHaveBeenCalled();
-        expect(byText('button', 'Save tokens').disabled).toBe(false);
+        expect(byText('button', 'Save styles').disabled).toBe(false);
     });
 
     it('saves tokens, css, scope and facet, then goes clean', async () => {
@@ -171,14 +171,14 @@ describe('Design tokens screen', () => {
         await type($('#hof-tk-hof-primary'), '#123456');
         await type($('textarea'), '.a{b:c}');
         await click(byText('button', 'This facet'));
-        await click(byText('button', 'Save tokens'));
+        await click(byText('button', 'Save styles'));
         expect(saveTokens).toHaveBeenCalledWith({
             tokens: expect.objectContaining({ '--hof-primary': '#123456' }),
             custom_css: '.a{b:c}',
             scope: 'facet',
             facet: 'brand',
         });
-        expect(byText('button', 'Save tokens').disabled).toBe(true);
+        expect(byText('button', 'Save styles').disabled).toBe(true);
         expect($('[role=status]').textContent).toContain('Saved');
     });
 
@@ -186,9 +186,9 @@ describe('Design tokens screen', () => {
         saveTokens.mockRejectedValue(new Error('403 Forbidden'));
         await mount();
         await type($('#hof-tk-hof-primary'), '#123456');
-        await click(byText('button', 'Save tokens'));
+        await click(byText('button', 'Save styles'));
         expect($('[role=status]').textContent).toContain('403 Forbidden');
-        expect(byText('button', 'Save tokens').disabled).toBe(false);
+        expect(byText('button', 'Save styles').disabled).toBe(false);
     });
 
     it('copies the generated CSS', async () => {

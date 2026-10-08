@@ -72,9 +72,9 @@ describe('Dashboard', () => {
     };
     const props = { facets: [], productsIndexed: 1596, telemetry, onCreateFacet: vi.fn(), onOpenBlueprint: vi.fn() };
 
-    it('explains Avg query time', async () => {
+    it('explains Filter speed', async () => {
         await mount(createElement(Dashboard, props));
-        const stat = [...host.querySelectorAll('.hof-stat')].find((s) => s.textContent.startsWith('Avg query time'));
+        const stat = [...host.querySelectorAll('.hof-stat')].find((s) => s.textContent.startsWith('Filter speed'));
 
         expect(stat.querySelector('.hof-tip').dataset.tip).toContain('Under 50 ms means a filter change feels instant.');
     });
@@ -90,6 +90,45 @@ describe('Dashboard', () => {
         await mount(createElement(Dashboard, props));
 
         for (const t of host.querySelectorAll('.hof-tip')) expect(t.getAttribute('tabindex')).toBe('0');
+    });
+
+    it('leads with the next step, not engine jargon', async () => {
+        await mount(createElement(Dashboard, { ...props, telemetry: {} }));
+
+        expect(host.querySelector('.hof-dash-headline').textContent).toBe('Add a facet and it shows up on your store.');
+        expect(host.querySelector('.hof-dash-hero .hof-btn-primary').textContent).toBe('New facet');
+        expect(host.textContent).not.toMatch(/Auto-Hook Engine/);
+    });
+
+    it('hides latency percentiles it has no numbers for', async () => {
+        await mount(createElement(Dashboard, { ...props, telemetry: { resolver: { p95_ms: 12.5 } } }));
+        const labels = [...host.querySelectorAll('.hof-stat .hof-eyebrow')].map((e) => e.textContent);
+
+        expect(labels).toContain('Slow (p95)');
+        expect(labels).not.toContain('Typical (p50)');
+        expect(labels).not.toContain('Slowest (p99)');
+    });
+
+    it('flags unused facets only once shoppers have used something', async () => {
+        const facets = [{ name: 'brand', label: 'Brand', source: 'tax/brand', display: 'checkbox' }];
+        await mount(createElement(Dashboard, { ...props, facets, telemetry: {} }));
+        expect(host.querySelector('.hof-analytics-dead')).toBeNull();
+
+        await act(async () => root.unmount());
+        host.remove();
+        await mount(createElement(Dashboard, { ...props, facets }));
+        expect(host.querySelector('.hof-analytics-dead').textContent).toContain('1 facet not used yet: Brand');
+    });
+
+    it('marks each facet Live or Draft in words, not just a dot', async () => {
+        const facets = [
+            { name: 'brand', label: 'Brand', source: 'tax/brand', display: 'checkbox' },
+            { name: 'wip', label: 'Wip', source: '', display: 'checkbox' },
+        ];
+        await mount(createElement(Dashboard, { ...props, facets }));
+        const pills = [...host.querySelectorAll('.hof-dash-facet .hof-pill')].map((p) => p.textContent);
+
+        expect(pills).toEqual(['Live', 'Draft']);
     });
 
     it('sets numbers in tabular figures', () => {
@@ -280,26 +319,26 @@ describe('Indexer', () => {
 describe('Blueprint', () => {
     const props = { facets: [{ name: 'color', label: 'Color', display: 'swiper', kind: 'taxonomy', source: 'pa_color', settings: {} }], onBack: vi.fn(), onSaveSettings: vi.fn() };
 
-    it('calls the button Deploy blueprint', async () => {
+    it('calls the button Publish all', async () => {
         await mount(createElement(Blueprint, props));
 
-        expect(host.querySelector('.hof-bp-deploy').textContent).toBe('Deploy blueprint');
+        expect(host.querySelector('.hof-bp-deploy').textContent).toBe('Publish all');
     });
 
-    it('explains Sync versus Deploy in a tooltip beside it', async () => {
+    it('explains Save versus Publish in a tooltip beside it', async () => {
         await mount(createElement(Blueprint, props));
         const tip = host.querySelector('.hof-bp-bar-actions .hof-tip').dataset.tip;
 
-        expect(tip).toContain('Sync writes one facet');
-        expect(tip).toContain('Deploy writes every facet in this blueprint to the Shop archive template');
+        expect(tip).toContain("Save to facet writes this facet's look back to that one facet");
+        expect(tip).toContain('Publish all writes every facet in the playground to the Shop archive template');
         expect(host.querySelector('.hof-bp-bar-actions .hof-tip').getAttribute('tabindex')).toBe('0');
     });
 
     it('says the same in one sentence under the title', async () => {
         await mount(createElement(Blueprint, props));
 
-        expect(host.querySelector('.hof-view-title').textContent).toBe('Blueprint');
-        expect(host.querySelector('.hof-lede').textContent).toContain('Sync saves one facet; Deploy saves the whole blueprint to the template.');
+        expect(host.querySelector('.hof-view-title').textContent).toBe('Playground');
+        expect(host.querySelector('.hof-lede').textContent).toContain('Save one facet, or publish them all to the template.');
     });
 
     it('keeps the Sync behavior', async () => {

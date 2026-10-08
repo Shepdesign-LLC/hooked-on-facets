@@ -71,8 +71,8 @@ final class MenuRegistrarTest extends TestCase {
 
         self::assertSame( '#534AB7', $tokens['--hof-primary'] );
         self::assertSame( '#FFFFFF', $tokens['--hof-on-primary'] );
-        self::assertSame( '#F5F4FB', $tokens['--hof-bg'] );
-        self::assertSame( '#DDDAEE', $tokens['--hof-border'] );
+        self::assertSame( '#F7F7F5', $tokens['--hof-bg'] );
+        self::assertSame( '#E6E4DF', $tokens['--hof-border'] );
         self::assertSame( '#D85A30', $tokens['--hof-danger'] );
         self::assertStringStartsWith( "'Geist Variable'", $tokens['--hof-font'] );
     }

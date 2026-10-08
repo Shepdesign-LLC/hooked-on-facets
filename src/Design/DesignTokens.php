@@ -28,10 +28,13 @@ final class DesignTokens {
     /** Upper bound on stored custom CSS. Site CSS this large belongs in a theme. */
     public const MAX_CSS_BYTES = 20000;
 
-    /** Tokens the admin's own UI follows when they are saved. Layout tokens stay compact. */
+    /**
+     * Tokens the admin's own UI follows when they are saved: the brand accents
+     * only. Surfaces, text and borders stay the admin's own neutrals so a dark
+     * or loud storefront palette can never make the settings screens unreadable.
+     */
     public const ADMIN_TOKENS = [
-        '--hof-primary', '--hof-on-primary', '--hof-text', '--hof-muted',
-        '--hof-surface', '--hof-bg', '--hof-border', '--hof-danger',
+        '--hof-primary', '--hof-on-primary', '--hof-danger',
     ];
 
     /**

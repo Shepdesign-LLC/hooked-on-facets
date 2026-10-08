@@ -345,6 +345,7 @@ export default function App({ bootstrap }) {
                         telemetry={bootstrap.telemetry}
                         onCreateFacet={addFacet}
                         onOpenBlueprint={() => setView('blueprint')}
+                        onOpenFacets={() => setView('facets')}
                     />
                 )}
 

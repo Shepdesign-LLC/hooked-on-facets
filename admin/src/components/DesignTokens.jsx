@@ -168,11 +168,11 @@ export default function DesignTokens({ initial, facets = [] }) {
         <div className="hof-tokens">
             <header className="hof-view-header">
                 <div className="hof-view-heading">
-                    <h2 className="hof-view-title">Design tokens</h2>
+                    <h2 className="hof-view-title">Styles</h2>
                     <p className="hof-lede">
-                        CSS variables that every hooked on facets surface reads, admin and public. Change one here
-                        and every facet on the site follows. Override per site in theme CSS or with the{' '}
-                        <code>hof_public_css_tokens</code> filter.
+                        Colors, corners and type for every facet on your site. Change a value and the preview
+                        updates; save and the storefront follows. Developers can override them in theme CSS or with
+                        the <code>hof_public_css_tokens</code> filter.
                         <Tip text={TOKENS_TIP} />
                     </p>
                 </div>
@@ -185,7 +185,7 @@ export default function DesignTokens({ initial, facets = [] }) {
                         Copy CSS
                     </button>
                     <button type="button" className="hof-btn hof-btn-primary" onClick={save} disabled={busy || !dirty}>
-                        {busy ? 'Saving…' : 'Save tokens'}
+                        {busy ? 'Saving…' : 'Save styles'}
                     </button>
                 </div>
             </header>

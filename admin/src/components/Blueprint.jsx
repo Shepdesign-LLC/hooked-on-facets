@@ -15,9 +15,9 @@ import { applyFilter } from '../api.js';
 import Tip from './ui/Tip.jsx';
 
 const DEPLOY_TIP =
-    "Two levels of saving. Sync writes one facet's look back to that facet. Deploy writes every facet in this blueprint " +
-    'to the Shop archive template at once, so the whole sandbox becomes the live page. Until you do one of those, ' +
-    'nothing on the site changes.';
+    "Two ways to save. Save to facet writes this facet's look back to that one facet. Publish all writes every facet " +
+    'in the playground to the Shop archive template at once, so the whole page goes live together. Until you do one ' +
+    'of those, nothing on the site changes.';
 
 const VARIANTS    = ['Card', 'Grid', 'Swipe'];
 const CARD_SIZES  = ['Small', 'Medium', 'Large'];
@@ -103,9 +103,9 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
         setToast(null);
         try {
             await onSaveSettings(editing.name, { variant, cardSize, deckDepth, animation });
-            setToast({ type: 'ok', message: `Synced to "${editing.label || editing.name}".` });
+            setToast({ type: 'ok', message: `Saved to "${editing.label || editing.name}".` });
         } catch (e) {
-            setToast({ type: 'err', message: e?.message || 'Sync failed.' });
+            setToast({ type: 'err', message: e?.message || 'Save failed.' });
         } finally {
             setSyncing(false);
         }
@@ -121,10 +121,10 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
         <>
             <div className="hof-view-header">
                 <div className="hof-view-heading">
-                    <h2 className="hof-view-title">Blueprint</h2>
+                    <h2 className="hof-view-title">Playground</h2>
                     <p className="hof-lede">
-                        Try a facet&apos;s look and motion against live products. Sync saves one facet; Deploy saves the
-                        whole blueprint to the template. Until then nothing on the site changes.
+                        Try how a facet looks and moves against your real products. Save one facet, or publish them
+                        all to the template. Until then nothing on the site changes.
                     </p>
                 </div>
             </div>
@@ -133,9 +133,9 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                     <button type="button" className="hof-bp-back" onClick={onBack} aria-label="Back">
                         <IconArrowLeft size={14} stroke={1.75} />
                     </button>
-                    <span className="hof-bp-crumb">Sandbox</span>
+                    <span className="hof-bp-crumb">Playground</span>
                     <IconChevronRight size={12} stroke={1.75} className="hof-bp-sep" aria-hidden="true" />
-                    <span className="hof-bp-crumb hof-bp-crumb-active">Shop archive blueprint</span>
+                    <span className="hof-bp-crumb hof-bp-crumb-active">Shop archive</span>
                     <div className="hof-bp-bar-actions">
                         <button type="button" className="hof-bp-chip">
                             <IconDeviceDesktop size={13} stroke={1.75} aria-hidden="true" />
@@ -146,7 +146,7 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                         </button>
                         <button type="button" className="hof-bp-deploy">
                             <IconCloudUpload size={13} stroke={1.75} aria-hidden="true" />
-                            <span>Deploy blueprint</span>
+                            <span>Publish all</span>
                         </button>
                         <Tip text={DEPLOY_TIP} align="left" />
                     </div>
@@ -157,8 +157,8 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                         <span className="hof-bp-results-pill">
                             <IconLink size={11} stroke={1.75} aria-hidden="true" />
                             <span>
-                                Bricks · Shop archive ·{' '}
-                                {resultCount === null ? '— results' : `${resultCount.toLocaleString()} results`} matching
+                                Shop archive ·{' '}
+                                {resultCount === null ? 'counting products…' : `${resultCount.toLocaleString()} products`}
                             </span>
                         </span>
 
@@ -170,7 +170,7 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                         />
 
                         <div className="hof-bp-response">
-                            <p className="hof-eyebrow hof-bp-response-label">Products responding live</p>
+                            <p className="hof-eyebrow hof-bp-response-label">Matching products update live</p>
                             <div className="hof-bp-response-bars">
                                 <span className="hof-bp-response-bar" style={{ opacity: 1 }}></span>
                                 <span className="hof-bp-response-bar" style={{ opacity: 0.7 }}></span>
@@ -182,7 +182,7 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                     </section>
 
                     <aside className="hof-bp-inspector">
-                        <p className="hof-eyebrow">Editing</p>
+                        <p className="hof-eyebrow">Facet</p>
 
                         {editable.length > 1 && (
                             <div className="hof-bp-facet-picker" role="tablist" aria-label="Pick facet to edit">
@@ -263,8 +263,10 @@ export default function Blueprint({ facets, onBack, onSaveSettings }) {
                                 onClick={sync}
                                 disabled={!editing || !dirty || syncing}
                             >
-                                <IconArrowUpRight size={14} stroke={1.75} aria-hidden="true" />
-                                <span>{syncing ? 'Syncing…' : dirty ? 'Sync to query loop' : 'Synced'}</span>
+                                {dirty || syncing
+                                    ? <IconArrowUpRight size={14} stroke={1.75} aria-hidden="true" />
+                                    : <IconCheck size={14} stroke={1.75} aria-hidden="true" />}
+                                <span>{syncing ? 'Saving…' : dirty ? 'Save to facet' : 'Saved'}</span>
                             </button>
                         </div>
                     </aside>

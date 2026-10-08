@@ -441,7 +441,7 @@ describe('FacetEditor — button style', () => {
         await render(editor({ onOpenTokens, facet: facet({ settings: { style: 'buttons' } }) }));
         const note = host.querySelector('.hof-btn-note');
 
-        expect(note.textContent).toContain('Colors, radius and font come from Design tokens');
+        expect(note.textContent).toContain('Colors, radius and font come from Styles');
         expect(note.querySelector('code').textContent).toBe('hof-facet--brand');
 
         await act(async () => note.querySelector('button').click());

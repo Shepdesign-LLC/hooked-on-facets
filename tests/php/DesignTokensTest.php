@@ -266,8 +266,11 @@ final class DesignTokensTest extends TestCase {
         self::assertSame( '.a{color:red}/style>script>', DesignTokens::public_css() );
     }
 
-    public function test_admin_only_follows_the_color_tokens(): void {
+    public function test_admin_only_follows_the_accent_tokens(): void {
         self::assertContains( '--hof-primary', DesignTokens::ADMIN_TOKENS );
+        self::assertContains( '--hof-danger', DesignTokens::ADMIN_TOKENS );
+        self::assertNotContains( '--hof-bg', DesignTokens::ADMIN_TOKENS );
+        self::assertNotContains( '--hof-text', DesignTokens::ADMIN_TOKENS );
         self::assertNotContains( '--hof-space', DesignTokens::ADMIN_TOKENS );
         self::assertNotContains( '--hof-radius-md', DesignTokens::ADMIN_TOKENS );
         self::assertNotContains( '--hof-font-body', DesignTokens::ADMIN_TOKENS );
