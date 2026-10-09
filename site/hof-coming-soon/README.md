@@ -2,7 +2,8 @@
 
 A throwaway WordPress plugin for `hookedonfacets.com` while the real site is built.
 
-- Every front-end URL shows one bento-style homepage with a beta sign-up form. Inner URLs redirect to `/`.
+- `/` shows one bento-style homepage with a beta sign-up form.
+- `/privacy/` (or `/privacy-policy/`) shows the privacy policy. Every other inner URL redirects to `/`.
 - Logged-in administrators see the normal site, so you can build behind it.
 - Deactivate the plugin to go live. Nothing else to undo.
 - The page sends `noindex`, so search engines skip the stand-in.
@@ -25,6 +26,20 @@ The form asks for an email and an optional first name. Sign-ups post to
 `/api/v1/batch/subscribers`. If Bento is unreachable or no credentials are found, the sign-up is held in
 the `hof_soon_pending` option and retried hourly. The visitor still sees success, and wp-admin shows
 what Bento said.
+
+## Privacy policy
+
+`templates/privacy.php` covers the site, the free plugin and Pro. It is linked from the sign-up form
+and the footer, and WordPress' own privacy link (login screen, WooCommerce checkout) points to it until
+you set a real Privacy Policy page. Admins see it too, unless a real page already answers `/privacy/`.
+
+Privacy requests go to `privacy@hookedonfacets.com`. Make sure that mailbox exists, or override it:
+
+```php
+define( 'HOF_SOON_PRIVACY_EMAIL', 'you@example.com' );
+```
+
+When what we collect or who we share it with changes, edit the template and bump `$updated` at its top.
 
 ## Check it reaches Bento
 

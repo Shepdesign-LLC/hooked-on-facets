@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: hooked on facets — coming soon
- * Description: Serves one placeholder homepage with a Bento sign-up form on every front-end URL while the real site is built. Admins see the normal site. Deactivate to go live.
- * Version:     0.2.1
+ * Description: Serves one placeholder homepage with a Bento sign-up form, plus a privacy policy at /privacy/, while the real site is built. Every other front-end URL redirects home. Admins see the normal site. Deactivate to go live.
+ * Version:     0.3.0
  * Requires PHP: 8.0
  * License:     GPL-2.0-or-later
  *
@@ -13,6 +13,7 @@
  *   define( 'HOF_SOON_BENTO_PUBLISHABLE_KEY', '...' );
  *   define( 'HOF_SOON_BENTO_SECRET_KEY',      '...' );
  *   define( 'HOF_SOON_BENTO_TAGS',            'hof-beta' ); // optional, comma separated
+ *   define( 'HOF_SOON_PRIVACY_EMAIL',         'privacy@hookedonfacets.com' ); // optional
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -32,10 +33,14 @@ function hof_soon_gate(): void {
 	if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 		return;
 	}
+	$page = hof_soon_page_for( $_SERVER['REQUEST_URI'] ?? '/', (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ) );
 	if ( current_user_can( 'manage_options' ) ) {
-		return; // you, building the real site
+		// You, building the real site. Still show the policy until a real page claims /privacy/.
+		if ( 'privacy' !== $page || ! is_404() ) {
+			return;
+		}
 	}
-	if ( ! hof_soon_is_home_request( $_SERVER['REQUEST_URI'] ?? '/', (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ) ) ) {
+	if ( null === $page ) {
 		wp_safe_redirect( home_url( '/' ), 302 );
 		exit;
 	}
@@ -44,17 +49,42 @@ function hof_soon_gate(): void {
 	header( 'X-Robots-Tag: noindex, follow', true ); // keep Google off the stand-in
 	status_header( 200 );
 	header( 'Content-Type: text/html; charset=utf-8' );
-	echo hof_soon_render_page( rest_url( 'hof-soon/v1/subscribe' ) ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside the template
+	echo 'privacy' === $page // phpcs:ignore WordPress.Security.EscapeOutput -- escaped inside the templates
+		? hof_soon_render( 'privacy', array( 'contact_email' => hof_soon_privacy_email() ) )
+		: hof_soon_render( 'page', array( 'endpoint_url' => rest_url( 'hof-soon/v1/subscribe' ) ) );
 	exit;
 }
 
 // Hide the core sitemap and feeds from the stand-in too.
 add_filter( 'wp_sitemaps_enabled', '__return_false' );
 
-function hof_soon_render_page( string $endpoint ): string {
+// Point WordPress' own privacy link (login screen, WooCommerce checkout) at the stand-in policy until a real page is set.
+add_filter(
+	'privacy_policy_url',
+	static fn( string $url ): string => '' !== $url ? $url : home_url( '/privacy/' )
+);
+
+/** Where privacy requests go. Override with HOF_SOON_PRIVACY_EMAIL in wp-config.php. */
+function hof_soon_privacy_email(): string {
+	$email = defined( 'HOF_SOON_PRIVACY_EMAIL' ) ? hof_soon_clean_email( (string) HOF_SOON_PRIVACY_EMAIL ) : null;
+	return $email ?? 'privacy@hookedonfacets.com';
+}
+
+/**
+ * Renders templates/{$template}.php. Every template gets $home_url and $privacy_url, plus $vars.
+ *
+ * @param array<string, mixed> $vars
+ */
+function hof_soon_render( string $template, array $vars = array() ): string {
+	$vars += array(
+		'home_url'    => home_url( '/' ),
+		'privacy_url' => home_url( '/privacy/' ),
+	);
 	ob_start();
-	$endpoint_url = $endpoint;
-	require __DIR__ . '/templates/page.php';
+	( static function ( string $hof_file, array $hof_vars ): void {
+		extract( $hof_vars, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
+		require $hof_file;
+	} )( __DIR__ . '/templates/' . $template . '.php', $vars );
 	return (string) ob_get_clean();
 }
 

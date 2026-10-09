@@ -29,9 +29,10 @@ Internal runway for taking Hooked on Facets to a paid product. Status reflects t
 
 ## 🟨 Strongly recommended
 
-- [ ] **Legal:** license EULA/terms, refund policy, privacy policy. The AI "ask"
-      facet sends the typed query + facet schema to Anthropic — disclose this for
-      GDPR (already noted in `readme.txt` FAQ).
+- [ ] **Legal:** license EULA/terms, refund policy. Privacy policy ships with the stand-in at
+      `hookedonfacets.com/privacy/` (`site/hof-coming-soon/templates/privacy.php`,
+      including the AI "ask" facet's Anthropic disclosure); get it a legal read and
+      carry it over to the real site.
 - [ ] **Support channel:** ticket/email + response expectations.
 - [ ] **Build pipeline** for the distributable ZIP: `composer install --no-dev`,
       `npm ci && npm run build`, regenerate the `.pot`, exclude dev files
