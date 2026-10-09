@@ -1,7 +1,7 @@
 <?php
 /**
  * The stand-in homepage. Self-contained: inline CSS and JS, no external requests.
- * Expects $endpoint_url (the REST subscribe route).
+ * Expects $endpoint_url (the REST subscribe route), $home_url and $privacy_url.
  */
 defined( 'ABSPATH' ) || exit;
 ?><!DOCTYPE html>
@@ -13,19 +13,7 @@ defined( 'ABSPATH' ) || exit;
 <title>hooked on facets — filtering, finally fun.</title>
 <meta name="description" content="Faceted search and filtering for WordPress and WooCommerce, built for motion. Join the beta.">
 <style>
-:root{
-  --purple:#534AB7;--purple-700:#3C3489;--purple-400:#7F77DD;--purple-50:#EEEDFE;--purple-200:#CECBF6;
-  --coral:#D85A30;--coral-50:#FAECE7;--ink:#2C2C2A;--ink-700:#5F5E5A;--ink-500:#888780;--ink-200:#D3D1C7;
-  --cream:#F1EFE8;--canvas:#E6E3D9;--white:#fff;--dark:#1A1A19;
-  --r-sm:6px;--r-md:8px;--r-lg:14px;--r-pill:999px;
-  --sans:'Geist',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
-  --mono:'Geist Mono','SF Mono',Menlo,Consolas,monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--sans);background:var(--canvas);color:var(--ink);min-height:100vh;padding:clamp(16px,4vw,48px);-webkit-font-smoothing:antialiased}
-.wrap{max-width:1100px;margin:0 auto}
-.nav{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.nav svg{width:34px;height:34px}.nav span{font-size:17px;font-weight:500;letter-spacing:-.01em}
+<?php readfile( __DIR__ . '/partials/base.css' ); ?>
 .grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr);grid-auto-rows:minmax(120px,auto)}
 .tile{background:var(--cream);border-radius:var(--r-lg);padding:clamp(22px,3vw,36px);border:1px solid var(--ink-200)}
 .hero{grid-column:span 8;grid-row:span 2;display:flex;flex-direction:column;justify-content:center}
@@ -45,7 +33,8 @@ input[type=email]:focus,input[type=text].in:focus{outline:2px solid var(--coral)
 button{font:inherit;font-size:15px;font-weight:500;padding:13px 18px;border:0;border-radius:var(--r-md);background:var(--coral);color:#fff;cursor:pointer}
 button:hover{filter:brightness(1.07)}button[disabled]{opacity:.6;cursor:wait}
 .msg{font-size:13px;min-height:1.4em;color:var(--purple-200)}.msg.err{color:#FAD0C2}.msg.ok{color:#fff;font-weight:500}
-.fine{font-family:var(--mono);font-size:11px;color:var(--purple-200);margin-top:12px}
+.fine{font-family:var(--mono);font-size:11px;line-height:1.6;color:var(--purple-200);margin-top:12px}
+.fine a{color:#fff;text-decoration:underline;text-underline-offset:3px}
 .feat{grid-column:span 4}
 .feat b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:10px}
 .feat h3{font-size:20px;font-weight:500;letter-spacing:-.015em;margin-bottom:6px}
@@ -59,10 +48,7 @@ button:hover{filter:brightness(1.07)}button[disabled]{opacity:.6;cursor:wait}
 </head>
 <body>
 <main class="wrap">
-  <div class="nav">
-    <svg viewBox="0 0 72 72" role="img" aria-label="hooked on facets"><path d="M36 6 L62 21 L36 36 L10 21 Z" fill="#7F77DD"/><path d="M10 21 L10 51 L36 66 L36 36 Z" fill="#3C3489"/><path d="M62 21 L62 51 L36 66 L36 36 Z" fill="#534AB7"/><circle cx="36" cy="6" r="3.5" fill="#D85A30"/></svg>
-    <span>hooked on facets</span>
-  </div>
+<?php require __DIR__ . '/partials/nav.php'; ?>
 
   <div class="grid">
     <section class="tile hero">
@@ -87,7 +73,7 @@ button:hover{filter:brightness(1.07)}button[disabled]{opacity:.6;cursor:wait}
         <button type="submit">Join the beta</button>
         <div class="msg" role="status" aria-live="polite"></div>
       </form>
-      <p class="fine">No spam. Unsubscribe anytime.</p>
+      <p class="fine">No spam. Unsubscribe anytime. <a href="<?php echo esc_url( $privacy_url ); ?>">How we use your email</a>.</p>
     </section>
 
     <section class="tile feat"><b>Speed</b><h3>Sub-50ms queries</h3><p>A purpose-built index, so filters answer before you notice.</p></section>
@@ -100,6 +86,8 @@ button:hover{filter:brightness(1.07)}button[disabled]{opacity:.6;cursor:wait}
       <span class="pill">Oxygen</span><span class="pill">Gutenberg</span><span class="pill">WooCommerce</span>
     </section>
   </div>
+
+<?php require __DIR__ . '/partials/footer.php'; ?>
 </main>
 <script>
 (function(){

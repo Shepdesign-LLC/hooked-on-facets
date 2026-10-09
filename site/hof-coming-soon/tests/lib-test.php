@@ -21,6 +21,15 @@ $eq( hof_soon_is_home_request( '/pricing/' ), false, 'inner page' );
 $eq( hof_soon_is_home_request( '/blog/', '/blog/' ), true, 'subdir root' );
 $eq( hof_soon_is_home_request( '/blog/about', '/blog/' ), false, 'subdir inner' );
 
+$eq( hof_soon_page_for( '/' ), 'home', 'route home' );
+$eq( hof_soon_page_for( '/privacy/' ), 'privacy', 'route privacy' );
+$eq( hof_soon_page_for( '/privacy?ref=x' ), 'privacy', 'route privacy, no slash + query' );
+$eq( hof_soon_page_for( '/Privacy-Policy/' ), 'privacy', 'route privacy-policy alias, any case' );
+$eq( hof_soon_page_for( '/privacy/extra' ), null, 'route privacy sub-path redirects' );
+$eq( hof_soon_page_for( '/pricing/' ), null, 'route inner page redirects' );
+$eq( hof_soon_page_for( '/blog/privacy/', '/blog/' ), 'privacy', 'route privacy under subdir' );
+$eq( hof_soon_page_for( '/privacy/', '/blog/' ), null, 'route privacy outside subdir redirects' );
+
 $eq( hof_soon_bento_payload( 'a@b.co' ), array( 'subscribers' => array( array( 'email' => 'a@b.co' ) ) ), 'payload bare' );
 $eq( hof_soon_bento_payload( 'a@b.co', ' hof-beta ' )['subscribers'][0]['tags'], 'hof-beta', 'payload tags' );
 
