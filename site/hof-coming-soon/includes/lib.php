@@ -25,6 +25,21 @@ if ( ! function_exists( 'hof_soon_is_home_request' ) ) {
 	}
 }
 
+if ( ! function_exists( 'hof_soon_page_for' ) ) {
+	/**
+	 * Which stand-in page a request gets: 'home', 'privacy', or null (redirect home).
+	 * /privacy and /privacy-policy both serve the policy, with or without a trailing slash.
+	 */
+	function hof_soon_page_for( string $request_uri, string $home_path = '/' ): ?string {
+		if ( hof_soon_is_home_request( $request_uri, $home_path ) ) {
+			return 'home';
+		}
+		$path = strtolower( '/' . trim( (string) parse_url( $request_uri, PHP_URL_PATH ), '/' ) );
+		$home = rtrim( '/' . trim( $home_path, '/' ), '/' );
+		return in_array( $path, array( $home . '/privacy', $home . '/privacy-policy' ), true ) ? 'privacy' : null;
+	}
+}
+
 if ( ! function_exists( 'hof_soon_clean_name' ) ) {
 	/** A first name safe to store: no markup or control characters, 60 chars max. Empty when nothing usable is left. */
 	function hof_soon_clean_name( string $raw ): string {
