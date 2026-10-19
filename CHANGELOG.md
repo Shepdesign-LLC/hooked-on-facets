@@ -9,6 +9,13 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-19
+
+The storefront grows up. Facets ship at app scale out of the box, counts read
+as pills, the search box gets an icon, and facets follow a site's dark theme.
+Every new size is a token, so a site that preferred the compact look can set
+it back.
+
 ### Changed
 
 - **Storefront facets are app-scale by default.** Body text 1rem, facet titles
@@ -52,6 +59,13 @@ major version. Each version links to its full GitHub release notes.
   declared on the facet it always fell back to 8 segments, leaving blank
   segments and stopping the pointer on the wrong one.
 - **The dropdown chevron stays visible in dark themes.**
+
+### Security
+
+- **The vendored Freemius SDK's `composer.json` is no longer shipped.** It
+  listed the SDK's own dev tooling (PHPCS, WPCS) with ranges that carry known
+  advisories. The plugin never installs it, and the release build now fails
+  if it comes back.
 
 ## [1.4.0] - 2026-10-08
 
@@ -427,7 +441,8 @@ Custom-field source line — ACF, Meta Box, and Pods.
 
 - First public alpha.
 
-[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/Shepdesign/hooked-on-facets/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.5.0
 [1.4.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.4.0
 [1.3.0]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.3.0
 [1.2.1]: https://github.com/Shepdesign/hooked-on-facets/releases/tag/v1.2.1
