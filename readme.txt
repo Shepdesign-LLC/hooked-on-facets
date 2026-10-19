@@ -5,7 +5,7 @@ Tags: facets, faceted search, filters, woocommerce, product filter
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -125,6 +125,20 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 4. The Styles screen — edit the `--hof-*` variables with a live preview of real facets.
 
 == Changelog ==
+
+= 1.5.0 =
+* Changed: storefront facets are app-scale by default: 1rem text, 48px
+  fields and dropdowns, a 54px search box with an icon, 44px button facets
+  and 20px checkboxes. Every size is a design token.
+* Changed: counts are tinted pills, button facets fill with your primary
+  color when selected, and the active-filters bar is a bordered panel.
+* Changed: Spin the wheel has four tones and a larger dial; the Ask input
+  matches the search box.
+* Added: facets follow common dark theme switches (Bricks, `.dark`,
+  `data-theme="dark"`) and leave your brand colors alone.
+* Fixed: Spin the wheel draws one segment per option.
+* Security: the bundled Freemius SDK's development manifest is no longer
+  shipped.
 
 = 1.4.0 =
 * Added: the Freemius SDK, for licensing and updates of Hooked on Facets Pro.
@@ -259,6 +273,11 @@ lives in the public repository: https://github.com/Shepdesign-LLC/hooked-on-face
 * First public alpha.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Storefront facets get bigger, app-scale controls and follow dark themes. Sites
+with custom Styles keep their colors; set the size tokens lower to keep the
+compact look. No reindex needed.
 
 = 1.4.0 =
 Prepares for Hooked on Facets Pro licensing through Freemius. Nothing is sent
