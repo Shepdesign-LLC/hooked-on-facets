@@ -164,7 +164,7 @@ describe('facets.css respects the hidden attribute', () => {
 });
 
 describe('storefront defaults', () => {
-    const tokenBlock = facetsCss.match(/\.hof-facet,\s*\.hof-results\s*\{([\s\S]*?)\n\}/)[1];
+    const tokenBlock = facetsCss.match(/\.hof-facet,\s*\.hof-results,\s*\.hof-active-filters\s*\{([\s\S]*?)\n\}/)[1];
     const token = (name) => tokenBlock.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim();
 
     it('titles facets in sentence case, not letter-spaced capitals', () => {
@@ -189,6 +189,30 @@ describe('storefront defaults', () => {
 
     it('hides every renderer input marked screen-reader-text, without relying on the theme', () => {
         expect(facetsCss).toMatch(/\.hof-facet \.screen-reader-text \{[^}]*clip: rect\(0 0 0 0\)/);
+    });
+
+    it('ships app-scale controls, not 13px chrome', () => {
+        expect(token('--hof-font-size-body')).toBe('1rem');
+        expect(token('--hof-search-height')).toBe('54px');
+        expect(token('--hof-input-height')).toBe('48px');
+        expect(token('--hof-btn-height')).toBe('44px');
+        expect(token('--hof-control-size')).toBe('20px');
+    });
+
+    it('draws counts as a tinted pill', () => {
+        expect(token('--hof-count-bg')).toBe('var(--hof-tint)');
+        expect(facetsCss).toMatch(/\.hof-facet-count \{[^}]*border-radius: var\(--hof-radius-pill\);[^}]*background: var\(--hof-count-bg\);/);
+    });
+
+    it('centres the search icon on the field, not on the facet', () => {
+        expect(facetsCss).toMatch(/\.hof-facet-search-field \{[^}]*position: relative;/);
+        expect(facetsCss).toMatch(/\.hof-facet-search-icon \{[^}]*top: 50%;[^}]*transform: translateY\(-50%\);/);
+    });
+
+    it('follows a dark theme switch without touching brand colors', () => {
+        const dark = facetsCss.match(/html\[data-brx-theme="dark"\][\s\S]*?\{([\s\S]*?)\n\}/)[1];
+        expect(dark).toMatch(/--hof-surface:/);
+        expect(dark).not.toMatch(/--hof-primary:/);
     });
 
     it('uses no sub-pixel hairlines', () => {

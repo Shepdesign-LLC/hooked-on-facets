@@ -12,7 +12,8 @@
    cards back sets the four --hof-facet-* tokens below. */
 
 .hof-facet,
-.hof-results {
+.hof-results,
+.hof-active-filters {
     /* ── Brand colors ────────────────────────────────────────────────── */
     --hof-primary:    #534AB7;
     --hof-on-primary: #FFFFFF;
@@ -29,24 +30,24 @@
     --hof-radius-xs:   4px;       /* tiny — 2D rect, marquee */
     --hof-radius-sm:   6px;       /* chip-x, tooltip, swipe stamp */
     --hof-radius-md:   8px;       /* DEFAULT — inputs, wrapper */
-    --hof-radius-lg:  10px;       /* ask input/submit, swatch tile */
-    --hof-radius-xl:  16px;       /* swiper card, swiper done */
+    --hof-radius-lg:  12px;       /* ask input/submit, swatch tile */
+    --hof-radius-xl:  18px;       /* swiper card, swiper done */
     --hof-radius-pill: 999px;     /* toggle track, active-filter chip */
     --hof-radius-ui:   var(--hof-radius-md);  /* legacy alias */
 
     /* ── Typography ──────────────────────────────────────────────────── */
     --hof-font-body:          inherit;
     --hof-font-mono:          ui-monospace, "SF Mono", Menlo, monospace;
-    --hof-font-size-body:     0.9375rem;
-    --hof-font-size-sm:       0.875rem;
-    --hof-font-size-xs:       0.8125rem;
-    --hof-font-size-eyebrow:  0.6875rem;
+    --hof-font-size-body:     1rem;
+    --hof-font-size-sm:       0.9375rem;
+    --hof-font-size-xs:       0.875rem;
+    --hof-font-size-eyebrow:  0.75rem;
     --hof-line-height-body:   1.5;
     --hof-line-height-tight:  1.2;
 
     /* ── Facet title ──────────────────────────────────────────────────── */
     --hof-label-color:           var(--hof-text);
-    --hof-label-font-size:       var(--hof-font-size-body);
+    --hof-label-font-size:       1.0625rem;
     --hof-label-font-weight:     600;
     --hof-label-letter-spacing:  normal;
     --hof-label-transform:       none;
@@ -57,27 +58,45 @@
        to var(--hof-radius-lg) and divider to none. */
     --hof-facet-bg:       transparent;
     --hof-facet-border-w: 0;
-    --hof-facet-pad:      0 0 20px;
+    --hof-facet-pad:      0 0 24px;
     --hof-facet-radius:   0;
     --hof-facet-divider:  1px solid var(--hof-border);
-    --hof-facet-gap:      20px;
+    --hof-facet-gap:      24px;
 
     /* ── Hover wash on rows, chips and quiet buttons ─────────────────── */
-    --hof-hover-bg: color-mix(in oklab, var(--hof-text) 5%, transparent);
+    --hof-hover-bg: color-mix(in oklab, var(--hof-primary) 7%, transparent);
+    --hof-tint:     color-mix(in oklab, var(--hof-primary) 10%, var(--hof-surface));
+    /* Primary as text on a tint (counts, chip x, text links). Dark themes
+       lift it so it stays readable. */
+    --hof-primary-text: var(--hof-primary);
 
     /* ── Count badge ─────────────────────────────────────────────────── */
-    --hof-count-color:       var(--hof-muted);
-    --hof-count-font-size:   var(--hof-font-size-sm);
-    --hof-count-font-weight: 400;
+    /* A tinted pill: reads as data, not as leftover text. Set bg to
+       transparent and color to var(--hof-muted) for the old bare number. */
+    --hof-count-color:       var(--hof-primary-text);
+    --hof-count-bg:          var(--hof-tint);
+    --hof-count-font-size:   0.8125rem;
+    --hof-count-font-weight: 500;
+    --hof-count-pad:         0.2em 0.6em;
 
     /* ── Shared input chrome (range, search, date, dropdown, ask) ────── */
     --hof-input-bg:       var(--hof-surface);
     --hof-input-border:   var(--hof-border);
     --hof-input-border-w: 1px;
-    --hof-input-radius:   var(--hof-radius-md);
+    --hof-input-radius:   var(--hof-radius-lg);
     --hof-input-color:    var(--hof-text);
-    --hof-input-pad-y:    9px;
-    --hof-input-pad-x:    12px;
+    --hof-input-height:   48px;
+    --hof-input-pad-y:    11px;
+    --hof-input-pad-x:    16px;
+    --hof-input-shadow:   var(--hof-shadow-xs);
+    --hof-placeholder:    color-mix(in oklab, var(--hof-muted) 80%, transparent);
+
+    /* ── Search ──────────────────────────────────────────────────────── */
+    /* The search box is the front door: taller, larger type, an icon. */
+    --hof-search-height:    54px;
+    --hof-search-font-size: 1.0625rem;
+    --hof-search-icon:      20px;
+    --hof-search-icon-color: var(--hof-muted);
 
     /* ── Focus ring ──────────────────────────────────────────────────── */
     /* Text inputs get a soft glow; buttons and tiles get an outline. Both
@@ -86,7 +105,7 @@
     --hof-focus-ring:            var(--hof-primary);
     --hof-focus-ring-w:          2px;
     --hof-focus-ring-offset:     1px;
-    --hof-focus-ring-soft-w:     3px;
+    --hof-focus-ring-soft-w:     4px;
     --hof-focus-ring-soft-alpha: 18%;
 
     /* ── Shadow scale ────────────────────────────────────────────────── */
@@ -99,18 +118,19 @@
     --hof-surface-elevated: var(--hof-surface);
 
     /* ── Option row (checkbox / radio) ───────────────────────────────── */
-    --hof-option-gap:    10px;
-    --hof-option-pad-y:  6px;
+    --hof-option-gap:    12px;
+    --hof-option-pad-y:  9px;
     --hof-option-accent: var(--hof-primary);
+    --hof-control-size:  20px;   /* native checkbox + radio */
 
     /* ── Toggle ──────────────────────────────────────────────────────── */
-    --hof-toggle-track-w:    36px;
-    --hof-toggle-track-h:    20px;
+    --hof-toggle-track-w:    46px;
+    --hof-toggle-track-h:    26px;
     --hof-toggle-track-off:  color-mix(in oklab, var(--hof-muted) 20%, var(--hof-surface));
     --hof-toggle-track-on:   var(--hof-primary);
     --hof-toggle-thumb-bg:   var(--hof-surface);
     --hof-toggle-thumb-on:   var(--hof-on-primary);
-    --hof-toggle-thumb-size: 16px;
+    --hof-toggle-thumb-size: 22px;
 
     /* ── Hierarchy ───────────────────────────────────────────────────── */
     --hof-hierarchy-indent:      18px;
@@ -118,13 +138,19 @@
     --hof-hierarchy-guide-style: solid;
 
     /* ── Active-filters chip strip ───────────────────────────────────── */
-    --hof-chip-bg:        color-mix(in oklab, var(--hof-text) 6%, var(--hof-surface));
-    --hof-chip-bg-hover:  color-mix(in oklab, var(--hof-text) 11%, var(--hof-surface));
+    --hof-chip-bg:        var(--hof-tint);
+    --hof-chip-bg-hover:  color-mix(in oklab, var(--hof-primary) 18%, var(--hof-surface));
     --hof-chip-border:    transparent;
     --hof-chip-radius:    var(--hof-radius-pill);
 
+    /* ── Button facets (checkbox / radio as buttons) ─────────────────── */
+    --hof-btn-height:    44px;
+    --hof-btn-pad-x:     18px;
+    --hof-btn-gap:       10px;
+    --hof-btn-font-size: var(--hof-font-size-body);
+
     /* ── Swatch facet ────────────────────────────────────────────────── */
-    --hof-swatch-min: 36px;
+    --hof-swatch-min: 40px;
     --hof-swatch-max: 96px;
     --hof-swatch-gap:        var(--hof-space);
     --hof-swatch-radius:     var(--hof-radius-lg);
@@ -175,7 +201,18 @@
 
 .hof-facet-label-text {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 0;
+}
+
+/* Search and dropdown wrap the control in their label; the title needs
+   its own breathing room above the field. */
+.hof-facet-search .hof-facet-label-text,
+.hof-facet-dropdown .hof-facet-label-text {
+    margin-bottom: 12px;
+}
+
+.hof-facet-search .hof-facet-label {
+    margin-bottom: 0;
 }
 
 /* Checkbox / radio list. The renderer keeps the option's name (often a
@@ -185,11 +222,11 @@
    above that layer and the runtime forwards its click to the input. */
 .hof-facet-options {
     list-style: none;
-    margin: 0 -8px;
+    margin: 0 -10px;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
 }
 
 .hof-facet-option {
@@ -198,8 +235,8 @@
     align-items: center;
     gap: var(--hof-option-gap);
     margin: 0;
-    padding: var(--hof-option-pad-y) 8px;
-    border-radius: var(--hof-radius-sm);
+    padding: var(--hof-option-pad-y) 10px;
+    border-radius: var(--hof-radius-md);
     cursor: pointer;
     transition: background-color 120ms ease;
 }
@@ -232,15 +269,24 @@
 .hof-facet-option input[type='checkbox'],
 .hof-facet-option input[type='radio'] {
     accent-color: var(--hof-option-accent);
-    width: 18px;
-    height: 18px;
+    width: var(--hof-control-size);
+    height: var(--hof-control-size);
     margin: 0;
     flex-shrink: 0;
     cursor: pointer;
 }
 
+.hof-facet-option:has(input:checked) {
+    background: var(--hof-hover-bg);
+}
+
 .hof-facet-option:has(input:checked) .hof-facet-name {
     font-weight: 600;
+}
+
+.hof-facet-option:has(input:checked) .hof-facet-count {
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
 }
 
 .hof-facet-name {
@@ -250,10 +296,18 @@
 
 .hof-facet-count {
     margin-left: auto;
+    flex-shrink: 0;
+    min-width: 2em;
+    padding: var(--hof-count-pad);
+    border-radius: var(--hof-radius-pill);
+    background: var(--hof-count-bg);
     color: var(--hof-count-color);
     font-variant-numeric: tabular-nums;
     font-size: var(--hof-count-font-size);
     font-weight: var(--hof-count-font-weight);
+    line-height: 1.4;
+    text-align: center;
+    transition: background-color 120ms ease, color 120ms ease;
 }
 
 .hof-facet-empty {
@@ -276,7 +330,9 @@
     border-radius: var(--hof-input-radius);
     /* Range inputs run two side-by-side, so they're a notch tighter than
        the standard input chrome. */
-    padding: var(--hof-input-pad-y) calc(var(--hof-input-pad-x) - 2px);
+    min-height: var(--hof-input-height);
+    padding: var(--hof-input-pad-y) calc(var(--hof-input-pad-x) - 4px);
+    box-shadow: var(--hof-input-shadow);
     color: var(--hof-input-color);
     font: inherit;
     font-variant-numeric: tabular-nums;
@@ -300,16 +356,63 @@
     margin: 6px 0 0 0;
 }
 
-/* Search */
+/* Search. The icon lives in its own wrapper beside the input, so it is
+   centred on the field at any label size (a pseudo-element on the facet
+   drifts as soon as the title wraps). */
+.hof-facet-search-field {
+    position: relative;
+    display: block;
+}
+
+.hof-facet-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 18px;
+    width: var(--hof-search-icon);
+    height: var(--hof-search-icon);
+    transform: translateY(-50%);
+    color: var(--hof-search-icon-color);
+    pointer-events: none;
+    transition: color 160ms ease;
+}
+
 .hof-facet-search input[type='search'] {
     width: 100%;
+    height: var(--hof-search-height);
     background: var(--hof-input-bg);
     border: var(--hof-input-border-w) solid var(--hof-input-border);
     border-radius: var(--hof-input-radius);
-    padding: var(--hof-input-pad-y) var(--hof-input-pad-x);
+    padding: 0 var(--hof-input-pad-x) 0 calc(18px + var(--hof-search-icon) + 12px);
+    box-shadow: var(--hof-input-shadow);
     color: var(--hof-input-color);
     font: inherit;
+    font-size: var(--hof-search-font-size);
     transition: border-color 160ms ease, box-shadow 160ms ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.hof-facet-search input[type='search']::placeholder {
+    color: var(--hof-placeholder);
+    opacity: 1;
+}
+
+.hof-facet-search input[type='search']:hover {
+    border-color: color-mix(in oklab, var(--hof-text) 22%, var(--hof-input-border));
+}
+
+.hof-facet-search-field:focus-within .hof-facet-search-icon {
+    color: var(--hof-primary-text);
+}
+
+.hof-facet-search input[type='search']::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    background: var(--hof-muted);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .hof-facet-search input[type='search']:focus {
@@ -764,19 +867,20 @@
 
 .hof-active-filters {
     background: var(--hof-bg);
-    border: 0;
+    border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-lg);
-    padding: calc(var(--hof-space) * 1.5) calc(var(--hof-space) * 2);
+    padding: 14px 18px;
     margin: 0 0 calc(var(--hof-space) * 2);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
+    font-family: var(--hof-font-body);
 }
 
 .hof-active-filters-count {
     margin: 0;
-    font-size: 14px;
-    color: var(--hof-text);
+    font-size: var(--hof-font-size-body);
+    color: var(--hof-muted);
 }
 
 .hof-active-filters-count strong {
@@ -802,12 +906,13 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 6px 5px 12px;
+    min-height: 34px;
+    padding: 5px 6px 5px 14px;
     background: var(--hof-chip-bg);
     border: var(--hof-input-border-w) solid var(--hof-chip-border);
     border-radius: var(--hof-chip-radius);
     font: inherit;
-    font-size: var(--hof-font-size-xs);
+    font-size: var(--hof-font-size-sm);
     color: var(--hof-text);
     cursor: pointer;
     transition: background 140ms ease, border-color 140ms ease;
@@ -825,19 +930,19 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    background: color-mix(in oklab, var(--hof-text) 14%, transparent);
-    color: var(--hof-text);
-    font-size: 11px;
+    background: color-mix(in oklab, var(--hof-primary) 16%, transparent);
+    color: var(--hof-primary-text);
+    font-size: 12px;
     line-height: 1;
     transition: background-color 120ms ease, color 120ms ease;
 }
 
 .hof-active-filters-chip:hover .hof-active-filters-chip-x {
-    background: var(--hof-text);
-    color: var(--hof-surface);
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
 }
 
 .hof-active-filters-clear {
@@ -845,16 +950,17 @@
     border: none;
     color: var(--hof-text);
     font: inherit;
-    font-size: var(--hof-font-size-xs);
+    font-size: var(--hof-font-size-sm);
+    font-weight: 500;
     cursor: pointer;
-    padding: 5px 10px;
+    padding: 6px 10px;
     margin-left: auto;
     text-decoration: underline;
     text-underline-offset: 3px;
 }
 
 .hof-active-filters-clear:hover {
-    color: var(--hof-primary);
+    color: var(--hof-primary-text);
 }
 
 /* Reset link */
@@ -1277,7 +1383,8 @@
 
 .hof-facet-select {
     width: 100%;
-    min-height: 42px;
+    min-height: var(--hof-input-height);
+    box-shadow: var(--hof-input-shadow);
     padding: var(--hof-input-pad-y) var(--hof-input-pad-x);
     border: var(--hof-input-border-w) solid var(--hof-input-border);
     border-radius: var(--hof-input-radius);
@@ -1287,6 +1394,17 @@
     font-size: var(--hof-font-size-body);
     cursor: pointer;
     transition: border-color 160ms ease, box-shadow 160ms ease;
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: calc(var(--hof-input-pad-x) + 24px);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2362615C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--hof-input-pad-x) center;
+    background-size: 18px;
+}
+
+.hof-facet-select:hover {
+    border-color: color-mix(in oklab, var(--hof-text) 22%, var(--hof-input-border));
 }
 
 .hof-facet-select:focus {
@@ -1300,7 +1418,7 @@
 .hof-toggle-label {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     cursor: pointer;
     user-select: none;
 }
@@ -1329,8 +1447,8 @@
 
 .hof-toggle-thumb {
     position: absolute;
-    top: 2px;
-    left: 2px;
+    top: calc((var(--hof-toggle-track-h) - var(--hof-toggle-thumb-size)) / 2);
+    left: calc((var(--hof-toggle-track-h) - var(--hof-toggle-thumb-size)) / 2);
     width: var(--hof-toggle-thumb-size);
     height: var(--hof-toggle-thumb-size);
     border-radius: 50%;
@@ -1344,8 +1462,9 @@
 }
 
 .hof-toggle-input:checked + .hof-toggle-track .hof-toggle-thumb {
-    /* Slide distance = track width − thumb width − 2× edge gap. */
-    transform: translateX(calc(var(--hof-toggle-track-w) - var(--hof-toggle-thumb-size) - 4px));
+    /* Slide distance = track width - track height (the thumb is centred
+       in a track-height square at each end). */
+    transform: translateX(calc(var(--hof-toggle-track-w) - var(--hof-toggle-track-h)));
     background: var(--hof-toggle-thumb-on);
 }
 
@@ -1423,8 +1542,8 @@
 
 .hof-hierarchy-label input[type='checkbox'] {
     accent-color: var(--hof-option-accent);
-    width: 18px;
-    height: 18px;
+    width: var(--hof-control-size);
+    height: var(--hof-control-size);
     margin: 0;
 }
 
@@ -1675,39 +1794,78 @@
 /* ── Spin the wheel ─────────────────────────────────────────────────────── */
 
 .hof-facet-wheel {
-    --hof-wheel-a: var(--hof-primary);
-    --hof-wheel-b: var(--hof-accent);
-    --hof-wheel-size: 220px;
+    /* Four tones cycle round the dial. They default to the brand pair plus
+       a light and a deep step of primary, so a site that only sets
+       --hof-primary still gets a coherent wheel. --hof-wheel-a / -b are the
+       legacy two-tone names and still drive tones 1 and 4. */
+    --hof-wheel-a:    var(--hof-primary);
+    --hof-wheel-b:    var(--hof-accent);
+    --hof-wheel-1:    var(--hof-wheel-a);
+    --hof-wheel-2:    color-mix(in oklab, var(--hof-primary) 72%, white);
+    --hof-wheel-3:    color-mix(in oklab, var(--hof-primary) 72%, black);
+    --hof-wheel-4:    var(--hof-wheel-b);
+    --hof-wheel-sep:  rgba(255, 255, 255, 0.5);
+    --hof-wheel-size: 300px;
+    --hof-wheel-arc:  calc(360deg / var(--hof-wheel-n, 8));
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 36px;
+}
+
+.hof-facet-wheel > .hof-facet-label {
+    flex: 0 0 100%;
+    margin-bottom: 0;
+    padding-right: 4em;
 }
 
 .hof-wheel {
     position: relative;
+    flex: 0 0 var(--hof-wheel-size);
     width: var(--hof-wheel-size);
     height: var(--hof-wheel-size);
-    margin: 0.75rem auto;
+    margin: 6px auto;
 }
 
 .hof-wheel-dial {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 3px solid var(--hof-surface);
-    box-shadow: var(--hof-shadow-md);
+    /* !important beats the two-tone inline gradient older Pro builds print. */
+    background:
+        repeating-conic-gradient(from -0.45deg, var(--hof-wheel-sep) 0 0.9deg, transparent 0.9deg var(--hof-wheel-arc)),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 62%),
+        repeating-conic-gradient(from 0deg,
+            var(--hof-wheel-1) 0 var(--hof-wheel-arc),
+            var(--hof-wheel-2) 0 calc(var(--hof-wheel-arc) * 2),
+            var(--hof-wheel-3) 0 calc(var(--hof-wheel-arc) * 3),
+            var(--hof-wheel-4) 0 calc(var(--hof-wheel-arc) * 4)) !important;
+    border: 6px solid var(--hof-surface);
+    box-shadow: 0 0 0 1px var(--hof-border), var(--hof-shadow-md);
     transform: rotate(var(--hof-wheel-rotation, 0deg));
     transition: transform 4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Labels read outward from the hub, prize-wheel style, so none of them
+   end up upside down at any rotation. */
 .hof-wheel-seg {
     position: absolute;
-    top: 4%;
+    top: 50%;
     left: 50%;
-    transform-origin: 0 calc(var(--hof-wheel-size) / 2 - 4%);
-    transform: translateX(-50%)
-        rotate(calc((var(--hof-wheel-i) + 0.5) * (360deg / var(--hof-wheel-n))));
-    max-width: 42%;
-    font-size: 0.6875rem;
+    width: 50%;
+    height: 1.3em;
+    margin-top: -0.65em;
+    padding: 0 6% 0 15%;
+    box-sizing: border-box;
+    transform-origin: 0 50%;
+    transform: rotate(calc((var(--hof-wheel-i) + 0.5) * var(--hof-wheel-arc) - 90deg));
+    font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--hof-surface);
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+    color: #FFFFFF;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
@@ -1717,14 +1875,15 @@
 
 .hof-wheel-pointer {
     position: absolute;
-    top: -6px;
+    top: -9px;
     left: 50%;
     transform: translateX(-50%);
     width: 0;
     height: 0;
-    border-left: 9px solid transparent;
-    border-right: 9px solid transparent;
-    border-top: 14px solid var(--hof-text);
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 22px solid var(--hof-text);
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
     z-index: 2;
 }
 
@@ -1733,16 +1892,27 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 56px;
-    height: 56px;
+    width: 68px;
+    height: 68px;
     border-radius: 50%;
-    border: 3px solid var(--hof-surface);
-    background: var(--hof-text);
-    color: var(--hof-surface);
+    border: 4px solid var(--hof-surface);
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
+    box-shadow: 0 0 0 1px var(--hof-border), 0 4px 14px rgba(0, 0, 0, 0.22);
+    font: inherit;
+    font-size: 0.875rem;
     font-weight: 700;
-    font-size: 0.75rem;
+    letter-spacing: 0.02em;
     cursor: pointer;
     z-index: 3;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.hof-wheel-spin:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.06); }
+
+.hof-wheel-spin:focus-visible {
+    outline: var(--hof-focus-ring-w) solid var(--hof-focus-ring);
+    outline-offset: 3px;
 }
 
 .hof-wheel-spin:disabled { opacity: 0.5; cursor: default; }
@@ -1750,43 +1920,73 @@
 [data-hof-wheel-spinning] .hof-wheel-spin { pointer-events: none; opacity: 0.6; }
 
 .hof-wheel-options {
+    flex: 1 1 340px;
+    min-width: 0;
     list-style: none;
-    margin: 0.5rem 0 0;
+    margin: 0;
     padding: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.375rem;
+    gap: var(--hof-btn-gap);
 }
 
 .hof-wheel-option {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.3rem 0.75rem;
+    gap: 0.5em;
+    min-height: var(--hof-btn-height);
+    padding: 0 var(--hof-btn-pad-x);
     border: 1px solid var(--hof-border);
     border-radius: var(--hof-radius-pill);
+    background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-xs);
+    color: var(--hof-text);
     cursor: pointer;
-    font-size: 0.8125rem;
-    transition: background-color 120ms ease, border-color 120ms ease;
+    font-size: var(--hof-btn-font-size);
+    font-weight: 500;
+    line-height: 1.2;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 
 .hof-wheel-option:hover {
+    border-color: color-mix(in oklab, var(--hof-primary) 45%, var(--hof-border));
     background: var(--hof-hover-bg);
 }
 
 .hof-wheel-option[data-hof-selected="1"] {
     border-color: var(--hof-primary);
-    background: color-mix(in oklab, var(--hof-primary) 12%, var(--hof-surface));
+    background: var(--hof-primary);
+    color: var(--hof-on-primary);
 }
 
+.hof-wheel-option[data-hof-selected="1"] .hof-facet-count {
+    background: color-mix(in srgb, var(--hof-on-primary) 22%, transparent);
+    color: var(--hof-on-primary);
+}
+
+/* Clear sits on the title row, top right, at any width. */
 .hof-wheel-clear {
-    margin-top: 0.5rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
     background: none;
     border: none;
-    color: var(--hof-primary);
+    color: var(--hof-primary-text);
     cursor: pointer;
-    font-size: 0.8125rem;
-    text-decoration: underline;
+    font: inherit;
+    font-size: var(--hof-font-size-sm);
+    font-weight: 500;
+    line-height: 1.3;
+    text-decoration: none;
+}
+
+.hof-wheel-clear:hover { text-decoration: underline; }
+
+@media (max-width: 480px) {
+    .hof-facet-wheel { --hof-wheel-size: 260px; }
+    .hof-wheel-seg { font-size: 0.75rem; padding: 0 4% 0 14%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1940,17 +2140,25 @@
 .hof-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.4em;
-    padding: 0.45em 0.9em;
+    justify-content: center;
+    gap: 0.5em;
+    min-height: var(--hof-btn-height);
+    padding: 0 var(--hof-btn-pad-x);
     border: 1px solid var(--hof-border);
     background: var(--hof-surface);
+    box-shadow: var(--hof-shadow-xs);
     color: var(--hof-text);
     font: inherit;
-    font-size: var(--hof-font-size-sm);
+    font-size: var(--hof-btn-font-size);
     font-weight: 500;
     line-height: 1.2;
     cursor: pointer;
-    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease,
+        box-shadow 140ms ease, transform 140ms ease;
+}
+
+.hof-btn:active:not(:disabled) {
+    transform: translateY(1px);
 }
 
 .hof-btn--pill {
@@ -1970,18 +2178,30 @@
     border-color: var(--hof-primary);
     background: var(--hof-primary);
     color: var(--hof-on-primary);
+    box-shadow: 0 2px 8px color-mix(in oklab, var(--hof-primary) 32%, transparent);
 }
 
 .hof-btn:hover:not(:disabled):not([aria-pressed="true"]) {
-    border-color: color-mix(in oklab, var(--hof-text) 30%, var(--hof-border));
+    border-color: color-mix(in oklab, var(--hof-primary) 45%, var(--hof-border));
+    background: var(--hof-hover-bg);
 }
 
 .hof-btn__count {
-    font-size: 0.8em;
-    padding: 0 0.4em;
+    min-width: 1.9em;
+    font-size: 0.8125em;
+    font-weight: 500;
+    line-height: 1.5;
+    padding: 0 0.5em;
     border-radius: var(--hof-radius-pill);
-    background: color-mix(in srgb, currentColor 14%, transparent);
+    background: var(--hof-tint);
+    color: var(--hof-primary-text);
+    text-align: center;
     font-variant-numeric: tabular-nums;
+}
+
+.hof-btn[aria-pressed="true"] .hof-btn__count {
+    background: color-mix(in srgb, var(--hof-on-primary) 22%, transparent);
+    color: var(--hof-on-primary);
 }
 
 .hof-btn--empty {
@@ -1997,7 +2217,32 @@
 .hof-facet__buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--hof-btn-gap);
+}
+
+/* ── Dark themes ────────────────────────────────────────────────────────
+   Facets follow the theme, not the OS: a light theme on a dark-mode laptop
+   stays light. Any of the common theme switches flips the neutrals; brand
+   colors are left alone, so a saved --hof-primary still applies. Opt a
+   page out with data-hof-theme="light" on <html> or <body>.
+   Specificity is held at two classes on purpose: it beats the inline
+   token block, and a theme that maps its own dark palette onto the
+   --hof-* tokens with a more specific selector still wins. */
+:where(html[data-theme="dark"], html.dark, html[data-brx-theme="dark"], body.dark, body.dark-mode, [data-hof-theme="dark"])
+    :is(.hof-facet, .hof-results, .hof-active-filters):not([data-hof-theme="light"] *) {
+    --hof-surface:  #1E1D24;
+    --hof-bg:       #16151B;
+    --hof-border:   #34323D;
+    --hof-text:     #F2F1EE;
+    --hof-muted:    #A9A7B0;
+    --hof-tint:     color-mix(in oklab, var(--hof-primary) 22%, var(--hof-surface));
+    --hof-hover-bg: color-mix(in oklab, var(--hof-primary) 16%, transparent);
+    --hof-primary-text: color-mix(in oklab, var(--hof-primary) 45%, white);
+    --hof-swatch-bg: #2A2932;
+    --hof-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --hof-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+    --hof-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4), 0 10px 22px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
 }
 
 /* ── Hidden means hidden ────────────────────────────────────────────────
