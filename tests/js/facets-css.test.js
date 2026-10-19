@@ -209,6 +209,18 @@ describe('storefront defaults', () => {
         expect(facetsCss).toMatch(/\.hof-facet-search-icon \{[^}]*top: 50%;[^}]*transform: translateY\(-50%\);/);
     });
 
+    it('works out the wheel arc where the renderer sets the segment count', () => {
+        // Pro prints --hof-wheel-n on .hof-wheel; an arc declared on the facet
+        // would resolve before n exists and always draw 8 segments.
+        expect(facetsCss).toMatch(/\.hof-wheel \{[^}]*--hof-wheel-arc: calc\(360deg \/ var\(--hof-wheel-n, 8\)\);/);
+        expect(facetsCss.match(/\.hof-facet-wheel \{[^}]*\}/)[0]).not.toMatch(/--hof-wheel-arc:/);
+    });
+
+    it('sizes the Ask input like the search box', () => {
+        expect(facetsCss).toMatch(/\.hof-ask-input \{[^}]*height: var\(--hof-search-height\);[^}]*font-size: var\(--hof-search-font-size\);/);
+        expect(facetsCss).toMatch(/\.hof-ask-submit \{[^}]*width: var\(--hof-search-height\);/);
+    });
+
     it('follows a dark theme switch without touching brand colors', () => {
         const dark = facetsCss.match(/html\[data-brx-theme="dark"\][\s\S]*?\{([\s\S]*?)\n\}/)[1];
         expect(dark).toMatch(/--hof-surface:/);

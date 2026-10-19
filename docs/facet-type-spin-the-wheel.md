@@ -72,14 +72,19 @@ The dial colors and size are CSS variables on the facet wrapper:
 
 ```css
 .hof-facet-wheel {
-  --hof-wheel-a: var(--hof-primary);   /* alternating segment color A */
-  --hof-wheel-b: var(--hof-accent);    /* alternating segment color B */
-  --hof-wheel-size: 220px;             /* dial diameter */
+  --hof-wheel-1: var(--hof-primary);                              /* tone 1 */
+  --hof-wheel-2: color-mix(in oklab, var(--hof-primary) 72%, white); /* tone 2 */
+  --hof-wheel-3: color-mix(in oklab, var(--hof-primary) 72%, black); /* tone 3 */
+  --hof-wheel-4: var(--hof-accent);                               /* tone 4 */
+  --hof-wheel-sep: rgba(255, 255, 255, 0.5);  /* hairline between segments */
+  --hof-wheel-size: 300px;                    /* dial diameter (260px on phones) */
 }
 ```
 
-The dial is drawn as an even conic-gradient split across these two tokens, one
-segment per option.
+The dial has one segment per option, and the four tones repeat around it. A
+site that only sets `--hof-primary` still gets a matching wheel. The older
+two-tone names still work: `--hof-wheel-a` sets tone 1 and `--hof-wheel-b`
+sets tone 4.
 
 ## see also
 

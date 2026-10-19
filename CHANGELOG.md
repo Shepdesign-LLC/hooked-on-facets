@@ -33,6 +33,8 @@ major version. Each version links to its full GitHub release notes.
   read outward from the hub, a 300px dial, a larger hub and pointer, options
   beside the dial when there is room, and Clear on the title row. Tones are
   `--hof-wheel-1` to `--hof-wheel-4`; `--hof-wheel-a` and `-b` still work.
+- **The Ask input** matches the search box: 54px tall, the search type size,
+  the input radius and a square submit button.
 
 ### Added
 
@@ -42,6 +44,14 @@ major version. Each version links to its full GitHub release notes.
   Brand colors are untouched. They follow the theme, not the OS setting; opt a
   page out with `data-hof-theme="light"`.
 - `--hof-primary-text`: primary as readable text on a tint, lifted in dark.
+
+### Fixed
+
+- **Spin the wheel draws one segment per option.** The segment angle is
+  worked out on `.hof-wheel`, where the renderer sets `--hof-wheel-n`;
+  declared on the facet it always fell back to 8 segments, leaving blank
+  segments and stopping the pointer on the wrong one.
+- **The dropdown chevron stays visible in dark themes.**
 
 ## [1.4.0] - 2026-10-08
 

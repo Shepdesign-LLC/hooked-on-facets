@@ -1113,11 +1113,11 @@
 
 .hof-ask-icon {
     position: absolute;
-    left: 14px;
+    left: 18px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--hof-primary);
-    font-size: 1rem;
+    color: var(--hof-primary-text);
+    font-size: 1.125rem;
     pointer-events: none;
     line-height: 1;
 }
@@ -1125,20 +1125,21 @@
 .hof-ask-input {
     flex: 1;
     min-width: 0;
-    /* Bigger than the standard input chrome — conversational facet
-       wants more breathing room than a typical search box. */
-    padding: 12px 12px 12px 38px;
+    /* Sized like the search box: both are a front door to the catalog. */
+    height: var(--hof-search-height);
+    padding: 0 var(--hof-input-pad-x) 0 calc(18px + var(--hof-search-icon) + 12px);
     border: var(--hof-input-border-w) solid var(--hof-input-border);
-    border-radius: var(--hof-radius-lg);
+    border-radius: var(--hof-input-radius);
     background: var(--hof-input-bg);
-    box-shadow: var(--hof-shadow-xs);
+    box-shadow: var(--hof-input-shadow);
     color: var(--hof-input-color);
     font: inherit;
-    font-size: 1rem;
+    font-size: var(--hof-search-font-size);
     transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .hof-ask-input::placeholder {
+    color: var(--hof-placeholder);
     transition: opacity 160ms ease;
     opacity: 1;
 }
@@ -1169,10 +1170,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 46px;
+    width: var(--hof-search-height);
+    flex-shrink: 0;
     padding: 0;
     border: 0;
-    border-radius: var(--hof-radius-lg);
+    border-radius: var(--hof-input-radius);
     background: var(--hof-primary);
     color: var(--hof-on-primary);
     font-size: var(--hof-font-size-sm);
@@ -1806,7 +1808,6 @@
     --hof-wheel-4:    var(--hof-wheel-b);
     --hof-wheel-sep:  rgba(255, 255, 255, 0.5);
     --hof-wheel-size: 300px;
-    --hof-wheel-arc:  calc(360deg / var(--hof-wheel-n, 8));
     position: relative;
     display: flex;
     flex-wrap: wrap;
@@ -1821,6 +1822,10 @@
 }
 
 .hof-wheel {
+    /* The arc is worked out here, on the element the renderer gives
+       --hof-wheel-n: declared on the facet it would resolve before n exists
+       and fall back to 8 segments whatever the option count. */
+    --hof-wheel-arc: calc(360deg / var(--hof-wheel-n, 8));
     position: relative;
     flex: 0 0 var(--hof-wheel-size);
     width: var(--hof-wheel-size);
@@ -1847,8 +1852,8 @@
     transition: transform 4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Labels read outward from the hub, prize-wheel style, so none of them
-   end up upside down at any rotation. */
+/* Labels read outward from the hub, prize-wheel style: each one runs along
+   its segment's centre line, so a long name keeps the full radius. */
 .hof-wheel-seg {
     position: absolute;
     top: 50%;
@@ -2243,6 +2248,13 @@
     --hof-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
     --hof-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4), 0 10px 22px rgba(0, 0, 0, 0.4);
     color-scheme: dark;
+}
+
+/* The dropdown chevron is an SVG with a fixed stroke; a dark surface needs
+   the lighter one to keep 3:1 against it. Same switches as above. */
+:where(html[data-theme="dark"], html.dark, html[data-brx-theme="dark"], body.dark, body.dark-mode, [data-hof-theme="dark"])
+    .hof-facet-select:not([data-hof-theme="light"] *) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A9A7B0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
 
 /* ── Hidden means hidden ────────────────────────────────────────────────
