@@ -1109,11 +1109,20 @@ final class Renderer {
              data-hof-display="search">
             <label class="hof-facet-label">
                 <span class="hof-facet-label-text"><?php echo esc_html( $label ); ?></span>
-                <input type="search"
-                       name="hof[<?php echo esc_attr( $name ); ?>]"
-                       value="<?php echo esc_attr( $value ); ?>"
-                       placeholder="<?php esc_attr_e( 'Search…', 'hooked-on-facets' ); ?>"
-                       autocomplete="off">
+                <span class="hof-facet-search-field">
+                    <svg class="hof-facet-search-icon" viewBox="0 0 24 24" width="20" height="20"
+                         fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round"
+                         aria-hidden="true" focusable="false">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="M20 20l-3.5-3.5"/>
+                    </svg>
+                    <input type="search"
+                           name="hof[<?php echo esc_attr( $name ); ?>]"
+                           value="<?php echo esc_attr( $value ); ?>"
+                           placeholder="<?php esc_attr_e( 'Search…', 'hooked-on-facets' ); ?>"
+                           autocomplete="off">
+                </span>
             </label>
         </div>
         <?php

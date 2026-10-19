@@ -238,7 +238,7 @@ final class AssetLoader implements Bootable {
         }
 
         printf(
-            '<style id="hof-tokens">.hof-facet, .hof-results { %s }</style>',
+            '<style id="hof-tokens">.hof-facet, .hof-results, .hof-active-filters { %s }</style>',
             implode( ' ', $lines ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized above.
         );
     }

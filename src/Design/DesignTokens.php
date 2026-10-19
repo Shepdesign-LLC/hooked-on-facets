@@ -80,35 +80,43 @@ final class DesignTokens {
             '--hof-radius-xs'   => '4px',
             '--hof-radius-sm'   => '6px',
             '--hof-radius-md'   => '8px',
-            '--hof-radius-lg'   => '10px',
-            '--hof-radius-xl'   => '16px',
+            '--hof-radius-lg'   => '12px',
+            '--hof-radius-xl'   => '18px',
             '--hof-radius-pill' => '999px',
             '--hof-radius-ui'   => 'var(--hof-radius-md)',
 
             // Typography
             '--hof-font-body'         => 'inherit',
             '--hof-font-mono'         => 'ui-monospace, "SF Mono", Menlo, monospace',
-            '--hof-font-size-body'    => '0.9375rem',
-            '--hof-font-size-sm'      => '0.875rem',
-            '--hof-font-size-xs'      => '0.8125rem',
-            '--hof-font-size-eyebrow' => '0.6875rem',
+            '--hof-font-size-body'    => '1rem',
+            '--hof-font-size-sm'      => '0.9375rem',
+            '--hof-font-size-xs'      => '0.875rem',
+            '--hof-font-size-eyebrow' => '0.75rem',
 
             // Facet title: sentence case, the theme's own weight scale.
             '--hof-label-color'          => 'var(--hof-text)',
-            '--hof-label-font-size'      => 'var(--hof-font-size-body)',
+            '--hof-label-font-size'      => '1.0625rem',
             '--hof-label-font-weight'    => '600',
             '--hof-label-letter-spacing' => 'normal',
             '--hof-label-transform'      => 'none',
 
-            // Count badge
-            '--hof-count-color'       => 'var(--hof-muted)',
-            '--hof-count-font-size'   => 'var(--hof-font-size-sm)',
-            '--hof-count-font-weight' => '400',
+            // Count badge: a tinted pill. bg transparent + color muted for a bare number.
+            '--hof-count-color'       => 'var(--hof-primary-text)',
+            '--hof-count-bg'          => 'var(--hof-tint)',
+            '--hof-count-font-size'   => '0.8125rem',
+            '--hof-count-font-weight' => '500',
 
             // Input chrome (range, search, date, dropdown, ask, visual-dna)
             '--hof-input-bg'       => 'var(--hof-surface)',
             '--hof-input-border'   => 'var(--hof-border)',
             '--hof-input-border-w' => '1px',
+            '--hof-input-radius'   => 'var(--hof-radius-lg)',
+            '--hof-input-height'   => '48px',
+            '--hof-search-height'  => '54px',
+
+            // Button facets + native controls
+            '--hof-btn-height'    => '44px',
+            '--hof-control-size'  => '20px',
         ];
     }
 

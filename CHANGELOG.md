@@ -9,6 +9,50 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+### Changed
+
+- **Storefront facets are app-scale by default.** Body text 1rem, facet titles
+  1.0625rem, 48px inputs and dropdowns, a 54px search box, 44px button facets,
+  20px checkboxes and radios, a 46x26 toggle and roomier option rows. Every
+  size is a token (`--hof-input-height`, `--hof-search-height`,
+  `--hof-btn-height`, `--hof-control-size`), so a site that wants the compact
+  look back sets them lower.
+- **Counts are tinted pills** (`--hof-count-bg`), and turn solid when their
+  option is selected. Set `--hof-count-bg: transparent` and
+  `--hof-count-color: var(--hof-muted)` for the old bare number.
+- **The search facet has an icon.** It sits in a new `.hof-facet-search-field`
+  wrapper beside the input, centred on the field at any title length, and
+  takes the primary color on focus.
+- **Button facets** are taller with a soft lift; selected buttons fill with
+  primary and their count flips to a light pill. Hover tints with primary.
+- **Dropdowns** draw their own chevron instead of the browser's.
+- **Active filters** sit in a bordered panel with larger chips and a primary
+  remove button. The bar now carries the token block itself, so it styles
+  correctly outside a facet.
+- **Spin the wheel** draws four tones with hairline separators, labels that
+  read outward from the hub, a 300px dial, a larger hub and pointer, options
+  beside the dial when there is room, and Clear on the title row. Tones are
+  `--hof-wheel-1` to `--hof-wheel-4`; `--hof-wheel-a` and `-b` still work.
+- **The Ask input** matches the search box: 54px tall, the search type size,
+  the input radius and a square submit button.
+
+### Added
+
+- **Dark themes.** Facets, results and the active-filters bar switch to dark
+  neutrals when the page carries a common theme switch (`data-theme="dark"`,
+  `.dark`, `data-brx-theme="dark"`, `.dark-mode`) or `data-hof-theme="dark"`.
+  Brand colors are untouched. They follow the theme, not the OS setting; opt a
+  page out with `data-hof-theme="light"`.
+- `--hof-primary-text`: primary as readable text on a tint, lifted in dark.
+
+### Fixed
+
+- **Spin the wheel draws one segment per option.** The segment angle is
+  worked out on `.hof-wheel`, where the renderer sets `--hof-wheel-n`;
+  declared on the facet it always fell back to 8 segments, leaving blank
+  segments and stopping the pointer on the wrong one.
+- **The dropdown chevron stays visible in dark themes.**
+
 ## [1.4.0] - 2026-10-08
 
 Groundwork for Hooked on Facets Pro's move to Freemius. The Freemius SDK ships
