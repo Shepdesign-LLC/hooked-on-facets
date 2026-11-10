@@ -10,6 +10,7 @@ namespace HookedOnFacets\Tests;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use HookedOnFacets\Design\DesignTokens;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -69,9 +70,7 @@ final class DesignTokensTest extends TestCase {
         ];
     }
 
-    /**
-     * @dataProvider unsafeCss
-     */
+    #[DataProvider( 'unsafeCss' )]
     public function test_unsafe_css_is_removed( string $input, string $expected ): void {
         self::assertSame( $expected, DesignTokens::sanitize_css( $input ) );
     }
@@ -99,9 +98,7 @@ final class DesignTokensTest extends TestCase {
         ];
     }
 
-    /**
-     * @dataProvider safeCss
-     */
+    #[DataProvider( 'safeCss' )]
     public function test_ordinary_css_is_kept_exactly( string $css ): void {
         self::assertSame( $css, DesignTokens::sanitize_css( $css ) );
     }
@@ -154,9 +151,7 @@ final class DesignTokensTest extends TestCase {
         ];
     }
 
-    /**
-     * @dataProvider tokenValues
-     */
+    #[DataProvider( 'tokenValues' )]
     public function test_token_values( string $input, string $expected ): void {
         self::assertSame( $expected, DesignTokens::sanitize_value( $input ) );
     }
@@ -319,9 +314,7 @@ final class DesignTokensTest extends TestCase {
         return $out;
     }
 
-    /**
-     * @dataProvider scopeCases
-     */
+    #[DataProvider( 'scopeCases' )]
     public function test_scope_css( string $slug, string $input, string $expected ): void {
         self::assertSame( $expected, DesignTokens::scope_css( $input, $slug ) );
     }
