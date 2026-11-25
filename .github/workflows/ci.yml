@@ -29,7 +29,7 @@ jobs:
     name: PHP · Lint & Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Detect PHP project
         id: detect
@@ -43,7 +43,7 @@ jobs:
 
       - name: Setup PHP
         if: steps.detect.outputs.found == 'true'
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -51,7 +51,7 @@ jobs:
 
       - name: Cache Composer dependencies
         if: steps.detect.outputs.found == 'true'
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
@@ -81,7 +81,7 @@ jobs:
     name: JavaScript · Lint, Test & Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Detect JS project
         id: detect
@@ -95,7 +95,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.detect.outputs.found == 'true'
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -121,10 +121,10 @@ jobs:
     name: Markdown · Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Lint markdown
-        uses: DavidAnson/markdownlint-cli2-action@v25.0.0
+        uses: DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34 # v25.0.0
         with:
           globs: |
             *.md
