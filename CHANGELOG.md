@@ -9,6 +9,21 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+### Removed
+
+- **The bundled Freemius SDK** (`freemius/`, `includes/freemius.php`,
+  `hof_fs()`, the `hof_fs_loaded` action and the `HOF_FS_PRODUCT_ID` /
+  `HOF_FS_PUBLIC_KEY` constants). Pro 1.4 licenses through Creem, so the
+  plugin no longer asks to share usage data and contacts no outside service.
+  The ZIP is about 4 MB lighter.
+
+### Changed
+
+- Uninstall cleanup is always the plugin's own uninstall hook, registered on
+  activation. What it removes is unchanged.
+- A site still on Pro 1.3 or older sees "Update Hooked on Facets Pro" on the
+  License screen instead of the Freemius links.
+
 ### Added
 
 - **The License screen takes a Pro license key.** With Hooked on Facets Pro
