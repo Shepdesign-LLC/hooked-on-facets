@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react';
 import { IconAlertTriangle, IconCheck, IconKey } from '@tabler/icons-react';
 import { activateLicense, deactivateLicense, getLicense } from '../api.js';
 
-// Pro reports which licensing it uses. Pro 1.4+ uses Creem: the admin enters
-// the key from their receipt here and Pro activates it through the license
-// server. Pro 1.3 used Freemius, which activates in its own screens, so for
-// it this screen only reports the state and links there.
+// Pro 1.4+ licenses through Creem: the admin enters the key from their
+// receipt here and Pro activates it through the Shepdesign license server.
+// An older Pro reports another provider; it gets a prompt to update.
 
 const formatDate = (iso) => {
     const d = new Date(`${iso}T00:00:00`);
@@ -188,63 +187,20 @@ function CreemLicense({ initial }) {
     );
 }
 
-// --- Freemius (Pro 1.3) -----------------------------------------------------
+// --- Older Pro ------------------------------------------------------------
 
-const FS_STATUS = {
-    active:        { tone: 'ok',   label: 'Active' },
-    trial:         { tone: 'ok',   label: 'Trial' },
-    expired:       { tone: 'warn', label: 'Expired' },
-    not_activated: { tone: 'warn', label: 'Not activated' },
-    unconfigured:  { tone: 'warn', label: 'Licensing isn\'t set up' },
-};
-
-const FS_DETAIL = {
-    active:        'Pro is licensed on this site. Updates arrive on the WordPress Updates screen.',
-    trial:         'You\'re on a trial. Upgrade before it ends to keep updates coming.',
-    expired:       'Your license has expired. Pro keeps working, but updates stop until you renew.',
-    not_activated: 'Activate your license to get automatic updates for Pro.',
-    unconfigured:  'This build isn\'t connected to Freemius yet, so Pro runs without license checks or automatic updates.',
-};
-
-// Primary and secondary actions per status: [label, url key(s)]. With several
-// keys the first URL Pro sends wins: an unregistered add-on gets Freemius'
-// license-key form (activate), a registered one its account page.
-const FS_ACTIONS = {
-    active:        [['Manage license', 'account']],
-    trial:         [['Upgrade', 'upgrade'], ['Manage license', 'account']],
-    expired:       [['Renew', 'upgrade'], ['Manage license', 'account']],
-    not_activated: [['Activate license', ['activate', 'account']], ['Buy a license', 'upgrade']],
-    unconfigured:  [],
-};
-
-function FreemiusLicense({ state }) {
-    const status  = FS_STATUS[state?.status] ? state.status : 'unconfigured';
-    const present = FS_STATUS[status];
-    const urls    = state?.urls || {};
-    const actions = FS_ACTIONS[status]
-        .map(([label, keys]) => [label, [].concat(keys).map((k) => urls[k]).find(Boolean)])
-        .filter(([, href]) => href);
-
-    let meta = null;
-    if (state?.plan || state?.expires || status === 'active') {
-        const when = state?.expires
-            ? `${status === 'expired' ? 'Expired' : status === 'trial' ? 'Trial ends' : 'Renews'} ${formatDate(state.expires)}`
-            : status === 'active' ? 'Lifetime license' : null;
-        meta = [state?.plan && `${state.plan} plan`, when].filter(Boolean).join(' · ');
-    }
-
+// Pro 1.3 and earlier licensed through Freemius, which this plugin no longer
+// bundles. Their license can't be managed here; updating Pro fixes that.
+function OutdatedPro() {
     return (
-        <Shell sub="Hooked on Facets Pro is licensed through Freemius. Activate, renew or move your license from your account; updates arrive through the normal WordPress Updates screen.">
-            <StatusRow status={status} tone={present.tone} label={present.label} meta={meta} detail={FS_DETAIL[status]} />
-            {actions.length > 0 && (
-                <div className="hof-ai-settings-actions">
-                    {actions.map(([label, href], i) => (
-                        <a key={label} href={href} className={`hof-btn ${i === 0 ? 'hof-btn-primary' : ''}`}>
-                            {label}
-                        </a>
-                    ))}
-                </div>
-            )}
+        <Shell sub="Hooked on Facets Pro's license on this site.">
+            <StatusRow
+                status="outdated_pro"
+                tone="warn"
+                label="Update Hooked on Facets Pro"
+                meta={null}
+                detail="This version of Pro uses an older licensing system. Update Pro to 1.4 or newer, then enter the license key from your receipt here."
+            />
         </Shell>
     );
 }
@@ -280,5 +236,5 @@ export default function LicenseSettings() {
         );
     }
 
-    return state.provider === 'creem' ? <CreemLicense initial={state} /> : <FreemiusLicense state={state} />;
+    return state.provider === 'creem' ? <CreemLicense initial={state} /> : <OutdatedPro />;
 }

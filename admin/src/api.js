@@ -108,8 +108,8 @@ export const saveTokens = ({ tokens, custom_css, scope, facet }) =>
 
 // The Pro add-on's license state. Pro 1.4+ reports `provider: 'creem'` with
 // { status, expires, key_hint, activations, activation_limit, urls: { buy } }
-// and takes the key here; Pro 1.3 reports Freemius, which activates in its own
-// screens. `refresh` asks Pro to re-check with the license server first.
+// and takes the key here. `refresh` asks Pro to re-check with the license
+// server first.
 export const getLicense = (refresh = false) => request(refresh ? 'license?refresh=1' : 'license');
 
 // Creem only. Both resolve with { ok, error?, message?, ...state }, also on a

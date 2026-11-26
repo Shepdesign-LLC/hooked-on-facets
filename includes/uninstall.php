@@ -21,11 +21,9 @@
  * never set hof_uninstall_remove_data keeps its data even if a sibling opted
  * in. The HOF_DELETE_DATA constant, if set, opts in network-wide.
  *
- * How it runs: there is deliberately no root uninstall.php — WordPress
- * prefers that file over any uninstall hook, which would stop Freemius from
- * reporting the uninstall. With Freemius configured, hof_uninstall() runs on
- * its `after_uninstall` action (includes/freemius.php); without it, the
- * activation hook registers it as the plugin's uninstall hook.
+ * How it runs: the activation hook registers hof_uninstall() as the plugin's
+ * uninstall hook. There is deliberately no root uninstall.php, which
+ * WordPress would run instead of it.
  *
  * Uses only WP core APIs and raw $wpdb. Hook / option names are literals on
  * purpose; keep them in sync with HookedOnFacets\Indexer.
