@@ -9,6 +9,16 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+### Documentation
+
+- **`docs/creem-setup.md`** replaces the Freemius guide: step by step from test
+  mode to live, covering the Creem product with license keys, the Vercel license
+  server, a staging test purchase and releasing Pro updates.
+  `licensing-and-updates.md`, the launch checklist and the WordPress.org guide
+  describe Creem.
+- The privacy page names Creem, Vercel (license server) and GitHub (update
+  files) in place of Freemius, and says the free plugin sends no usage data.
+
 ### Added
 
 - **The License screen takes a Pro license key.** With Hooked on Facets Pro
