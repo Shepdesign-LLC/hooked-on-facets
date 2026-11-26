@@ -14,6 +14,7 @@ GitHub Wiki, so they travel with each release and are reviewed in pull requests.
 - **[Page Builders](page-builders.md)** — Gutenberg, Elementor, Bricks, Breakdance, Divi.
 - **[Architecture](architecture.md)** — how the index and resolver deliver the speed.
 - **[Licensing & Updates](licensing-and-updates.md)** — license keys, activation, auto-updates.
+- **[Set up Pro in Creem](creem-setup.md)** — step-by-step store, license server and release setup (internal).
 - **[Launch Checklist](launch-checklist.md)** — commercial readiness runway (internal).
 
 ## Requirements

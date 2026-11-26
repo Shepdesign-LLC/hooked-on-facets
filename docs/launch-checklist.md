@@ -9,20 +9,18 @@ Internal runway for taking Hooked on Facets to a paid product. Status reflects t
 - [x] Performance gates met (~54ms p95 ids / ~63ms full / ~19s reindex on 100k).
 - [x] Sources: WooCommerce, ACF, Meta Box, Pods. Builders: Gutenberg, Elementor,
       Bricks, Breakdance, Divi.
-- [x] Freemius integration: the free plugin bundles the SDK (WordPress.org
-      compliant, opt-in only); Pro is a Freemius add-on for licensing and updates.
+- [x] Licensing: Pro licenses through Creem via the Shepdesign license server
+      (`license-server/` in the Pro repo); the free plugin contacts nothing.
 - [x] Tests + CI gating (PHP / JS / Markdown). Versions consistent at 1.0.0.
 - [x] `readme.txt`, translation template (`languages/hooked-on-facets.pot`), docs.
 - [x] Authorship/brand consolidated under Shepdesign, LLC.
 
 ## 🟧 Must-do before charging money
 
-- [ ] **Set up Freemius.** The free plugin product, the Pro add-on (parent: the
-      free plugin) and Pro's plans.
-- [ ] **Set the Freemius IDs and public keys** (`HOF_FS_*`, `HOF_PRO_FS_*`); until
-      they are set, neither plugin loads the SDK. See
-      [Licensing & Updates](licensing-and-updates.md).
-- [ ] **Upload each Pro release ZIP** to the add-on in Freemius.
+- [ ] **Set up Creem and the license server**, test mode first. Follow
+      [Set up hooked on facets Pro in Creem](creem-setup.md).
+- [ ] **Run the test purchase** (Part 6 of that guide) on a staging site.
+- [ ] **Go live** in Creem and Vercel (Part 7), and pass Creem's account review.
 - [ ] **Build `hookedonfacets.com`** — landing page, feature/benefit sections,
       pricing, checkout, account/license area, docs, support contact.
 - [ ] **Tag & publish `v1.0.0`** (GitHub release + store), matching this changelog.

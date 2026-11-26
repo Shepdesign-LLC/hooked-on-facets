@@ -8,7 +8,7 @@
  */
 defined( 'ABSPATH' ) || exit;
 
-$updated = '2026-10-09';
+$updated = '2026-11-26';
 
 $mail = static fn( string $label = '' ): string => sprintf(
 	'<a href="mailto:%1$s">%2$s</a>',
@@ -127,24 +127,15 @@ td:first-child{color:var(--ink);font-weight:500;white-space:nowrap}
         <p>The facet index, your settings and every filter query live in your own WordPress database. Nothing about your products, orders, customers or shoppers is sent to us.</p>
         <h3>The saved bin facet</h3>
         <p>If you use it, items a shopper saves are kept in their own browser (<code>localStorage</code>). They never leave the shopper's device.</p>
-        <h3>Usage data, only if you opt in</h3>
-        <p>When you activate the plugin, it asks whether you'd like to share usage data through Freemius, our licensing and analytics provider. Skip it and nothing is sent. If you opt in, Freemius receives:</p>
-        <ul>
-          <li>the name and email of the WordPress user who opted in,</li>
-          <li>your site URL and language, and your WordPress, PHP and plugin versions,</li>
-          <li>plugin events: activation, deactivation, uninstall and update,</li>
-          <li>a list of your active plugins and theme, unless you switch that off on the opt-in screen.</li>
-        </ul>
-        <p>We use it to fix bugs, decide which builders and themes to test against, and occasionally email you about important updates. You can opt out at any time from the plugin's entry on your Plugins screen.</p>
-        <h3>The Add-Ons screen</h3>
-        <p>Opening it loads the add-on list from Freemius, which sees that request the way any web server would.</p>
+        <h3>No usage data</h3>
+        <p>The free plugin sends nothing to us or anyone else. There's no opt-in screen, no analytics and no add-on list loaded from another site.</p>
       </section>
 
       <section id="pro">
         <h2>hooked on facets Pro</h2>
         <h3>Buying and licensing</h3>
-        <p>Checkout, payments, licenses, renewals and updates for Pro are handled by Freemius, which acts as our reseller and payment processor. Freemius collects your billing name, email, address and payment details. We receive your name, email, plan and license details so we can support you. We never see your full card number.</p>
-        <p>Pro checks your license with Freemius to deliver updates, which sends your site URL and license key.</p>
+        <p>Checkout, payments, tax and receipts for Pro are handled by Creem, which acts as the merchant of record (the legal seller). Creem collects your billing name, email, address and payment details. We receive your name, email, purchase and license details so we can support you. We never see your full card number.</p>
+        <p>To activate your license and deliver updates, Pro sends your license key and your site's URL to our license server, which runs on Vercel and checks the key with Creem. Update files download from GitHub's file storage, which sees that request the way any web server would.</p>
         <h3>The AI "ask" facet</h3>
         <p>The ask facet uses <strong>your own</strong> Anthropic API key. When a shopper types a question, the plugin sends that text plus your facet setup (facet names and their options) from your server straight to Anthropic. It doesn't pass through us, and we never see it. Because you run it, you're the controller for that data, so mention it in your store's privacy policy. Anthropic's terms and <a href="https://www.anthropic.com/legal/privacy" rel="noopener">privacy policy</a> apply.</p>
       </section>
@@ -157,7 +148,9 @@ td:first-child{color:var(--ink);font-weight:500;white-space:nowrap}
             <thead><tr><th>Service</th><th>What for</th><th>What they get</th></tr></thead>
             <tbody>
               <tr><td><a href="https://bentonow.com" rel="noopener">Bento</a></td><td>The beta email</td><td>Email, first name, sign-up tag, whether you open or click our emails</td></tr>
-              <tr><td><a href="https://freemius.com/privacy/" rel="noopener">Freemius</a></td><td>Opt-in usage data, Pro checkout, licensing, updates</td><td>What's listed under <a href="#plugin">The plugin</a> and <a href="#pro">Pro</a></td></tr>
+              <tr><td><a href="https://creem.io" rel="noopener">Creem</a></td><td>Pro checkout, payments, tax, license keys</td><td>What's listed under <a href="#pro">Pro</a></td></tr>
+              <tr><td><a href="https://vercel.com/legal/privacy-policy" rel="noopener">Vercel</a></td><td>Hosting our license server</td><td>Your license key, site URL and server logs</td></tr>
+              <tr><td><a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub</a></td><td>Storing Pro update files</td><td>The download request (IP address)</td></tr>
               <tr><td>Our web host</td><td>Serving this website</td><td>Server logs and the sign-up retry queue</td></tr>
             </tbody>
           </table>
