@@ -3,7 +3,10 @@
 
 const bootstrap = typeof window !== 'undefined' ? window.hofAdmin || {} : {};
 
-async function request(path, options = {}) {
+// `acceptErrorBody`: on a 4xx/5xx, resolve with the JSON body plus its
+// `httpStatus` instead of throwing, for routes whose error body carries a
+// message meant for the admin (the license routes).
+async function request(path, { acceptErrorBody = false, ...options } = {}) {
     const base = bootstrap.restUrl || '/wp-json/hof/v1/';
     const rel = String(path).replace(/^\//, '');
     // With plain permalinks the base is `…/index.php?rest_route=/hof/v1/`, which
@@ -20,6 +23,13 @@ async function request(path, options = {}) {
     }
 
     const res = await fetch(url, { credentials: 'same-origin', ...options, headers });
+
+    if (!res.ok && acceptErrorBody) {
+        const body = await res.json().catch(() => null);
+        if (body && typeof body === 'object') {
+            return { ...body, httpStatus: res.status };
+        }
+    }
 
     if (!res.ok) {
         let detail = '';
@@ -96,6 +106,15 @@ export const saveTokens = ({ tokens, custom_css, scope, facet }) =>
         body: JSON.stringify({ tokens, custom_css, scope, facet }),
     });
 
-// The Pro add-on's Freemius license state: { configured, status, plan,
-// expires, urls: { account, upgrade } }. Freemius itself does activation.
-export const getLicense = () => request('license');
+// The Pro add-on's license state. Pro 1.4+ reports `provider: 'creem'` with
+// { status, expires, key_hint, activations, activation_limit, urls: { buy } }
+// and takes the key here; Pro 1.3 reports Freemius, which activates in its own
+// screens. `refresh` asks Pro to re-check with the license server first.
+export const getLicense = (refresh = false) => request(refresh ? 'license?refresh=1' : 'license');
+
+// Creem only. Both resolve with { ok, error?, message?, ...state }, also on a
+// rejected key, so the screen can show the server's explanation.
+export const activateLicense = (licenseKey) =>
+    request('license', { method: 'POST', body: JSON.stringify({ license_key: licenseKey }), acceptErrorBody: true });
+
+export const deactivateLicense = () => request('license', { method: 'DELETE', acceptErrorBody: true });

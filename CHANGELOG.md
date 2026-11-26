@@ -9,6 +9,15 @@ major version. Each version links to its full GitHub release notes.
 
 ## [Unreleased]
 
+### Added
+
+- **The License screen takes a Pro license key.** With Hooked on Facets Pro
+  1.4 or newer, which licenses through Creem, the screen has a key field,
+  Activate, Check again and Deactivate on this site. It shows the key's last
+  four characters, how many sites use it and when it renews. Messages for a
+  rejected key (wrong key, too many sites, expired) come from the license
+  server. Sites still on Pro 1.3 keep the Freemius view.
+
 ## [1.5.0] - 2026-10-19
 
 The storefront grows up. Facets ship at app scale out of the box, counts read
